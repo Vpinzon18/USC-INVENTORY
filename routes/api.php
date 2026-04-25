@@ -1,7 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\AssetApiController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\InventoryController;
 
-// Esta es la ruta para tu APK de C#
-Route::post('/inventory/report', [InventoryController::class, 'report']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('assets/report', [AssetApiController::class, 'report']);
+});
