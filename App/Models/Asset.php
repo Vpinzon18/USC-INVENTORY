@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Asset extends Model
 {
-    // Asegúrate de que esta línea termine en punto y coma (;)
     protected $table = 'assets';
 
-    // Asegúrate de que esta línea también termine en punto y coma (;)
     protected $fillable = [
+        'room_id',        // <--- MUY IMPORTANTE: Añadir esto para permitir la asignación de salones
         'serial_number', 
         'hostname', 
         'ip_address', 
@@ -20,6 +20,11 @@ class Asset extends Model
         'last_seen_at'
     ];
 
-    // Si tu tabla no tiene created_at/updated_at, descomenta la siguiente línea:
-    // public $timestamps = false; 
+    /**
+     * Obtiene el salón al que pertenece el equipo.
+     */
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
+    }
 }

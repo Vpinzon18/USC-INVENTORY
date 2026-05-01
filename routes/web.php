@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\BuildingController;
+use App\Http\Controllers\Admin\CampusController;
+use App\Http\Controllers\Admin\RoomController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Api\InventoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController; // 1. IMPORTANTE: Añadir esta línea
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Models\Asset;
 
 // 1. PÁGINA DE INICIO / LOGIN
@@ -34,6 +37,11 @@ Route::get('/dashboard', [InventoryController::class, 'index'])
 // RUTAS PROTEGIDAS PARA ADMINISTRADORES (ROL 1)
 Route::middleware(['auth', 'role:1'])->group(function () {
     Route::resource('users', UserController::class);
+});
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::resource('campuses', CampusController::class);
+    Route::resource('buildings', BuildingController::class);
+    Route::resource('rooms', RoomController::class);
 });
 
 // RUTAS DE PERFIL
