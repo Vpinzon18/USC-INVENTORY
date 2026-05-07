@@ -29,4 +29,23 @@ class CampusController extends Controller
 
         return redirect()->route('campuses.index')->with('success', 'Sede creada correctamente.');
     }
+
+    public function edit(Campus $campus) {
+    return view('admin.campuses.edit', compact('campus'));
+}
+
+public function update(Request $request, Campus $campus) {
+    $validated = $request->validate([
+        'name' => 'required|string|max:255|unique:campuses,name,' . $campus->id,
+        'address' => 'nullable|string|max:255',
+    ]);
+    $campus->update($validated);
+    return redirect()->route('campuses.index')->with('success', 'Sede actualizada.');
+}
+
+public function destroy(Campus $campus) {
+    // Nota: Podrías validar que no tenga bloques asociados antes de borrar
+    $campus->delete();
+    return redirect()->route('campuses.index')->with('success', 'Sede eliminada.');
+}
 }

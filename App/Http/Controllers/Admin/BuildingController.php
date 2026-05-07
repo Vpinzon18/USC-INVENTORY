@@ -67,24 +67,22 @@ class BuildingController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        //
-    }
+    public function edit(Building $building) {
+    $campuses = Campus::all();
+    return view('admin.buildings.edit', compact('building', 'campuses'));
+}
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+public function update(Request $request, Building $building) {
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'campus_id' => 'required|exists:campuses,id',
+    ]);
+    $building->update($validated);
+    return redirect()->route('buildings.index')->with('success', 'Bloque actualizado.');
+}
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+public function destroy(Building $building) {
+    $building->delete();
+    return redirect()->route('buildings.index')->with('success', 'Bloque eliminado.');
+}
 }

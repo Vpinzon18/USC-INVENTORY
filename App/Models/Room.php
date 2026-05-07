@@ -8,7 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Room extends Model
 {
-    protected $fillable = ['building_id', 'name', 'floor'];
+   // app/Models/Room.php
+
+protected $fillable = [
+    'name',
+    'nomenclatura', // Nuevo campo
+    'building_id',
+    'floor',
+];
 
     // Relación con los equipos (Un salón tiene muchos equipos)
     public function assets(): HasMany
@@ -21,4 +28,5 @@ class Room extends Model
     {
         return $this->belongsTo(Building::class);
     }
+    
 }

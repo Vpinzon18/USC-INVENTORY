@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Models\Asset;
+use App\Http\Controllers\MovementController;
+use App\Http\Controllers\CustodianController;
+use App\Http\Controllers\Admin\AssetController; // Asegúrate de que el controlador exista
 
 // 1. PÁGINA DE INICIO / LOGIN
 Route::get('/', function () {
@@ -50,5 +53,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/movements/mass', [MovementController::class, 'createMass'])->name('movements.mass.create');
+Route::post('/movements/mass', [MovementController::class, 'storeMass'])->name('movements.mass.store');
+
+// Rutas para la gestión de Responsables (Custodios)
+Route::resource('custodians', CustodianController::class);
+
+// Esta línea crea automáticamente las rutas para index, create, store, edit, etc.
+Route::resource('assets', AssetController::class);
+
 
 require __DIR__.'/auth.php';

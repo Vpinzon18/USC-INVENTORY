@@ -1,9 +1,9 @@
 <x-app-layout>
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Listado de Bloques</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Listado de Sedes</h2>
             <a href="{{ route('campuses.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
-                + Nueva Sede / Sucursal
+                + Nueva Sede / Convenio
             </a>
         </div>
 

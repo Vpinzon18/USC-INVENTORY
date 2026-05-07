@@ -19,4 +19,6 @@ class Building extends Model
     {
         return $this->belongsTo(Campus::class);
     }
+
+    
 }
