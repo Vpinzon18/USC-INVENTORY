@@ -7,22 +7,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
-
+use Illuminate\Database\Eloquent\Relations\technicalServices;
 class Asset extends Model
 {
     protected $table = 'assets';
 
     protected $fillable = [
-        'room_id', 
-        'serial_number', 
-        'internal_code',
-        'hostname', 
-        'ip_address', 
-        'cpu', 
-        'ram', 
-        'storage', 
-        'last_seen_at'
-    ];
+    'room_id',
+    'custodian_id',
+    'serial_number',
+    'internal_code',
+    'hostname',
+    'ip_address',
+    'cpu',
+    'ram',
+    'storage',
+    'monitor_asset',   // Indispensable para R-GT004
+    'monitor_serial',  // Indispensable para R-GT004
+    'keyboard_serial', // Indispensable para R-GT004
+    'mouse_serial',    // Indispensable para R-GT004
+    'security_guaya',  // Indispensable para R-GT004
+];
 
     /**
      * Relación directa con el salón actual (Ubicación física)
@@ -61,10 +66,34 @@ class Asset extends Model
      * HISTORIAL COMPLETO
      * Para la auditoría de la hoja de vida.
      */
-    public function history(): HasMany
-    {
-        return $this->hasMany(Assignment::class)->orderBy('created_at', 'desc');
-    }
+    /**
+ * HISTORIAL COMPLETO DE ASIGNACIONES
+ * Cambiamos 'history' por 'assignments' para que el controlador lo encuentre.
+ */
+public function assignments(): HasMany
+{
+    return $this->hasMany(Assignment::class)->orderBy('created_at', 'desc');
+}
+public function technicalServices(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(TechnicalService::class)->orderBy('created_at', 'desc');
+}
 
+public function custodian()
+{
+    // Un equipo pertenece a un responsable (custodio)
+    return $this->belongsTo(Custodian::class);
+}
     
+// app/Models/Asset.php
+
+public function maintenances()
+{
+    // Un equipo (Asset) puede tener muchos mantenimientos/servicios técnicos
+    // Asegúrate de importar el modelo si es necesario, o usa la ruta completa si tu editor lo pide
+    return $this->hasMany(TechnicalService::class, 'asset_id'); 
+}
+
+
+
 }

@@ -72,15 +72,22 @@ class AssetController extends Controller
 
 public function update(Request $request, Asset $asset)
 {
+    
     $validated = $request->validate([
         'room_id'       => 'required|exists:rooms,id',
         'serial_number' => 'required|unique:assets,serial_number,' . $asset->id,
-        'internal_code' => 'nullable|unique:assets,internal_code,' . $asset->id, // <--- REVISA ESTO
+        'internal_code' => 'nullable|unique:assets,internal_code,' . $asset->id,
+        'custodian_id' => 'nullable|exists:custodians,id', // <--- REVISA ESTO
         'hostname'      => 'nullable|string',
         'ip_address'    => 'nullable|ip',
         'cpu'           => 'nullable|string',
         'ram'           => 'nullable|string',
         'storage'       => 'nullable|string',
+        'monitor_asset'   => 'nullable|string',
+        'monitor_serial'  => 'nullable|string',
+        'keyboard_serial' => 'nullable|string',
+        'mouse_serial'    => 'nullable|string',
+        'security_guaya'  => 'nullable|string',
     ]);
 
     // Esto guarda todos los campos validados en la DB
@@ -108,5 +115,16 @@ public function show(Asset $asset)
     $currentAssignment = $asset->history()->where('status', 'active')->first();
 
     return view('admin.assets.show', compact('asset', 'currentAssignment'));
+}
+
+public function previewPdf(Asset $asset)
+{
+    // Cambiamos 'maintenances' por 'technicalServices'
+    $asset->load(['currentCustodian', 'room.building', 'assignments', 'technicalServices']);
+    
+    
+    return view('admin.assets.pdf_preview', compact('asset'));
+    
+    
 }
 }

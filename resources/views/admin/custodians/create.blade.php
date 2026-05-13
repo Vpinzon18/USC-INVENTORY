@@ -67,6 +67,51 @@
                                    placeholder="Ej: 1234">
                             @error('extension') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
+                        <div class="col-span-2 mt-6">
+    <label class="block text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">
+        Asignación de Ubicaciones a Cargo
+    </label>
+    
+    <div class="bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+        <!-- Buscador Indexado -->
+        <div class="p-4 bg-white border-b border-gray-200">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" id="roomSearch" 
+                       placeholder="Buscar por nomenclatura o edificio (ej: 2011 o Bloque 3)..." 
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition-all">
+            </div>
+        </div>
+
+        <!-- Lista de Checkboxes con Scroll -->
+        <div class="max-h-64 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-3" id="roomList">
+            @foreach($rooms as $room)
+                <label class="room-item flex items-center p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer group">
+                    <div class="relative flex items-center justify-center">
+                        <input type="checkbox" name="rooms[]" value="{{ $room->id }}" 
+                               class="h-5 w-5 text-blue-600 border-gray-300 rounded-md focus:ring-blue-500 transition-all cursor-pointer">
+                    </div>
+                    <div class="ml-3">
+                        <span class="block text-sm font-bold text-gray-700 group-hover:text-blue-700 nomenclature">
+                            {{ $room->nomenclatura }}
+                        </span>
+                        <span class="block text-[10px] text-gray-400 uppercase font-medium building">
+                            {{ $room->building->name ?? 'Sede Principal' }}
+                        </span>
+                    </div>
+                </label>
+            @endforeach
+        </div>
+
+        <!-- Contador de Selección -->
+        <div class="bg-gray-100 px-4 py-2 text-[11px] text-gray-500 font-bold flex justify-between items-center uppercase tracking-tighter">
+            <span>Resultados encontrados: <span id="matchCount">{{ count($rooms) }}</span></span>
+            <span class="text-blue-600">Seleccione los campos correspondientes</span>
+        </div>
+    </div>
+</div>
 
                     </div>
 
@@ -79,6 +124,36 @@
                         </button>
                     </div>
                 </form>
+                <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('roomSearch');
+            const roomItems = document.querySelectorAll('.room-item');
+            const matchCount = document.getElementById('matchCount');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const term = e.target.value.toLowerCase();
+                    let visibleCount = 0;
+
+                    roomItems.forEach(item => {
+                        // Buscamos dentro de la nomenclatura y el edificio
+                        const nomenclature = item.querySelector('.nomenclature').textContent.toLowerCase();
+                        const building = item.querySelector('.building').textContent.toLowerCase();
+
+                        if (nomenclature.includes(term) || building.includes(term)) {
+                            item.style.display = 'flex'; // Mostramos si coincide
+                            visibleCount++;
+                        } else {
+                            item.style.display = 'none'; // Ocultamos si no coincide
+                        }
+                    });
+
+                    // Actualizamos el contador de resultados
+                    matchCount.textContent = visibleCount;
+                });
+            }
+        });
+    </script>
             </div>
         </div>
     </div>

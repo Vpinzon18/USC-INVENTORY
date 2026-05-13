@@ -28,5 +28,9 @@ protected $fillable = [
     {
         return $this->belongsTo(Building::class);
     }
+    public function rooms()
+{
+    return $this->belongsToMany(Room::class, 'custodian_room');
+}
     
 }

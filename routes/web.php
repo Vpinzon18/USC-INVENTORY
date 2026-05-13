@@ -12,7 +12,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Models\Asset;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\CustodianController;
-use App\Http\Controllers\Admin\AssetController; // Asegúrate de que el controlador exista
+use App\Http\Controllers\Admin\AssetController; 
+use App\Http\Controllers\TechnicalServiceController;// Asegúrate de que el controlador exista
 
 // 1. PÁGINA DE INICIO / LOGIN
 Route::get('/', function () {
@@ -63,5 +64,8 @@ Route::resource('custodians', CustodianController::class);
 // Esta línea crea automáticamente las rutas para index, create, store, edit, etc.
 Route::resource('assets', AssetController::class);
 
+// Módulo independiente de Soporte Técnico
+Route::resource('maintenances', TechnicalServiceController::class);
 
+Route::get('assets/{asset}/preview', [AssetController::class, 'previewPdf'])->name('assets.preview');
 require __DIR__.'/auth.php';

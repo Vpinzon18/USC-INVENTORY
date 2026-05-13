@@ -17,4 +17,8 @@ class Custodian extends Model
     {
         return $this->hasMany(Asset::class); // Suponiendo que tu modelo de equipo se llama Asset
     }
+    public function rooms()
+{
+    return $this->belongsToMany(Room::class, 'custodian_room');
+}
 }

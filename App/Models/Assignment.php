@@ -16,6 +16,7 @@ class Assignment extends Model
         'observations'
     ];
 
+    
     // Relaciones para poder consultar fácilmente
     public function asset() { return $this->belongsTo(Asset::class); }
     public function custodian() { return $this->belongsTo(Custodian::class); }
