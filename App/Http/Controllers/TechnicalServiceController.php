@@ -12,37 +12,47 @@ class TechnicalServiceController extends Controller
     /**
      * Muestra el historial global de mantenimientos.
      */
- public function index(Request $request)
+public function index(Request $request)
 {
+    // 1. Capturamos los parámetros de la petición
+    $search = $request->input('search');
+    $fromDate = $request->input('from_date');
+    $toDate = $request->input('to_date');
+    
+    // Capturamos el límite dinámico (por defecto 10 para la bitácora)
+    $perPage = $request->input('per_page', 10);
+
     $query = TechnicalService::with(['asset.room.building', 'technician']);
 
-    // --- BUSCADOR UNIFICADO ---
+    // 2. Aplicamos el Buscador Unificado
     if ($request->filled('search')) {
-        $search = $request->search;
-        
         $query->where(function($q) use ($search) {
             // Busca en la tabla de Activos (Serial o Placa)
             $q->whereHas('asset', function($assetQuery) use ($search) {
                 $assetQuery->where('serial_number', 'ilike', "%{$search}%")
-                          ->orWhere('internal_code', 'ilike', "%{$search}%");
+                           ->orWhere('internal_code', 'ilike', "%{$search}%");
             })
-            // O busca por el nombre del Técnico que realizó el trabajo
+            // Busca por el nombre del Técnico
             ->orWhereHas('technician', function($techQuery) use ($search) {
                 $techQuery->where('name', 'ilike', "%{$search}%");
             })
-            // O busca dentro de la descripción del mantenimiento
+            // Busca en la descripción
             ->orWhere('description', 'ilike', "%{$search}%");
         });
     }
 
-    // Filtros de fecha (estos suelen mantenerse aparte por precisión)
+    // 3. Aplicamos Filtros de fecha
     if ($request->filled('from_date') && $request->filled('to_date')) {
-        $query->whereBetween('performed_at', [$request->from_date, $request->to_date]);
+        $query->whereBetween('performed_at', [$fromDate, $toDate]);
     }
 
-    $services = $query->latest('performed_at')->paginate(15)->withQueryString();
+    // 4. Ejecutamos la paginación con el límite dinámico
+    $services = $query->latest('performed_at')
+                      ->paginate($perPage)
+                      ->withQueryString(); // Mantiene search, from_date, to_date y per_page en los links
 
-    return view('admin.maintenances.index', compact('services'));
+    // 5. Retornamos la vista con todos los datos necesarios para mantener los inputs llenos
+    return view('admin.maintenances.index', compact('services', 'search', 'fromDate', 'toDate', 'perPage'));
 }
 
     /**

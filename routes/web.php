@@ -68,4 +68,6 @@ Route::resource('assets', AssetController::class);
 Route::resource('maintenances', TechnicalServiceController::class);
 
 Route::get('assets/{asset}/preview', [AssetController::class, 'previewPdf'])->name('assets.preview');
+
+Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'downloadPdf'])->name('assets.download.pdf');
 require __DIR__.'/auth.php';

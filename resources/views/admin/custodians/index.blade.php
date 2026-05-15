@@ -1,42 +1,46 @@
 <x-app-layout>
     <div class="py-12">
         <div class="max-w-[95%] mx-auto sm:px-6 lg:px-8">
-            
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 
                 <div class="p-6 border-b border-gray-100 bg-white">
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div>
                             <h2 class="font-bold text-2xl text-gray-800">Responsables</h2>
                             <p class="text-sm text-gray-500">Gestión y búsqueda de personal.</p>
                         </div>
 
-                        <div class="flex flex-1 max-w-md mx-4">
-                            <form action="{{ route('custodians.index') }}" method="GET" class="w-full">
-                                <div class="relative group">
+                        <div class="flex flex-col md:flex-row flex-1 max-w-2xl gap-3">
+                            <form action="{{ route('custodians.index') }}" method="GET" class="w-full flex flex-col md:flex-row gap-3 items-center">
+                                
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <span class="text-xs font-bold text-gray-400 uppercase">Ver:</span>
+                                    <select name="per_page" onchange="this.form.submit()" 
+                                            class="block pl-3 pr-8 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 text-sm transition-all shadow-sm">
+                                        <option value="5" {{ $perPage == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
+                                        <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="1000" {{ $perPage == 1000 ? 'selected' : '' }}>Todo</option>
+                                    </select>
+                                </div>
+
+                                <div class="relative group flex-1 w-full">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" 
-                                             fill="none" 
-                                             stroke="currentColor" 
-                                             viewBox="0 0 24 24">
+                                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                         </svg>
                                     </div>
-                                    
-                                    <input type="text" 
-                                           name="search" 
-                                           value="{{ $search }}"
-                                           placeholder="Buscar por nombre, cédula o área..."
-                                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 sm:text-sm transition-all shadow-sm"
-                                    >
+                                    <input type="text" name="search" value="{{ $search }}" placeholder="Buscar por nombre, cédula o área..." 
+                                           class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 sm:text-sm transition-all shadow-sm">
                                 </div>
                             </form>
-                        </div>
 
-                        <a href="{{ route('custodians.create') }}" 
-                           class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-all shadow-sm shrink-0 text-center">
-                            + Nuevo Responsable
-                        </a>
+                            <a href="{{ route('custodians.create') }}" 
+                               class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl text-sm transition-all shadow-md shrink-0 text-center">
+                                + Nuevo Responsable
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -64,7 +68,6 @@
                                         <div class="text-[10px] text-gray-400 italic">Ext: {{ $custodian->extension ?? '---' }}</div>
                                     </td>
                                     
-                                    <!-- Nueva Columna: Ubicaciones (Nomenclaturas) -->
                                     <td class="px-6 py-4">
                                         <div class="flex flex-wrap justify-center gap-1.5 max-w-[200px] mx-auto">
                                             @forelse($custodian->rooms as $room)
@@ -85,14 +88,14 @@
                                     </td>
                                     
                                     <td class="px-6 py-4 text-center">
-                                        <div class="flex justify-center space-x-1">
-                                            <a href="{{ route('custodians.edit', $custodian) }}" class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition" title="Editar">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        <div class="flex justify-center items-center gap-2">
+                                            <a href="{{ route('custodians.edit', $custodian) }}" class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all" title="Editar">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                             </a>
                                             <form action="{{ route('custodians.destroy', $custodian) }}" method="POST" class="inline">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" onclick="return confirm('¿Eliminar responsable?')" class="text-red-600 hover:bg-red-50 p-2 rounded-lg transition" title="Eliminar">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                <button type="submit" onclick="return confirm('¿Eliminar responsable?')" class="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all" title="Eliminar">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                 </button>
                                             </form>
                                         </div>

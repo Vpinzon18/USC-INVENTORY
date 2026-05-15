@@ -8,23 +8,29 @@ use App\Models\Room;
 use App\Models\Custodian;
 use App\Models\Assignment;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
+use Spatie\Browsershot\Browsershot;
 
 class AssetController extends Controller
 {
     public function index(Request $request)
-    {
-        $search = $request->input('search');
+{
+    $search = $request->input('search');
+    // Captura 'per_page'. Si no existe, por defecto es 15.
+    $perPage = $request->input('per_page', 15); 
 
-        $assets = Asset::with(['room', 'currentCustodian'])
-            ->when($search, function ($query, $search) {
-                return $query->where('serial_number', 'LIKE', "%{$search}%")
-                             ->orWhere('hostname', 'LIKE', "%{$search}%")
-                             ->orWhere('internal_code', 'LIKE', "%{$search}%");
-            })
-            ->paginate(15);
+    $assets = Asset::with(['room', 'currentCustodian'])
+        ->when($search, function ($query, $search) {
+            return $query->where('serial_number', 'LIKE', "%{$search}%")
+                         ->orWhere('hostname', 'LIKE', "%{$search}%")
+                         ->orWhere('internal_code', 'LIKE', "%{$search}%");
+        })
+        ->paginate($perPage) // Usamos la variable dinámica aquí
+        ->withQueryString(); // Mantiene 'search' y 'per_page' en los links de paginación
 
-        return view('admin.assets.index', compact('assets', 'search'));
-    }
+    return view('admin.assets.index', compact('assets', 'search', 'perPage'));
+}
 
     public function create()
     {
@@ -127,4 +133,34 @@ public function previewPdf(Asset $asset)
     
     
 }
+ // Asegúrate de importar el Facade al inicio
+
+
+public function downloadPdf(int $id)
+{
+    $asset = Asset::with(['currentCustodian', 'room.building', 'technicalServices.user'])->findOrFail($id);
+
+    // Generamos el HTML completo
+    $html = view('admin.assets.pdf_export', compact('asset'))->render();
+
+    $pdf = Browsershot::html($html)
+        ->setNodeBinary('C:\Program Files\nodejs\node.exe')
+        ->setChromePath('C:\Program Files\Google\Chrome\Application\chrome.exe')
+        ->addChromiumArguments([
+            'no-sandbox',
+            'disable-setuid-sandbox',
+            'disable-dev-shm-usage',
+            'disable-gpu',
+            'no-zygote'
+        ])
+        ->showBackground()
+        ->format('Letter')
+        ->setMargins(10, 10, 10, 10)
+        ->pdf();
+
+    return response($pdf)
+        ->header('Content-Type', 'application/pdf')
+        ->header('Content-Disposition', 'attachment; filename="Hoja_Vida_USC_'.$asset->internal_code.'.pdf"');
+}
+
 }

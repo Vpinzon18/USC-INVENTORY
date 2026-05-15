@@ -14,7 +14,11 @@ class CustodianController extends Controller
      */
     public function index(Request $request)
 {
+    // Capturamos la búsqueda
     $search = $request->input('search');
+
+    // Capturamos el límite dinámico desde el selector. Por defecto será 10.
+    $perPage = $request->input('per_page', 10);
 
     $custodians = \App\Models\Custodian::query()
         ->when($search, function ($query, $search) {
@@ -23,10 +27,11 @@ class CustodianController extends Controller
                          ->orWhere('dependency', 'LIKE', "%{$search}%");
         })
         ->orderBy('full_name', 'asc')
-        ->paginate(10) // Aquí ponemos el límite de 10 por página
-        ->withQueryString(); // Mantiene la búsqueda al cambiar de página
+        ->paginate($perPage) // Reemplazamos el 10 fijo por la variable dinámica
+        ->withQueryString(); // Crucial: Mantiene tanto 'search' como 'per_page' en la URL
 
-    return view('admin.custodians.index', compact('custodians', 'search'));
+    // Pasamos 'perPage' a la vista para que el <select> mantenga la opción elegida
+    return view('admin.custodians.index', compact('custodians', 'search', 'perPage'));
 }
 
     /**

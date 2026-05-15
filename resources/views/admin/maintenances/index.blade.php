@@ -17,29 +17,44 @@
                     <form action="{{ route('maintenances.index') }}" method="GET" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                             
-                            <div class="md:col-span-6">
-                                <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Buscador Inteligente</label>
-                                <div class="relative">
-                                    <input type="text" name="search" value="{{ request('search') }}" 
-                                           placeholder="Escribe serial, placa, técnico o detalle..." 
-                                           class="w-full border-gray-200 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold focus:ring-4 focus:ring-blue-100 transition-all shadow-sm">
-                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <svg class="h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
+                            <div class="md:col-span-7 flex flex-col md:flex-row gap-4 items-end">
+                                <div class="w-full md:w-32">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest text-center md:text-left">Ver</label>
+                                    <select name="per_page" onchange="this.form.submit()" 
+                                            class="w-full border-gray-200 rounded-2xl py-3 text-xs font-bold focus:ring-4 focus:ring-blue-100 transition-all shadow-sm bg-white cursor-pointer">
+                                        <option value="5" {{ $perPage == 5 ? 'selected' : '' }}>5</option>
+                                        <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15</option>
+                                        <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
+                                        <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="1000" {{ $perPage == 1000 ? 'selected' : '' }}>Todo</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex-1 w-full">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Buscador Inteligente</label>
+                                    <div class="relative group">
+                                        <input type="text" name="search" value="{{ $search }}" 
+                                               placeholder="Escribe serial, placa, técnico o detalle..." 
+                                               class="w-full border-gray-200 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold focus:ring-4 focus:ring-blue-100 transition-all shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <svg class="h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="md:col-span-4 flex space-x-2">
+                            <div class="md:col-span-3 flex space-x-2">
                                 <div class="flex-1">
                                     <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Desde</label>
-                                    <input type="date" name="from_date" value="{{ request('from_date') }}" 
+                                    <input type="date" name="from_date" value="{{ $fromDate }}" 
                                            class="w-full border-gray-200 rounded-2xl py-3 text-[10px] font-bold focus:ring-4 focus:ring-blue-100 uppercase shadow-sm">
                                 </div>
                                 <div class="flex-1">
                                     <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Hasta</label>
-                                    <input type="date" name="to_date" value="{{ request('to_date') }}" 
+                                    <input type="date" name="to_date" value="{{ $toDate }}" 
                                            class="w-full border-gray-200 rounded-2xl py-3 text-[10px] font-bold focus:ring-4 focus:ring-blue-100 uppercase shadow-sm">
                                 </div>
                             </div>
@@ -75,7 +90,7 @@
                                 <th class="px-6 py-4">Técnico</th>
                                 <th class="px-6 py-4">Tipo</th>
                                 <th class="px-6 py-4 w-1/3">Descripción</th> 
-                                <th class="px-6 py-4 text-center">Acciones</th> <!-- Nueva Columna -->
+                                <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white font-medium">
@@ -88,12 +103,12 @@
                                 <td class="px-6 py-4">
                                     <div class="font-black text-gray-800 uppercase text-xs tracking-tighter">{{ $service->asset->serial_number }}</div>
                                     <div class="text-[9px] text-blue-500 font-bold uppercase italic">
-                                        {{ $service->asset->room->building->name ?? 'N/A' }} - {{ $service->asset->room->name ?? 'N/A' }}
+                                        {{ $service->asset->room->building->name ?? 'N/A' }} - {{ $service->asset->room->nomenclatura ?? 'N/A' }}
                                     </div>
                                 </td>
 
                                 <td class="px-6 py-4 text-xs font-bold text-gray-700 uppercase">
-                                    {{ $service->technician->name }}
+                                    {{ $service->technician->name ?? 'N/A' }}
                                 </td>
 
                                 <td class="px-6 py-4">
@@ -115,7 +130,6 @@
                                     {{ Str::limit($service->description, 100) }}
                                 </td>
 
-                                <!-- Celda de Acciones -->
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center items-center">
                                         <a href="{{ route('maintenances.edit', $service) }}" 
@@ -129,13 +143,11 @@
                                 </td>
                             </tr>
                             @empty
-                            @if(!request()->anyFilled(['search', 'from_date', 'to_date']))
                             <tr>
                                 <td colspan="6" class="px-6 py-10 text-center text-gray-400 italic">
                                     No hay registros de soporte técnico en la bitácora.
                                 </td>
                             </tr>
-                            @endif
                             @endforelse
                         </tbody>
                     </table>

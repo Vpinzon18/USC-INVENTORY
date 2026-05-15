@@ -25,4 +25,10 @@ class TechnicalService extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function user(): BelongsTo
+    {
+        // Esto le dice a Laravel que 'user_id' en esta tabla 
+        // se conecta con la tabla de Usuarios.
+        return $this->belongsTo(User::class);
+    }
 }
