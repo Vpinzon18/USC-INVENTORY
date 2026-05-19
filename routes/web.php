@@ -13,7 +13,8 @@ use App\Models\Asset;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\CustodianController;
 use App\Http\Controllers\Admin\AssetController; 
-use App\Http\Controllers\TechnicalServiceController;// Asegúrate de que el controlador exista
+use App\Http\Controllers\TechnicalServiceController;
+use App\Http\Controllers\Admin\MaintenanceScheduleController;
 
 // 1. PÁGINA DE INICIO / LOGIN
 Route::get('/', function () {
@@ -70,4 +71,14 @@ Route::resource('maintenances', TechnicalServiceController::class);
 Route::get('assets/{asset}/preview', [AssetController::class, 'previewPdf'])->name('assets.preview');
 
 Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'downloadPdf'])->name('assets.download.pdf');
+
+
+
+Route::get('/schedules', [MaintenanceScheduleController::class, 'index'])->name('schedules.index');
+Route::get('/schedules/create', [MaintenanceScheduleController::class, 'create'])->name('schedules.create');
+Route::post('/schedules', [MaintenanceScheduleController::class, 'store'])->name('schedules.store');
+
+// Rutas para editar programaciones del cronograma
+Route::get('/schedules/{schedule}/edit', [MaintenanceScheduleController::class, 'edit'])->name('schedules.edit');
+Route::put('/schedules/{schedule}', [MaintenanceScheduleController::class, 'update'])->name('schedules.update');
 require __DIR__.'/auth.php';

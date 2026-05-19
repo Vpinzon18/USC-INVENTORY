@@ -58,32 +58,40 @@ public function index(Request $request)
     /**
      * Vista para que el técnico cree un nuevo registro.
      */
-    public function create()
-    {
-        // Cargamos los activos con su ubicación para que el técnico confirme el equipo
-        $assets = Asset::with('room')->orderBy('serial_number')->get();
-        
-        return view('admin.maintenances.create', compact('assets'));
+    public function create(Request $request)
+{
+    // 1. Iniciamos la consulta base cargando las relaciones necesarias
+    $query = Asset::with('room.building');
+
+    // 2. ¡EL INTERRUPTOR! Si la URL contiene un asset_id (viene desde el cronograma)
+    // filtramos la base de datos para traer ÚNICAMENTE ese equipo
+    if ($request->filled('asset_id')) {
+        $query->where('id', $request->asset_id);
     }
+
+    // 3. Ejecutamos la consulta manteniendo tu orden por número de serial
+    $assets = $query->orderBy('serial_number')->get();
+    
+    return view('admin.maintenances.create', compact('assets'));
+}
 
     /**
      * Almacena la intervención técnica en la base de datos.
      */
     public function store(Request $request)
 {
-    // 1. Lógica para unir el tipo (Selector o Custom)
     $finalType = ($request->type_selector === 'Otro') 
                  ? $request->custom_type 
                  : $request->type_selector;
 
-    // 2. Validamos (Bajé el min de la descripción para que tu prueba pase)
     $request->validate([
-        'asset_id'     => 'required|exists:assets,id',
-        'performed_at' => 'required|date',
-        'description'  => 'required|string|min:3', 
+        'asset_id'       => 'required|exists:assets,id',
+        'performed_at'   => 'required|date',
+        'description'    => 'required|string|min:3', 
+        'security_guaya' => 'nullable|string|max:255',
     ]);
 
-    // 3. Guardado
+    // 1. Guardamos el registro histórico unificado en la bitácora
     \App\Models\TechnicalService::create([
         'asset_id'     => $request->asset_id,
         'user_id'      => Auth::user()->id,
@@ -92,12 +100,27 @@ public function index(Request $request)
         'description'  => $request->description,
     ]);
 
+    // 2. Si se reportó un reemplazo de guaya, actualizamos el activo
+    if ($request->filled('security_guaya')) {
+        $asset = \App\Models\Asset::findOrFail($request->asset_id);
+        $asset->update([
+            'security_guaya' => $request->security_guaya
+        ]);
+    }
+
+    // 3. ¡CONEXIÓN AUTOMÁTICA CON EL CRONOGRAMA!
+    // Si la intervención fue un Mantenimiento Preventivo, cerramos la tarea pendiente
+    if (strtoupper($finalType) === 'PREVENTIVO') {
+        \App\Models\MaintenanceSchedule::where('asset_id', $request->asset_id)
+            ->where('status', 'PENDIENTE')
+            ->orderBy('scheduled_date', 'asc') // Tomamos el más antiguo programado
+            ->first()
+            ?->update(['status' => 'REALIZADO']); // Cerramos el compromiso semestral
+    }
+
     return redirect()->route('maintenances.index')
-        ->with('success', 'Mantenimiento registrado con éxito.');
+        ->with('success', 'Mantenimiento preventivo registrado y cronograma actualizado con éxito.');
 }
-// En el método edit
-// En TechnicalServiceController.php
-// TechnicalServiceController.php
 
 public function edit(int $id)
 {

@@ -8,76 +8,125 @@
                     <p class="text-gray-400 text-xs font-bold uppercase">Diligencie la intervención realizada al equipo</p>
                 </div>
 
-                <form action="{{ route('maintenances.store') }}" method="POST" class="p-8 space-y-8">
+                <form action="{{ route('maintenances.store') }}" method="POST" 
+                      x-data="{ 
+                          type: 'Preventivo', 
+                          cambioGuaya: false, 
+                          currentGuaya: '{{ $assets->count() === 1 ? ($assets->first()->security_guaya ?? 'Sin Guaya Registrada') : 'Seleccione un equipo...' }}' 
+                      }" 
+                      class="p-8 space-y-8">
                     @csrf
                     
                     <div class="space-y-4">
-                        <label class="block text-xs font-black text-gray-500 uppercase tracking-widest">1. Seleccione el Equipo</label>
-                        <div class="relative">
-                            <input type="text" id="assetSearch" placeholder="Buscar por Serial o Placa USC..." 
-                                   class="w-full pl-4 py-4 bg-gray-50 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-sm font-bold">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest">1. Seleccione el Equipo</label>
+                            @if($assets->count() === 1)
+                                <span class="text-[10px] bg-blue-100 text-blue-700 font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse">
+                                    Asignación Automática
+                                </span>
+                            @endif
                         </div>
 
-                        <div class="max-h-48 overflow-y-auto border border-gray-100 rounded-2xl p-2 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-2" id="assetContainer">
+                        <div class="relative">
+                            <input type="text" id="assetSearch" placeholder="Buscar por Serial o Placa USC..." 
+                                   class="w-full pl-4 py-4 bg-gray-50 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-sm font-bold
+                                          disabled:bg-gray-200/60 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-300"
+                                   {{ $assets->count() === 1 ? 'disabled' : '' }}>
+                        </div>
+
+                        <div class="max-h-48 overflow-y-auto border border-gray-100 rounded-2xl p-2 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-2
+                                    {{ $assets->count() === 1 ? 'pointer-events-none opacity-90' : '' }}" 
+                             id="assetContainer">
                             @foreach($assets as $asset)
                                 <label class="asset-option flex items-center p-3 bg-white rounded-xl border border-transparent hover:border-blue-500 cursor-pointer transition-all group">
-                                    <input type="radio" name="asset_id" value="{{ $asset->id }}" class="hidden peer" required>
+                                    <input type="radio" name="asset_id" value="{{ $asset->id }}" class="hidden peer" required
+                                           {{ $assets->count() === 1 ? 'checked' : '' }}
+                                           x-on:change="currentGuaya = '{{ $asset->security_guaya ?? 'Sin Guaya Registrada' }}'">
+                                    
                                     <div class="peer-checked:bg-blue-600 peer-checked:border-blue-600 w-4 h-4 rounded-full border-2 border-gray-300 mr-3 transition-all"></div>
-                                    <div>
+                                    <div class="flex-1">
                                         <p class="text-[11px] font-black text-gray-800 uppercase serial-text">{{ $asset->serial_number }}</p>
                                         <p class="text-[9px] text-blue-600 font-bold plate-text">{{ $asset->internal_code ?? 'S/P' }}</p>
+                                    </div>
+                                    <div class="text-[9px] bg-gray-100 text-gray-500 px-2 py-1 rounded-lg font-mono">
+                                        G: {{ Str::limit($asset->security_guaya ?? '---', 8) }}
                                     </div>
                                 </label>
                             @endforeach
                         </div>
                     </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="md:col-span-1">
-        <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
-            2. Fecha de Realización
-        </label>
-        <input type="date" 
-               name="performed_at" 
-               value="{{ date('Y-m-d') }}" 
-               max="{{ date('Y-m-d') }}"
-               class="w-full border-gray-200 rounded-2xl py-4 bg-gray-50 text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all"
-               required>
-        <p class="mt-1 text-[10px] text-gray-400 uppercase font-bold italic">* Seleccione el día que hizo el trabajo físico</p>
-    </div>
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
+                                2. Fecha de Realización
+                            </label>
+                            <input type="date" 
+                                   name="performed_at" 
+                                   value="{{ date('Y-m-d') }}" 
+                                   max="{{ date('Y-m-d') }}"
+                                   class="w-full border-gray-200 rounded-2xl py-4 bg-gray-50 text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all"
+                                   required>
+                            <p class="mt-1 text-[10px] text-gray-400 uppercase font-bold italic">* Seleccione el día que hizo el trabajo físico</p>
+                        </div>
 
+                        <div class="md:col-span-1">
+                            <label class="flex items-center space-x-3 cursor-pointer mb-3 mt-1">
+                                <input type="checkbox" x-model="cambioGuaya" class="w-5 h-5 rounded-xl border-gray-200 text-blue-600 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer">
+                                <span class="text-xs font-black text-gray-500 uppercase tracking-widest selection:bg-transparent">¿Instaló o reemplazó guaya?</span>
+                            </label>
 
-</div>
+                            <div x-show="cambioGuaya" 
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 class="space-y-2">
+                                
+                                <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-100 text-[11px] font-bold text-blue-700 flex justify-between items-center tracking-wider">
+                                    <span>ÚLTIMA GUAYA REGISTRADA:</span>
+                                    <span x-text="currentGuaya" class="bg-blue-600 text-white px-2.5 py-0.5 rounded-lg font-mono uppercase tracking-normal"></span>
+                                </div>
 
-                    <div class="md:col-span-1" x-data="{ type: 'Preventivo' }">
-    <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
-        3. Tipo de Intervención
-    </label>
-    
-    <select x-model="type" name="type_selector" class="w-full border-gray-200 rounded-2xl py-4 bg-gray-50 text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all">
-        <option value="Preventivo">Mantenimiento Preventivo</option>
-        <option value="Correctivo">Mantenimiento Correctivo</option>
-        <option value="Mejora">Mejora de Hardware/Software</option>
-        <option value="Diagnóstico">Diagnóstico Técnico</option>
-        <option value="Otro">Otro (Especificar...)</option>
-    </select>
+                                <input type="text" 
+                                       name="security_guaya" 
+                                       placeholder="Escriba el serial de la nueva guaya..." 
+                                       class="w-full border-blue-200 rounded-2xl py-4 bg-blue-50 text-sm font-bold placeholder-blue-300 focus:ring-4 focus:ring-blue-100 transition-all"
+                                       :required="cambioGuaya">
+                            </div>
+                        </div>
+                    </div>
 
-    <div x-show="type === 'Otro'" 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 transform -translate-y-2"
-         x-transition:enter-end="opacity-100 transform translate-y-0"
-         class="mt-3">
-        <input type="text" 
-               name="custom_type" 
-               placeholder="¿Qué tipo de intervención es?" 
-               class="w-full border-blue-200 rounded-2xl py-3 bg-blue-50 text-sm font-bold placeholder-blue-300 focus:ring-4 focus:ring-blue-100"
-               :required="type === 'Otro'">
-    </div>
-</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
+                                3. Tipo de Intervención
+                            </label>
+                            
+                            <select x-model="type" name="type_selector" class="w-full border-gray-200 rounded-2xl py-4 bg-gray-50 text-sm font-bold focus:ring-4 focus:ring-blue-100 transition-all">
+                                <option value="Preventivo">Mantenimiento Preventivo</option>
+                                <option value="Correctivo">Mantenimiento Correctivo</option>
+                                <option value="Mejora">Mejora de Hardware/Software</option>
+                                <option value="Diagnóstico">Diagnóstico Técnico</option>
+                                <option value="Otro">Otro (Especificar...)</option>
+                            </select>
 
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">3. Descripción del Trabajo</label>
-                            <textarea name="description" rows="5" placeholder="Sea detallado: 'Se realiza limpieza, cambio de pasta térmica y guaya de seguridad...'" 
-                                      class="w-full border-gray-200 rounded-2xl p-4 bg-gray-50 text-sm focus:ring-4 focus:ring-blue-100" required></textarea>
+                            <div x-show="type === 'Otro'" 
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 class="mt-3">
+                                <input type="text" 
+                                       name="custom_type" 
+                                       placeholder="¿Qué tipo de intervención es?" 
+                                       class="w-full border-blue-200 rounded-2xl py-3 bg-blue-50 text-sm font-bold placeholder-blue-300 focus:ring-4 focus:ring-blue-100"
+                                       :required="type === 'Otro'">
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">4. Descripción del Trabajo</label>
+                            <textarea name="description" rows="4" placeholder="Sea detallado: 'Se realiza limpieza, cambio de pasta térmica y guaya de seguridad...'" 
+                                      class="w-full border-gray-200 rounded-2xl p-4 bg-gray-50 text-sm font-bold focus:ring-4 focus:ring-blue-100" required></textarea>
                         </div>
                     </div>
 
@@ -93,7 +142,6 @@
     </div>
 
     <script>
-        // Script de búsqueda rápida
         document.getElementById('assetSearch').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const options = document.querySelectorAll('.asset-option');

@@ -94,6 +94,10 @@ public function maintenances()
     return $this->hasMany(TechnicalService::class, 'asset_id'); 
 }
 
+public function maintenanceSchedules()
+{
+    return $this->hasMany(MaintenanceSchedule::class);
+}
 
 
 }
