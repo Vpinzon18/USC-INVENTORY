@@ -11,7 +11,9 @@ class TechnicalService extends Model
     'user_id',
     'performed_at', // Este es el que acabamos de crear con la migración
     'type',
-    'description'
+    'description',
+    'maintenance_schedule_id'
+    
 ];
 
     // Para saber a qué equipo pertenece este mantenimiento
@@ -31,4 +33,8 @@ class TechnicalService extends Model
         // se conecta con la tabla de Usuarios.
         return $this->belongsTo(User::class);
     }
+    public function maintenanceSchedule()
+{
+    return $this->belongsTo(MaintenanceSchedule::class);
+}
 }

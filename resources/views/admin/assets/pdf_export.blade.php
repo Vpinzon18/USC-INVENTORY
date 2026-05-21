@@ -6,27 +6,23 @@
         @page { size: letter; margin: 0; }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
         
-        body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 40px; text-transform: uppercase; color: #000; }
+        body { font-family: Arial, sans-serif; font-size: 9px; margin: 0; padding: 40px; text-transform: uppercase; color: #000; }
 
         .page-break { page-break-after: always; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; table-layout: fixed; }
-        th, td { border: 1px solid #000; padding: 5px; text-align: center; vertical-align: middle; word-wrap: break-word; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle; word-wrap: break-word; overflow: hidden; }
 
         .bg-usc { background-color: #d9e1f2 !important; font-weight: bold; }
         .bg-gray { background-color: #f2f2f2 !important; font-weight: bold; }
         .text-blue { color: #002060; font-weight: bold; }
         .text-left { text-align: left !important; padding-left: 8px; }
-/* Bloqueo total de tabla */
-.table-fixed {
-    table-layout: fixed !important;
-    width: 100% !important;
-    border-collapse: collapse;
-}
-
-/* Definimos clases para los anchos exactos */
-.col-fecha-item { width: 35px !important; } /* 35px * 3 = 105px total */
-.col-tecnico { width: 150px !important; }
-/* La descripción no necesita ancho, tomará el resto automáticamente */
+        
+        /* Clase para datos técnicos largos */
+        .text-break { word-wrap: break-word; word-break: break-all; font-size: 8px !important; }
+        
+        .table-fixed { table-layout: fixed !important; width: 100% !important; border-collapse: collapse; }
+        .col-fecha-item { width: 35px !important; }
+        .col-tecnico { width: 150px !important; }
     </style>
 </head>
 <body>
@@ -94,76 +90,25 @@
             <tr><td class="text-left bg-gray">BOARD</td><td>{{ $asset->board ?? 'N/A' }}</td><td>N/A</td></tr>
         </table>
 
+        <table>
+            <tr class="bg-usc"><td colspan="4">DETALLES TÉCNICOS ADICIONALES</td></tr>
+            <tr class="bg-gray">
+                <td>MAC ADDRESS</td><td>TARJETA INALÁMBRICA</td><td>TARJETA GRÁFICA</td><td>SISTEMA OPERATIVO</td>
+            </tr>
+            <tr>
+                <td class="text-break">{{ $asset->mac_address ?? 'N/A' }}</td>
+                <td class="text-break">{{ $asset->wifi_card ?? 'N/A' }}</td>
+                <td class="text-break">{{ $asset->graphics_card ?? 'N/A' }}</td>
+                <td class="text-break">{{ $asset->os_version ?? 'N/A' }}</td>
+            </tr>
+            <tr class="bg-gray"><td colspan="4">DOMINIO REGISTRADO</td></tr>
+            <tr><td colspan="4" class="text-blue">{{ $asset->domain_name ?? 'N/A' }}</td></tr>
+        </table>
+
         <div style="text-align: right; font-weight: bold; border-top: 1px solid #000; padding-top: 5px;">SOMA - PÁGINA 1 DE 2</div>
     </div>
 
     <div class="container">
-        <table>
-            <tr>
-                <td rowspan="3" style="width: 100px;">@if(file_exists($logo)) <img src="{{ $logo }}" style="width: 60px;"> @endif</td>
-                <td style="font-size: 13px; font-weight: bold;">UNIVERSIDAD SANTIAGO DE CALI</td>
-                <td class="bg-usc" style="width: 100px;">R-GT004</td>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">DEPARTAMENTO DE GESTIÓN TECNOLÓGICA</td>
-                <td class="bg-usc">VERSIÓN. 3</td>
-            </tr>
-            <tr>
-                <td style="font-weight: bold;">HISTORIAL DE MANTENIMIENTOS DE EQUIPO</td>
-                <td class="bg-usc">FECHA</td>
-            </tr>
-        </table>
-
-        <table>
-            <tr class="bg-gray"><td>ACTIVO DEL EQUIPO</td><td>SERIAL DEL EQUIPO</td></tr>
-            <tr class="text-blue" style="font-size: 11px;">
-                <td>{{ $asset->internal_code }}</td>
-                <td>{{ $asset->serial_number }}</td>
-            </tr>
-        </table>
-
-        <table class="table-fixed">
-    <colgroup>
-        <col class="col-fecha-item"> <col class="col-fecha-item"> <col class="col-fecha-item"> <col>                        <col class="col-tecnico">    </colgroup>
-
-    <thead>
-        <tr class="bg-usc">
-            <th colspan="5">REGISTRO DE DIAGNOSTICOS, CAMBIOS O INGRESOS A TALLER</th>
-        </tr>
-        <tr class="bg-gray">
-            <th colspan="3">FECHA (DD/MM/AA)</th>
-            <th>DESCRIPCIÓN</th>
-            <th>NOMBRE DEL TÉCNICO</th>
-        </tr>
-        <tr class="bg-gray">
-            <th>DD</th>
-            <th>MM</th>
-            <th>AA</th>
-            <th style="border-top: none;"></th>
-            <th style="border-top: none;"></th>
-        </tr>
-    </thead>
-    <tbody>
-        @php $max = 20; $count = 0; @endphp
-        @foreach($asset->technicalServices as $service)
-            @php $count++; @endphp
-            <tr>
-                <td>{{ \Carbon\Carbon::parse($service->performed_at)->format('d') }}</td>
-                <td>{{ \Carbon\Carbon::parse($service->performed_at)->format('m') }}</td>
-                <td>{{ \Carbon\Carbon::parse($service->performed_at)->format('y') }}</td>
-                <td class="text-left">{{ $service->description }}</td>
-                <td class="text-blue">{{ $service->user->name ?? 'N/A' }}</td>
-            </tr>
-        @endforeach
-
-        @for ($i = $count; $i < $max; $i++)
-            <tr>
-                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-                <td>&nbsp;</td><td>&nbsp;</td>
-            </tr>
-        @endfor
-    </tbody>
-</table>
         <div style="text-align: right; font-weight: bold; border-top: 1px solid #000; padding-top: 5px;">SOMA - PÁGINA 2 DE 2</div>
     </div>
 

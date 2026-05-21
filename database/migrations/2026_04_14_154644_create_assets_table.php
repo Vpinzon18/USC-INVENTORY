@@ -19,6 +19,8 @@ return new class extends Migration
         $table->foreignId('sede_id')->nullable(); 
         $table->timestamp('last_seen_at')->nullable();
         $table->timestamps(); 
+        $table->string('internal_code')->nullable(); // Agrégalo aquí
+        
     });
 }
 

@@ -22,6 +22,11 @@ public function index(Request $request)
     // Capturamos el límite dinámico (por defecto 10 para la bitácora)
     $perPage = $request->input('per_page', 10);
 
+    // CANDADO DE SEGURIDAD: Validamos que solo acepte límites autorizados para el paginado
+    if (!in_array($perPage, [5, 10, 15, 25, 50])) {
+        $perPage = 10;
+    }
+
     $query = TechnicalService::with(['asset.room.building', 'technician']);
 
     // 2. Aplicamos el Buscador Unificado
@@ -54,7 +59,6 @@ public function index(Request $request)
     // 5. Retornamos la vista con todos los datos necesarios para mantener los inputs llenos
     return view('admin.maintenances.index', compact('services', 'search', 'fromDate', 'toDate', 'perPage'));
 }
-
     /**
      * Vista para que el técnico cree un nuevo registro.
      */
@@ -78,48 +82,43 @@ public function index(Request $request)
     /**
      * Almacena la intervención técnica en la base de datos.
      */
-    public function store(Request $request)
+public function store(Request $request)
 {
-    $finalType = ($request->type_selector === 'Otro') 
-                 ? $request->custom_type 
-                 : $request->type_selector;
-
+    // 1. Validaciones
+    // Cambié 'type_selector' por 'type' para que coincida con tu <select name="type">
     $request->validate([
-        'asset_id'       => 'required|exists:assets,id',
-        'performed_at'   => 'required|date',
-        'description'    => 'required|string|min:3', 
-        'security_guaya' => 'nullable|string|max:255',
+        'asset_id'      => 'required|exists:assets,id',
+        'performed_at'  => 'required|date',
+        'description'   => 'required|string|min:3',
+        'type'          => 'required', 
     ]);
 
-    // 1. Guardamos el registro histórico unificado en la bitácora
+    // 2. Determinar el valor final de 'type'
+    // Como en tu formulario el select tiene name="type", usamos $request->type
+    $finalType = ($request->type === 'Otro') 
+                 ? $request->custom_type 
+                 : $request->type;
+
+    // 3. Crear el registro técnico
+    // Asegúrate de incluir 'security_guaya' si también quieres guardarla
     \App\Models\TechnicalService::create([
-        'asset_id'     => $request->asset_id,
-        'user_id'      => Auth::user()->id,
-        'performed_at' => $request->performed_at,
-        'type'         => $finalType,
-        'description'  => $request->description,
+        'asset_id'                => $request->asset_id,
+        'user_id'                 => Auth::user()->id, // Más seguro que Auth::user()->id
+        'performed_at'            => $request->performed_at,
+        'type'                    => $finalType,
+        'description'             => $request->description,
+        'security_guaya'          => $request->security_guaya, // Agregado por si instalaste guaya
+        'maintenance_schedule_id' => $request->input('maintenance_schedule_id'),
     ]);
 
-    // 2. Si se reportó un reemplazo de guaya, actualizamos el activo
-    if ($request->filled('security_guaya')) {
-        $asset = \App\Models\Asset::findOrFail($request->asset_id);
-        $asset->update([
-            'security_guaya' => $request->security_guaya
-        ]);
-    }
-
-    // 3. ¡CONEXIÓN AUTOMÁTICA CON EL CRONOGRAMA!
-    // Si la intervención fue un Mantenimiento Preventivo, cerramos la tarea pendiente
-    if (strtoupper($finalType) === 'PREVENTIVO') {
-        \App\Models\MaintenanceSchedule::where('asset_id', $request->asset_id)
-            ->where('status', 'PENDIENTE')
-            ->orderBy('scheduled_date', 'asc') // Tomamos el más antiguo programado
-            ->first()
-            ?->update(['status' => 'REALIZADO']); // Cerramos el compromiso semestral
+    // 4. Actualización del cronograma
+    if (strtoupper($finalType) === 'PREVENTIVO' && $request->filled('maintenance_schedule_id')) {
+        \App\Models\MaintenanceSchedule::where('id', $request->maintenance_schedule_id)
+            ->update(['status' => 'REALIZADO']);
     }
 
     return redirect()->route('maintenances.index')
-        ->with('success', 'Mantenimiento preventivo registrado y cronograma actualizado con éxito.');
+        ->with('success', 'Registro guardado correctamente.');
 }
 
 public function edit(int $id)

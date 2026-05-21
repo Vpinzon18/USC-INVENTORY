@@ -81,4 +81,10 @@ Route::post('/schedules', [MaintenanceScheduleController::class, 'store'])->name
 // Rutas para editar programaciones del cronograma
 Route::get('/schedules/{schedule}/edit', [MaintenanceScheduleController::class, 'edit'])->name('schedules.edit');
 Route::put('/schedules/{schedule}', [MaintenanceScheduleController::class, 'update'])->name('schedules.update');
+
+Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'searchAssets'])
+    ->name('schedules.search-assets');
+
+    Route::get('/schedules/export', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'export'])
+    ->name('schedules.export'); // <-- Este es el nombre que Laravel busca
 require __DIR__.'/auth.php';

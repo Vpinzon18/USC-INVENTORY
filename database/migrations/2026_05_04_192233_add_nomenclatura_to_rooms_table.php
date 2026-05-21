@@ -8,18 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('assets', function (Blueprint $table) {
-            // Agregamos la columna 'internal_code' después de 'serial_number'
-            // La ponemos como nullable por si ya tienes equipos registrados sin placa
-            $table->string('internal_code')->nullable()->unique()->after('serial_number');
+        Schema::table('rooms', function (Blueprint $table) {
+            // Aquí pones la columna que va en ROOMS, no en ASSETS
+            $table->string('nomenclatura')->nullable();
         });
     }
 
     public function down(): void
     {
-        Schema::table('assets', function (Blueprint $table) {
-            // Esto permite revertir el cambio si algo sale mal
-            $table->dropColumn('internal_code');
+        Schema::table('rooms', function (Blueprint $table) {
+            $table->dropColumn('nomenclatura');
         });
     }
 };

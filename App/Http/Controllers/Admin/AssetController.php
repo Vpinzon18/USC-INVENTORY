@@ -94,6 +94,11 @@ public function update(Request $request, Asset $asset)
         'keyboard_serial' => 'nullable|string',
         'mouse_serial'    => 'nullable|string',
         'security_guaya'  => 'nullable|string',
+        'mac_address'     => 'nullable|string',
+        'wifi_card'       => 'nullable|string',
+        'graphics_card'   => 'nullable|string',
+        'os_version'      => 'nullable|string',
+        'domain_name'     => 'nullable|string',
     ]);
 
     // Esto guarda todos los campos validados en la DB
