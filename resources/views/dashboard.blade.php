@@ -12,15 +12,16 @@
                     <h3 class="mb-4 font-bold text-lg">Equipos en Inventario (Total: {{ $assets->count() }})</h3>
                     
                     <div class="overflow-x-auto">
-                        <table class="min-w-full table-auto border-collapse border border-gray-200">
+                        <table class="min-w-full table-auto border-collapse border border-gray-200 text-xs">
                             <thead class="bg-gray-100">
                                 <tr>
                                     <th class="border p-2">Hostname</th>
                                     <th class="border p-2">IP</th>
                                     <th class="border p-2">Serial</th>
-                                    <th class="border p-2">CPU</th>
-                                    <th class="border p-2">RAM</th>
-                                    <th class="border p-2">Disco</th>
+                                    <th class="border p-2">Hardware (CPU/RAM/HDD)</th>
+                                    <th class="border p-2">Red (MAC/Dominio)</th>
+                                    <th class="border p-2">S.O.</th>
+                                    <th class="border p-2">Software Instalado</th>
                                     <th class="border p-2">Estado</th>
                                 </tr>
                             </thead>
@@ -30,11 +31,29 @@
                                     <td class="border p-2 font-bold">{{ $asset->hostname }}</td>
                                     <td class="border p-2">{{ $asset->ip_address }}</td>
                                     <td class="border p-2">{{ $asset->serial_number }}</td>
-                                    <td class="border p-2 text-xs">{{ $asset->cpu }}</td>
-                                    <td class="border p-2">{{ $asset->ram }}</td>
-                                    <td class="border p-2">{{ $asset->storage }}</td>
                                     <td class="border p-2">
-                                        @if(\Carbon\Carbon::parse($asset->last_seen_at)->diffInMinutes() < 10)
+                                        {{ $asset->cpu }} / {{ $asset->ram }} / {{ $asset->storage }}
+                                    </td>
+                                    <td class="border p-2">
+                                        {{ $asset->mac_address ?? 'N/A' }} <br>
+                                        <span class="text-blue-600 font-semibold">{{ $asset->domain_name ?? 'N/A' }}</span>
+                                    </td>
+                                    <td class="border p-2 italic">{{ $asset->os_version ?? 'N/A' }}</td>
+                                    
+                                    <td class="border p-2 text-left">
+                                        <div class="max-h-24 overflow-y-auto">
+                                            @forelse($asset->software as $app)
+                                                <span class="block text-[10px] text-gray-600 truncate" title="{{ $app->name }} (v{{ $app->version }})">
+                                                    • {{ $app->name }}
+                                                </span>
+                                            @empty
+                                                <span class="text-gray-400 italic">Sin datos</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
+
+                                    <td class="border p-2">
+                                        @if($asset->last_seen_at && \Carbon\Carbon::parse($asset->last_seen_at)->diffInMinutes() < 10)
                                             <span class="text-green-600 font-bold">● En línea</span>
                                         @else
                                             <span class="text-gray-400">Desconectado</span>

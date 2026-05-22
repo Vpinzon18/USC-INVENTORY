@@ -29,6 +29,8 @@ Route::get('/', function () {
 // Esto soluciona el error "MethodNotAllowedHttpException" al presionar el botón
 Route::post('/', [AuthenticatedSessionController::class, 'store'])->name('login.post');
 
+
+
 // 3. EL SELECTOR DE MÓDULOS (Tu página welcome)
 Route::get('/seleccion', function () {
     return view('welcome');

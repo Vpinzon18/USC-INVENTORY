@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\Log;
 
 class AssetController extends Controller
 {
@@ -78,17 +79,17 @@ class AssetController extends Controller
 
 public function update(Request $request, Asset $asset)
 {
-    
+    // 1. Validamos los datos
     $validated = $request->validate([
-        'room_id'       => 'required|exists:rooms,id',
-        'serial_number' => 'required|unique:assets,serial_number,' . $asset->id,
-        'internal_code' => 'nullable|unique:assets,internal_code,' . $asset->id,
-        'custodian_id' => 'nullable|exists:custodians,id', // <--- REVISA ESTO
-        'hostname'      => 'nullable|string',
-        'ip_address'    => 'nullable|ip',
-        'cpu'           => 'nullable|string',
-        'ram'           => 'nullable|string',
-        'storage'       => 'nullable|string',
+        'room_id'         => 'required|exists:rooms,id',
+        'serial_number'   => 'required|unique:assets,serial_number,' . $asset->id,
+        'internal_code'   => 'nullable|unique:assets,internal_code,' . $asset->id,
+        'custodian_id'    => 'nullable|exists:custodians,id',
+        'hostname'        => 'nullable|string',
+        'ip_address'      => 'nullable|ip',
+        'cpu'             => 'nullable|string',
+        'ram'             => 'nullable|string',
+        'storage'         => 'nullable|string',
         'monitor_asset'   => 'nullable|string',
         'monitor_serial'  => 'nullable|string',
         'keyboard_serial' => 'nullable|string',
@@ -101,32 +102,16 @@ public function update(Request $request, Asset $asset)
         'domain_name'     => 'nullable|string',
     ]);
 
-    // Esto guarda todos los campos validados en la DB
+    // 2. FORZAR LA ACTUALIZACIÓN
+    // Si $validated no contiene los campos nuevos (porque el formulario no los envía),
+    // el update no hará nada.
     $asset->update($validated);
 
     return redirect()->route('assets.index')->with('success', 'Hoja de Vida actualizada correctamente.');
 }
 /**
  * Muestra la Hoja de Vida detallada de un equipo específico.
- */
-public function show(Asset $asset)
-{
-    // Usamos "load" para traer las relaciones y evitar múltiples consultas a la BD (Eager Loading)
-    $asset->load([
-        'room.building.campus',      // Ubicación completa (Sede > Bloque > Salón)
-        'history' => function($query) {
-            $query->orderBy('created_at', 'desc'); // Historial del más reciente al más antiguo
-        },
-        'history.custodian',         // Quiénes fueron los responsables en el tiempo
-        'history.room'               // Por qué oficinas pasó el equipo
-    ]);
-
-    // Buscamos quién es el responsable activo actualmente
-    // Esto asume que tienes una relación 'currentAssignment' o similar en tu modelo Asset
-    $currentAssignment = $asset->history()->where('status', 'active')->first();
-
-    return view('admin.assets.show', compact('asset', 'currentAssignment'));
-}
+*/
 
 public function previewPdf(Asset $asset)
 {

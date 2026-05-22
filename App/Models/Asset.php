@@ -12,26 +12,27 @@ class Asset extends Model
 {
     protected $table = 'assets';
 
-    protected $fillable = [
-    'room_id',
-    'custodian_id',
+   protected $fillable = [
     'serial_number',
-    'internal_code',
     'hostname',
     'ip_address',
     'cpu',
     'ram',
     'storage',
-    'monitor_asset',   // Indispensable para R-GT004
-    'monitor_serial',  // Indispensable para R-GT004
-    'keyboard_serial', // Indispensable para R-GT004
-    'mouse_serial',    // Indispensable para R-GT004
-    'security_guaya', 
+    'room_id',
+    'custodian_id',
+    'internal_code',
+    'monitor_asset',
+    'monitor_serial',
+    'keyboard_serial',
+    'mouse_serial',
+    'security_guaya',
     'mac_address',
     'wifi_card',
     'graphics_card',
     'os_version',
-    'domain_name', // Indispensable para R-GT004
+    'domain_name',
+    'last_seen_at'
 ];
 
     /**
@@ -105,4 +106,8 @@ public function maintenanceSchedules()
 }
 
 
+public function software() 
+{
+    return $this->hasMany(\App\Models\Software::class);
+}
 }
