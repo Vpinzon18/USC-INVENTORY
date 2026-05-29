@@ -13,27 +13,29 @@ class Asset extends Model
     protected $table = 'assets';
 
    protected $fillable = [
-    'serial_number',
-    'hostname',
-    'ip_address',
-    'cpu',
-    'ram',
-    'storage',
-    'room_id',
-    'custodian_id',
-    'internal_code',
-    'monitor_asset',
-    'monitor_serial',
-    'keyboard_serial',
-    'mouse_serial',
-    'security_guaya',
-    'mac_address',
-    'wifi_card',
-    'graphics_card',
-    'os_version',
-    'domain_name',
+    // Identificación
+    'hostname', 'serial_number', 'internal_code', 'mac_address', 'ip_address',
+    
+    // Relaciones
+    'sede_id', 'room_id', 'custodian_id',
+    
+    // Hardware Desglosado (Los que quieres usar de aquí en adelante)
+    'cpu_brand', 'cpu_model',
+    'storage_brand', 'storage_model',
+    'gpu_brand', 'gpu_model',
+    'wifi_brand', 'wifi_model',
+    'board_brand', 'board_model', // Asegúrate de tener estas creadas en BD
+    
+    // Otros
+    'ram','ram_brand', 'ram_model', 'ram_capacity_gb', 'os_version', 'domain_name', 'security_guaya',
+    'monitor_asset', 'monitor_serial', 'keyboard_serial', 'mouse_serial',
     'last_seen_at'
 ];
+// En tu modelo Asset.php
+public function getCpuAttribute()
+{
+    return "{$this->cpu_brand} {$this->cpu_model}";
+}
 
     /**
      * Relación directa con el salón actual (Ubicación física)

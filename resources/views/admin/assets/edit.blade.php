@@ -40,62 +40,76 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         
-                        <!-- SECCIÓN 1: IDENTIFICACIÓN (DATOS EN GRIS) -->
-                        <div class="space-y-6">
-                            <h3 class="text-xs font-black uppercase text-blue-600 tracking-widest border-b pb-2">Identificación del Activo</h3>
-                            
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Número de Serial (Torre)</label>
-                                <!-- Campo visible bloqueado -->
-                                <input type="text" value="{{ $asset->serial_number }}" 
-                                       class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed font-medium" readonly>
-                                <!-- Campo oculto que envía el valor real para pasar la validación 'required' -->
-                                <input type="hidden" name="serial_number" value="{{ $asset->serial_number }}">
-                            </div>
+                        <div class="space-y-6 mt-6">
+    <h3 class="text-xs font-black uppercase text-blue-600 tracking-widest border-b pb-2">Especificaciones Técnicas Detalladas</h3>
 
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Placa de Inventario (USC)</label>
-                                <input type="text" name="internal_code" value="{{ old('internal_code', $asset->internal_code) }}" 
-                                       class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed font-medium" readonly>
-                            </div>
+    <div class="max-w-7xl mx-auto p-4">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Hostname</label>
-                                    <input type="text" value="{{ $asset->hostname }}" 
-                                           class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed font-medium" readonly>
-                                    <input type="hidden" name="hostname" value="{{ $asset->hostname }}">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Dirección IP</label>
-                                    <input type="text" name="ip_address" value="{{ old('ip_address', $asset->ip_address) }}" 
-                                           class="w-full rounded-xl border-gray-300 focus:ring-blue-200 focus:border-blue-500 shadow-sm font-mono text-xs transition-all">
-                                </div>
-                            </div>
-                        </div>
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-xs font-black uppercase text-blue-600 mb-4 border-b pb-2">Identificación del Activo</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Serial (Torre)</label>
+                        <input type="text" value="{{ $asset->serial_number }}" class="w-full rounded-xl bg-gray-50 border-gray-200 text-gray-500 font-mono text-sm" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Placa Inventario (USC)</label>
+                        <input type="text" name="internal_code" value="{{ old('internal_code', $asset->internal_code) }}" class="w-full rounded-xl border-gray-300 font-medium text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Hostname</label>
+                        <input type="text" value="{{ $asset->hostname }}" class="w-full rounded-xl bg-gray-50 border-gray-200 text-gray-500 font-mono text-sm" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Dirección IP</label>
+                        <input type="text" name="ip_address" value="{{ old('ip_address', $asset->ip_address) }}" class="w-full rounded-xl border-gray-300 font-mono text-sm">
+                    </div>
+                </div>
+            </div>
 
-                        <!-- SECCIÓN 2: HARDWARE INTERNO (DATOS EN GRIS) -->
-                        <div class="space-y-6">
-                            <h3 class="text-xs font-black uppercase text-blue-600 tracking-widest border-b pb-2">Hardware Interno (Automático)</h3>
-                            
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Procesador</label>
-                                    <input type="text" value="{{ $asset->cpu }}" 
-                                           class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed font-medium" readonly>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Memoria RAM</label>
-                                    <input type="text" value="{{ $asset->ram }}" 
-                                           class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed font-medium" readonly>
-                                </div>
-                            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 class="text-xs font-black uppercase text-blue-600 mb-4 border-b pb-2">Software y Conectividad</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Sistema Operativo</label>
+                        <input type="text" value="{{ $asset->os_version ?? 'N/A' }}" class="w-full rounded-xl bg-gray-50 border-gray-200 text-gray-500 text-sm" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase">Tarjeta Inalámbrica</label>
+                        <input type="text" value="{{ ($asset->wifi_brand ?? 'N/A') . ' ' . ($asset->wifi_model ?? '') }}" class="w-full rounded-xl bg-gray-50 border-gray-200 text-gray-500 text-sm" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Almacenamiento (Disco)</label>
-                                <input type="text" value="{{ $asset->storage }}" 
-                                       class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed font-medium" readonly>
-                            </div>
+        <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            <h3 class="text-xs font-black uppercase text-blue-600 mb-4 border-b pb-2">Componentes Hardware</h3>
+            
+            <div class="space-y-3">
+                @php
+                    $hardware = [
+                        'Procesador' => $asset->cpu,
+                        'Memoria RAM' => $asset->ram,
+                        'Board' => ($asset->board_brand ?? 'N/A') . ' ' . ($asset->board_model ?? ''),
+                        'Disco Duro' => ($asset->storage_brand ?? 'N/A') . ' ' . ($asset->storage_model ?? ''),
+                        'Gráfica' => ($asset->gpu_brand ?? 'N/A') . ' ' . ($asset->gpu_model ?? '')
+                    ];
+                @endphp
+                @foreach($hardware as $label => $value)
+                    <div>
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase">{{ $label }}</label>
+                        <div class="text-[11px] font-medium text-gray-700 bg-gray-50 p-2 rounded-lg border">{{ $value }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+    </div>
+</div>
                             
                             <!-- El campo de MAC ADDRESS ha sido eliminado de esta sección -->
                         </div>

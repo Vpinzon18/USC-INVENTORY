@@ -82,35 +82,136 @@
         </table>
 
         <table>
-            <tr class="bg-usc"><td colspan="3">CARACTERÍSTICAS DEL EQUIPO DE CÓMPUTO</td></tr>
-            <tr class="bg-gray"><td>HARDWARE</td><td>DESCRIPCIÓN</td><td>MARCA</td></tr>
-            <tr><td class="text-left bg-gray">PROCESADOR</td><td>{{ $asset->cpu ?? 'N/A' }}</td><td>INTEL/AMD</td></tr>
-            <tr><td class="text-left bg-gray">RAM</td><td>{{ $asset->ram ?? 'N/A' }}</td><td>N/A</td></tr>
-            <tr><td class="text-left bg-gray">DISCO DURO</td><td>{{ $asset->storage ?? 'N/A' }}</td><td>N/A</td></tr>
-            <tr><td class="text-left bg-gray">BOARD</td><td>{{ $asset->board ?? 'N/A' }}</td><td>N/A</td></tr>
+            <tr class="bg-header"><td colspan="3">CARACTERISTICAS DEL EQUIPO DE COMPUTO</td></tr>
+            <tr class="bg-sub"><td>HARDWARE</td><td>DESCRIPCIÓN</td><td>MARCA</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">BOARD</td><td>{{ $asset->board_model ?? 'N/A' }}</td><td>{{ $asset->board_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">PROCESADOR</td><td>{{ $asset->cpu_model ?? 'N/A' }}</td><td>{{ $asset->cpu_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">RAM</td><td>{{ $asset->ram ?? 'N/A' }}</td><td>{{ $asset->ram_brand}}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">DISCO DURO</td><td>{{ $asset->storage_model ?? 'N/A' }}</td><td>{{ $asset->storage_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">TARJETA INALAMBRICA</td><td>{{ $asset->wifi_model ?? 'N/A' }}</td><td>{{ $asset->wifi_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">TARJETA GRAFICA</td><td>{{ $asset->gpu_model ?? 'N/A' }}</td><td>{{ $asset->gpu_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">GUAYA DE SEGURIDAD</td><td>{{ $asset->security_guaya ?? 'N/A' }}</td><td></td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">OTROS</td><td>{{ $asset->os_version ?? 'N/A' }}</td><td>MICROSOFT</td></tr>
         </table>
 
         <table>
-            <tr class="bg-usc"><td colspan="4">DETALLES TÉCNICOS ADICIONALES</td></tr>
-            <tr class="bg-gray">
-                <td>MAC ADDRESS</td><td>TARJETA INALÁMBRICA</td><td>TARJETA GRÁFICA</td><td>SISTEMA OPERATIVO</td>
+    <tr class="bg-header">
+        <td colspan="6" style="font-weight: bold; font-size: 8.5px; letter-spacing: 0.5px;">
+            SOFTWARE DEL EQUIPO
+        </td>
+    </tr>
+    
+    <tr class="bg-sub" style="font-size: 7.5px;">
+        <td style="width: 40%; font-weight: bold;">SOFTWARE</td>
+        <td style="width: 5%; font-weight: bold;">SI</td>
+        <td style="width: 5%; font-weight: bold;">NO</td>
+        <td style="width: 40%; font-weight: bold;">SOFTWARE</td>
+        <td style="width: 5%; font-weight: bold;">SI</td>
+        <td style="width: 5%; font-weight: bold;">NO</td>
+    </tr>
+    
+    @php
+        // Tomamos máximo 30 aplicaciones y las dividimos en parejas (15 a la izquierda, 15 a la derecha)
+        $softwarePairs = ($asset->software) ? $asset->software->take(30)->chunk(2) : collect([]);
+        $totalRows = 15; // Límite exacto de 15 filas hacia abajo
+        $filledRows = count($softwarePairs);
+    @endphp
+
+    @foreach($softwarePairs as $pair)
+        @php
+            $left = $pair->first();
+            $right = $pair->count() > 1 ? $pair->last() : null;
+        @endphp
+        <tr style="height: 18px;">
+            <td class="text-left" style="font-size: 7.5px; padding-left: 6px !important;">
+                {{ $left->name }} 
+                @if($left->version && $left->version !== 'N/A') 
+                    <span style="color: #555; font-size: 7px;">({{ $left->version }})</span>
+                @endif
+            </td>
+            <td style="font-weight: bold; color: green; font-size: 9px;">X</td>
+            <td>&nbsp;</td>
+            
+            <td class="text-left" style="font-size: 7.5px; padding-left: 6px !important;">
+                @if($right)
+                    {{ $right->name }} 
+                    @if($right->version && $right->version !== 'N/A') 
+                        <span style="color: #555; font-size: 7px;">({{ $right->version }})</span>
+                    @endif
+                @else
+                    &nbsp;
+                @endif
+            </td>
+            <td style="font-weight: bold; color: green; font-size: 9px;">{!! $right ? 'X' : '&nbsp;' !!}</td>
+            <td>&nbsp;</td>
+        </tr>
+    @endforeach
+
+    @for ($i = $filledRows; $i < $totalRows; $i++)
+        <tr style="height: 18px;">
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+    @endfor
+</table>
+
+<div>
+    <table>
+            <tr>
+                <td rowspan="3" style="width: 100px;">@if(file_exists($logo)) <img src="{{ $logo }}" style="width: 60px;"> @endif</td>
+                <td style="font-size: 13px; font-weight: bold;">UNIVERSIDAD SANTIAGO DE CALI</td>
+                <td class="bg-usc" style="width: 100px;">R-GT004</td>
             </tr>
             <tr>
-                <td class="text-break">{{ $asset->mac_address ?? 'N/A' }}</td>
-                <td class="text-break">{{ $asset->wifi_card ?? 'N/A' }}</td>
-                <td class="text-break">{{ $asset->graphics_card ?? 'N/A' }}</td>
-                <td class="text-break">{{ $asset->os_version ?? 'N/A' }}</td>
+                <td style="font-weight: bold;">DEPARTAMENTO DE GESTIÓN TECNOLÓGICA</td>
+                <td class="bg-usc">VERSIÓN. 3</td>
             </tr>
-            <tr class="bg-gray"><td colspan="4">DOMINIO REGISTRADO</td></tr>
-            <tr><td colspan="4" class="text-blue">{{ $asset->domain_name ?? 'N/A' }}</td></tr>
+            <tr>
+                <td style="font-weight: bold;">SOPORTE TECNICO - HOJA DE VIDA DE EQUIPOS</td>
+                <td class="bg-usc">11 SEP 2019</td>
+            </tr>
         </table>
 
-        <div style="text-align: right; font-weight: bold; border-top: 1px solid #000; padding-top: 5px;">SOMA - PÁGINA 1 DE 2</div>
+       <table>
+    <colgroup>
+        <col style="width: 5%;"> <col style="width: 5%;"> <col style="width: 5%;"> <col style="width: 60%;"> <col style="width: 25%;"> </colgroup>
+    
+    <tr class="bg-header"><td colspan="5">REGISTRO DE DIAGNOSTICOS Y MODIFICACIONES</td></tr>
+    <tr>
+        <td colspan="3" class="bg-sub">FECHA</td>
+        <td rowspan="2" class="bg-sub">DESCRIPCIÓN</td>
+        <td rowspan="2" class="bg-sub">TÉCNICO</td>
+    </tr>
+    <tr class="bg-sub"><td>DD</td><td>MM</td><td>AA</td></tr>
+    
+    @php 
+        $services = $asset->technicalServices ?? collect([]); 
+        $maxRows = 25; 
+    @endphp
+    
+    @foreach($services as $m)
+        <tr>
+            <td>{{ \Carbon\Carbon::parse($m->performed_at)->format('d') }}</td>
+            <td>{{ \Carbon\Carbon::parse($m->performed_at)->format('m') }}</td>
+            <td>{{ \Carbon\Carbon::parse($m->performed_at)->format('y') }}</td>
+            <td class="text-left" style="font-size: 8px;">{{ $m->description }}</td>
+            <td style="font-size: 8px;">{{ $m->user->name ?? 'N/A' }}</td>
+        </tr>
+    @endforeach
+    
+    @for ($i = count($services); $i < $maxRows; $i++)
+        <tr style="height: 20px;"><td></td><td></td><td></td><td></td><td></td></tr>
+    @endfor
+</table>
+        
+        <div style="margin-top: 10px; text-align: right; font-size: 9px; font-weight: bold;">
+            SOMA - SISTEMA DE GESTIÓN TECNOLÓGICA USC | PÁGINA 2 DE 2
+        </div>
     </div>
-
-    <div class="container">
-        <div style="text-align: right; font-weight: bold; border-top: 1px solid #000; padding-top: 5px;">SOMA - PÁGINA 2 DE 2</div>
-    </div>
-
+        
 </body>
 </html>

@@ -10,44 +10,56 @@ use Illuminate\Support\Facades\Log;
 
 class AssetApiController extends Controller
 {
-    public function report(Request $request) 
-    {
-        // 1. Capturamos los datos crudos del agente
+   public function report(Request $request) 
+{
+    try {
         $data = $request->json()->all();
+        
+        $mac = $data['mac_address'] ?? 'N/A';
+        $asset = Asset::firstOrNew(['mac_address' => $mac]);
+        
+        // 1. Datos básicos
+        $asset->serial_number = $data['serial_number'] ?? 'N/A';
+        $asset->hostname      = $data['hostname'] ?? null;
+        $asset->ram           = $data['ram'] ?? null;
+        $asset->os_version    = $data['os_version'] ?? null;
+        $asset->domain_name   = $data['domain_name'] ?? null;
+        $asset->last_seen_at  = now();
+        $asset->ip_address    = $request->ip();
+        
+        // 2. Hardware Desglosado (Mapeo de objetos HardwareInfo)
+        // CPU
+        $asset->cpu_brand     = $data['cpu']['brand'] ?? null;
+        $asset->cpu_model     = $data['cpu']['name'] ?? null;
+        
+        // Almacenamiento (Como ya tienes columnas marca/modelo, úsalas)
+        $asset->storage_brand = $data['storage']['brand'] ?? null;
+        $asset->storage_model = $data['storage']['name'] ?? null;
+        
+        // Motherboard
+        $asset->board_brand   = $data['motherboard']['brand'] ?? null;
+        $asset->board_model   = $data['motherboard']['name'] ?? null;
+        
+        // Gráficos
+        $asset->gpu_brand     = $data['graphics_card']['brand'] ?? null;
+        $asset->gpu_model     = $data['graphics_card']['name'] ?? null;
+        
+        // Wi-Fi
+        $asset->wifi_brand    = $data['wifi_card']['brand'] ?? null;
+        $asset->wifi_model    = $data['wifi_card']['name'] ?? null;
+        
+$asset->ram_brand = $request->input('ram_brand');
+    $asset->ram_model = $request->input('ram_model');
+    $asset->ram_capacity_gb = (int)$request->input('ram_capacity_gb');
 
-        // 2. Guardamos o actualizamos el equipo
-        // Usamos el serial_number como identificador único
-        $asset = Asset::updateOrCreate(
-            ['serial_number' => $data['serial_number'] ?? 'N/A'],
-            [
-                'hostname'      => $data['hostname'] ?? null,
-                'cpu'           => $data['cpu'] ?? null,
-                'ram'           => $data['ram'] ?? null,
-                'storage'       => $data['storage'] ?? null,
-                'mac_address'   => $data['mac_address'] ?? null,
-                'wifi_card'     => $data['wifi_card'] ?? null,
-                'graphics_card' => $data['graphics_card'] ?? null,
-                'os_version'    => $data['os_version'] ?? null,
-                'domain_name'   => $data['domain_name'] ?? null,
-                'last_seen_at'  => now(),
-                'ip_address'    => $request->ip()
-            ]
-        );
+        $asset->save(); 
 
-        // 3. Procesar Software asociado al equipo
-        // Verificamos que el asset se haya creado/recuperado correctamente y que venga software
-        if ($asset && isset($data['installed_software']) && is_array($data['installed_software'])) {
-            
-            // Log para debug (puedes ver esto en storage/logs/laravel.log)
-            Log::info("Actualizando software para Asset ID: {$asset->id}");
-
-            // Borramos los registros anteriores para refrescarlos totalmente
-            // Esto asegura que si desinstalas algo en la PC, se borre de la BD
+        // 3. Procesar Software (Limpieza)
+        if ($asset->id && isset($data['installed_software']) && is_array($data['installed_software'])) {
+            // Borramos solo el software asociado a este asset antes de volver a insertar
             $asset->software()->delete(); 
             
-            // Creamos los nuevos registros de software
             foreach ($data['installed_software'] as $prog) {
-                // Solo insertamos si el nombre es válido
                 if (!empty($prog['name'])) {
                     $asset->software()->create([
                         'name'    => $prog['name'],
@@ -57,9 +69,11 @@ class AssetApiController extends Controller
             }
         }
 
-        return response()->json([
-            'message' => 'Reporte y software guardados correctamente',
-            'asset_id' => $asset->id
-        ], 200);
+        return response()->json(['message' => 'Guardado exitoso', 'id' => $asset->id], 200);
+
+    } catch (\Exception $e) {
+        Log::error('ERROR EN API: ' . $e->getMessage());
+        return response()->json(['error' => 'Error procesando el inventario'], 500);
     }
+}
 }

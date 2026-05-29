@@ -100,34 +100,82 @@
         <table>
             <tr class="bg-header"><td colspan="3">CARACTERISTICAS DEL EQUIPO DE COMPUTO</td></tr>
             <tr class="bg-sub"><td>HARDWARE</td><td>DESCRIPCIÓN</td><td>MARCA</td></tr>
-            <tr><td class="text-left" style="font-weight: bold; width: 30%;">PROCESADOR</td><td>{{ $asset->cpu ?? 'N/A' }}</td><td>INTEL/AMD</td></tr>
-            <tr><td class="text-left" style="font-weight: bold;">RAM</td><td>{{ $asset->ram ?? 'N/A' }}</td><td>N/A</td></tr>
-            <tr><td class="text-left" style="font-weight: bold;">DISCO DURO</td><td>{{ $asset->storage ?? 'N/A' }}</td><td>N/A</td></tr>
-            <tr><td class="text-left" style="font-weight: bold;">BOARD</td><td>{{ $asset->board ?? 'N/A' }}</td><td>N/A</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">BOARD</td><td>{{ $asset->board_model ?? 'N/A' }}</td><td>{{ $asset->board_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">PROCESADOR</td><td>{{ $asset->cpu_model ?? 'N/A' }}</td><td>{{ $asset->cpu_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">RAM</td><td>{{ $asset->ram ?? 'N/A' }}</td><td>{{ $asset->ram_brand}}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">DISCO DURO</td><td>{{ $asset->storage_model ?? 'N/A' }}</td><td>{{ $asset->storage_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold;">TARJETA INALAMBRICA</td><td>{{ $asset->wifi_model ?? 'N/A' }}</td><td>{{ $asset->wifi_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">TARJETA GRAFICA</td><td>{{ $asset->gpu_model ?? 'N/A' }}</td><td>{{ $asset->gpu_brand ?? 'N/A' }}</td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">GUAYA DE SEGURIDAD</td><td>{{ $asset->security_guaya ?? 'N/A' }}</td><td></td></tr>
+            <tr><td class="text-left" style="font-weight: bold; width: 30%;">OTROS</td><td>{{ $asset->os_version ?? 'N/A' }}</td><td>MICROSOFT</td></tr>
         </table>
 
-        <table>
-            <tr class="bg-header"><td colspan="4">DETALLES TÉCNICOS ADICIONALES</td></tr>
-            <tr class="bg-sub"><td>MAC ADDRESS</td><td>WIFI CARD</td><td>GPU</td><td>SISTEMA OPERATIVO</td></tr>
-            <tr>
-                <td>{{ $asset->mac_address ?? 'N/A' }}</td>
-                <td>{{ $asset->wifi_card ?? 'N/A' }}</td>
-                <td>{{ $asset->graphics_card ?? 'N/A' }}</td>
-                <td>{{ $asset->os_version ?? 'N/A' }}</td>
-            </tr>
-            <tr class="bg-sub"><td colspan="4">DOMINIO REGISTRADO</td></tr>
-            <tr><td colspan="4" class="blue-val">{{ $asset->domain_name ?? 'N/A' }}</td></tr>
-        </table>
+        
 
         <table>
-            <tr class="bg-header"><td colspan="6">SOFTWARE DEL EQUIPO</td></tr>
-            <tr class="bg-sub">
-                <td style="width: 30%;">SOFTWARE</td><td style="width: 20%;">INSTALACIÓN</td><td colspan="2">AUTORIZADO</td><td style="width: 30%;">SOFTWARE</td><td style="width: 20%;">INSTALACIÓN</td>
-            </tr>
-            @for ($i = 0; $i < 6; $i++)
-            <tr><td>&nbsp;</td><td>&nbsp;</td><td style="width: 5%;">SI</td><td style="width: 5%;">NO</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-            @endfor
-        </table>
+    <tr class="bg-header">
+        <td colspan="6" style="font-weight: bold; font-size: 8.5px; letter-spacing: 0.5px;">
+            SOFTWARE DEL EQUIPO
+        </td>
+    </tr>
+    
+    <tr class="bg-sub" style="font-size: 7.5px;">
+        <td style="width: 40%; font-weight: bold;">SOFTWARE</td>
+        <td style="width: 5%; font-weight: bold;">SI</td>
+        <td style="width: 5%; font-weight: bold;">NO</td>
+        <td style="width: 40%; font-weight: bold;">SOFTWARE</td>
+        <td style="width: 5%; font-weight: bold;">SI</td>
+        <td style="width: 5%; font-weight: bold;">NO</td>
+    </tr>
+    
+    @php
+        // Tomamos máximo 30 aplicaciones y las dividimos en parejas (15 a la izquierda, 15 a la derecha)
+        $softwarePairs = ($asset->software) ? $asset->software->take(30)->chunk(2) : collect([]);
+        $totalRows = 15; // Límite exacto de 15 filas hacia abajo
+        $filledRows = count($softwarePairs);
+    @endphp
+
+    @foreach($softwarePairs as $pair)
+        @php
+            $left = $pair->first();
+            $right = $pair->count() > 1 ? $pair->last() : null;
+        @endphp
+        <tr style="height: 18px;">
+            <td class="text-left" style="font-size: 7.5px; padding-left: 6px !important;">
+                {{ $left->name }} 
+                @if($left->version && $left->version !== 'N/A') 
+                    <span style="color: #555; font-size: 7px;">({{ $left->version }})</span>
+                @endif
+            </td>
+            <td style="font-weight: bold; color: green; font-size: 9px;">X</td>
+            <td>&nbsp;</td>
+            
+            <td class="text-left" style="font-size: 7.5px; padding-left: 6px !important;">
+                @if($right)
+                    {{ $right->name }} 
+                    @if($right->version && $right->version !== 'N/A') 
+                        <span style="color: #555; font-size: 7px;">({{ $right->version }})</span>
+                    @endif
+                @else
+                    &nbsp;
+                @endif
+            </td>
+            <td style="font-weight: bold; color: green; font-size: 9px;">{!! $right ? 'X' : '&nbsp;' !!}</td>
+            <td>&nbsp;</td>
+        </tr>
+    @endforeach
+
+    @for ($i = $filledRows; $i < $totalRows; $i++)
+        <tr style="height: 18px;">
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+    @endfor
+</table>
 
         <div style="margin-top: auto; text-align: right; font-size: 8px; font-weight: bold;">SOMA - PÁGINA 1 DE 2</div>
     </div>
