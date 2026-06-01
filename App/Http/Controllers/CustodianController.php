@@ -46,6 +46,7 @@ public function store(Request $request)
 {
     $validated = $request->validate([
         'full_name'       => 'required|string|max:255',
+        'cost_center'     => 'required|string|max:50',
         'document_number' => 'required|string|unique:custodians,document_number',
         'dependency'      => 'required|string|max:255',
         'job_title'       => 'required|string|max:255',
@@ -86,13 +87,12 @@ public function update(Request $request, Custodian $custodian)
 {
     $validated = $request->validate([
         'full_name'       => 'required|string|max:255',
+        'cost_center'     => 'required|string|max:50',
         'dependency'      => 'required|string|max:255',
         'job_title'       => 'required|string|max:255',
         'email'           => 'nullable|email|max:255',
         'extension'       => 'nullable|string|max:10',
         'document_number' => 'required|string|unique:custodians,document_number,' . $custodian->id,
-        
-        // Nueva validación para las ubicaciones
         'rooms'           => 'nullable|array',
         'rooms.*'         => 'exists:rooms,id', 
     ]);

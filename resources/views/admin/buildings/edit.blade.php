@@ -1,76 +1,72 @@
 <x-app-layout>
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <!-- Contenedor Principal (Box) -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 
-                <!-- Encabezado -->
-                <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-                    <h2 class="font-bold text-2xl text-gray-800 leading-tight">
-                        Editar Bloque
-                    </h2>
-                    <p class="text-sm text-gray-500 mt-1">Actualice la información del bloque y su sede correspondiente.</p>
+                <div class="p-6 md:p-8 border-b border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div class="p-3 bg-amber-100 text-amber-600 rounded-xl w-fit">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="font-extrabold text-2xl text-slate-800 tracking-tight">Editar Bloque</h2>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">Actualice el nombre o reasigne este bloque a otra sede.</p>
+                    </div>
                 </div>
 
-                <!-- Formulario -->
-                <form action="{{ route('buildings.update', $building) }}" method="POST" class="p-8">
+                <form action="{{ route('buildings.update', $building) }}" method="POST" class="p-6 md:p-8 flex flex-col gap-6">
                     @csrf
                     @method('PUT')
+                    
+                    @if ($errors->any())
+                        <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl shadow-sm">
+                            <div class="flex items-center mb-2">
+                                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <h3 class="text-sm font-bold text-red-800">Se encontraron errores:</h3>
+                            </div>
+                            <ul class="list-disc list-inside text-xs text-red-700 ml-7 space-y-1 font-medium">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
-                    <div class="grid grid-cols-1 gap-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm transition-all hover:shadow-md flex flex-col gap-5">
                         
-                        <!-- Nombre del Bloque -->
                         <div>
-                            <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Nombre del Bloque
+                            <label for="campus_id" class="block text-[10px] font-bold text-slate-800 uppercase mb-2">
+                                Sede a la que pertenece <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="name" id="name" 
-                                   value="{{ old('name', $building->name) }}" 
-                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all"
-                                   required>
-                            @error('name')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+                            <select name="campus_id" id="campus_id" required
+                                    class="w-full bg-slate-50 border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white px-4 py-3 shadow-inner transition-all">
+                                <option value="" disabled>-- Seleccione la Sede --</option>
+                                @foreach($campuses as $campus)
+                                    <option value="{{ $campus->id }}" {{ old('campus_id', $building->campus_id) == $campus->id ? 'selected' : '' }}>
+                                        {{ $campus->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
-                        <!-- Selección de Sede -->
                         <div>
-                            <label for="campus_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Sede Perteneciente
+                            <label for="name" class="block text-[10px] font-bold text-slate-800 uppercase mb-2">
+                                Nombre del Bloque <span class="text-red-500">*</span>
                             </label>
-                            <div class="relative">
-                                <select name="campus_id" id="campus_id" 
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 appearance-none py-2.5 pl-4 pr-10 transition-all"
-                                        required>
-                                    @foreach($campuses as $campus)
-                                        <option value="{{ $campus->id }}" {{ $building->campus_id == $campus->id ? 'selected' : '' }}>
-                                            {{ $campus->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <!-- Icono de flecha personalizado -->
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
-                            </div>
+                            <input id="name" type="text" name="name" value="{{ old('name', $building->name) }}" required 
+                                   class="w-full bg-slate-50 border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 focus:bg-white px-4 py-3 shadow-inner transition-all">
                         </div>
 
                     </div>
 
-                    <!-- Botones de Acción -->
-                    <div class="mt-10 pt-6 border-t border-gray-100 flex items-center justify-end space-x-4">
-                        <a href="{{ route('buildings.index') }}" 
-                           class="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-                            Cancelar y volver
+                    <div class="mt-4 flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+                        <a href="{{ route('buildings.index') }}" class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase hover:text-slate-800 transition-colors">
+                            Cancelar
                         </a>
-                        <button type="submit" 
-                                class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm hover:shadow transition-all transform hover:-translate-y-0.5">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Guardar Cambios
+                        
+                        <button type="submit" class="px-8 py-2.5 bg-indigo-600 text-white text-xs font-bold uppercase rounded-xl shadow-md hover:bg-indigo-700 hover:shadow-lg transition-all focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 active:scale-95 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Actualizar Bloque
                         </button>
                     </div>
                 </form>

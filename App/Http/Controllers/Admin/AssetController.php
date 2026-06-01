@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\Room;
+use App\Models\Campus;
 use App\Models\Custodian;
 use App\Models\Assignment;
 use Illuminate\Http\Request;
@@ -37,7 +38,8 @@ class AssetController extends Controller
     {
         $rooms = Room::all();
         $custodians = Custodian::all();
-        return view('admin.assets.create', compact('rooms', 'custodians'));
+        $campuses = Campus::all();
+        return view('admin.assets.create', compact('rooms', 'custodians','campuses'));
     }
 
     public function store(Request $request)
@@ -72,9 +74,10 @@ class AssetController extends Controller
     // Es vital cargar estas dos listas para que los selectores del formulario funcionen
     $rooms = Room::all();
     $custodians = Custodian::all(); 
+    $campuses = \App\Models\Campus::all();
 
     // Enviamos TODO a la vista
-    return view('admin.assets.edit', compact('asset', 'rooms', 'custodians'));
+    return view('admin.assets.edit', compact('asset', 'rooms', 'custodians','campuses'));
 }
 
 public function update(Request $request, Asset $asset)

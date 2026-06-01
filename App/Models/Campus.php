@@ -13,4 +13,11 @@ class Campus extends Model
     {
         return $this->hasMany(Building::class);
     }
+    public function assets()
+    {
+        // Esto permite que withCount('assets') funcione haciendo un "salto" por las relaciones
+        return Asset::whereHas('room.building', function ($query) {
+            $query->where('campus_id', $this->id);
+        });
+    }
 }

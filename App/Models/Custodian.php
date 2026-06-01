@@ -9,7 +9,7 @@ class Custodian extends Model
 {
     protected $fillable = [
         'full_name', 'document_number', 'dependency', 
-        'job_title', 'email', 'extension'
+        'job_title', 'email', 'extension','cost_center'
     ];
 
     // Un custodio puede ser responsable de muchos equipos

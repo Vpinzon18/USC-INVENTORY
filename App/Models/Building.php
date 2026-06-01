@@ -18,7 +18,10 @@ class Building extends Model
     public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
+        
     }
+    
+    
 
     
 }

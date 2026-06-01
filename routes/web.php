@@ -60,6 +60,8 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/movements/mass', [MovementController::class, 'createMass'])->name('movements.mass.create');
 Route::post('/movements/mass', [MovementController::class, 'storeMass'])->name('movements.mass.store');
+// Ruta para exportar el Acta (opcional, por si quieres imprimir el formato luego)
+Route::get('/movements/acta_entrega/{actaNumber}', [MovementController::class, 'exportActa'])->name('movements.exportActa');
 
 // Rutas para la gestión de Responsables (Custodios)
 Route::resource('custodians', CustodianController::class);
@@ -89,4 +91,7 @@ Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceSc
 
     Route::get('/schedules/export', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'export'])
     ->name('schedules.export'); // <-- Este es el nombre que Laravel busca
+
+    Route::post('/movements/validate-conflict', [App\Http\Controllers\MovementController::class, 'validateConflict'])
+     ->name('movements.validate-conflict');
 require __DIR__.'/auth.php';

@@ -53,6 +53,7 @@
                                 <th class="px-6 py-4 text-center">Ubicaciones a Cargo</th>
                                 <th class="px-6 py-4">Documento</th>
                                 <th class="px-6 py-4">Dependencia</th>
+                                <th class="px-6 py-4">Centro de Costos</th>
                                 <th class="px-6 py-4 text-center">Acciones</th>
                             </tr>
                         </thead>
@@ -86,6 +87,11 @@
                                     <td class="px-6 py-4">
                                         <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-[10px] font-bold uppercase">{{ $custodian->dependency }}</span>
                                     </td>
+                                    <td class="px-6 py-4">
+    <span class="font-mono text-xs text-blue-700 font-bold bg-blue-50 px-2 py-1 rounded">
+        {{ $custodian->cost_center ?? 'N/A' }}
+    </span>
+</td>
                                     
                                     <td class="px-6 py-4 text-center">
                                         <div class="flex justify-center items-center gap-2">

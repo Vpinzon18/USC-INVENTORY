@@ -13,7 +13,11 @@ class Assignment extends Model
         'started_at', 
         'ended_at', 
         'status', 
-        'observations'
+        'observations',
+        'movement_type', // Nuevo
+        'headquarters',  // Nuevo
+        'acta_number',   // Nuevo
+         'user_id'        // Nuevo
     ];
 
     

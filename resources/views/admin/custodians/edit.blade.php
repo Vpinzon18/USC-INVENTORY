@@ -56,6 +56,14 @@
                                    required>
                             @error('dependency') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
+                        <div class="col-span-1">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Centro de Costos (CC)</label>
+    <input type="text" name="cost_center" 
+           value="{{ old('cost_center', $custodian->cost_center) }}" 
+           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-200"
+           required>
+    @error('cost_center') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+</div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Correo Electrónico</label>

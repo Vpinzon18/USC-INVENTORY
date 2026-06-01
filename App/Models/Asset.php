@@ -49,10 +49,12 @@ public function getCpuAttribute()
      * OBTIENE LA ASIGNACIÓN ACTIVA
      * Útil para cerrar procesos de entrega y ver quién responde hoy.
      */
-    public function currentAssignment(): HasOne
-    {
-        return $this->hasOne(Assignment::class)->where('status', 'active');
-    }
+   public function currentAssignment(): HasOne
+{
+    return $this->hasOne(Assignment::class)
+                ->where('status', 'active')
+                ->latestOfMany(); // Asegura que solo tome la más reciente
+}
 
     /**
      * QUIÉN RESPONDE (Persona)
@@ -93,7 +95,6 @@ public function custodian()
     return $this->belongsTo(Custodian::class);
 }
     
-// app/Models/Asset.php
 
 public function maintenances()
 {
