@@ -50,7 +50,7 @@
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-gray-400 uppercase bg-gray-50/50 border-b">
                             <tr>
-                                <th class="px-6 py-4">Serial / Placa</th>
+                                <th class="px-6 py-4">Serial / Modelo</th>
                                 <th class="px-6 py-4 text-center">Estado HV</th>
                                 <th class="px-6 py-4">Ubicación / Hostname</th>
                                 <th class="px-6 py-4">Monitor / Periféricos</th>
@@ -63,7 +63,8 @@
                                 <tr class="hover:bg-blue-50/30 transition-colors">
                                     <td class="px-6 py-4">
                                         <div class="font-bold text-gray-900">{{ $asset->serial_number }}</div>
-                                        <div class="text-[10px] text-blue-600 font-mono uppercase">{{ $asset->internal_code ?? 'Sin Placa' }}</div>
+                                        <div class="text-[10px] text-blue-600 font-bold uppercase tracking-tight">{{ $asset->model_version ?? 'Sin modelo' }}</div>
+                                        <div class="text-[10px] text-gray-400 font-mono uppercase">{{ $asset->internal_code ?? 'Sin Placa' }}</div>
                                     </td>
 
                                     <td class="px-6 py-4 text-center">

@@ -29,8 +29,6 @@ Route::get('/', function () {
 // Esto soluciona el error "MethodNotAllowedHttpException" al presionar el botón
 Route::post('/', [AuthenticatedSessionController::class, 'store'])->name('login.post');
 
-
-
 // 3. EL SELECTOR DE MÓDULOS (Tu página welcome)
 Route::get('/seleccion', function () {
     return view('welcome');
@@ -45,7 +43,9 @@ Route::get('/dashboard', [InventoryController::class, 'index'])
 Route::middleware(['auth', 'role:1'])->group(function () {
     Route::resource('users', UserController::class);
 });
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+
+// RUTAS PROTEGIDAS PARA LA ADMINISTRACION DE LA INFRAESTRUCCTURA
+Route::middleware(['auth' ,'role:1'])->prefix('admin')->group(function () {
     Route::resource('campuses', CampusController::class);
     Route::resource('buildings', BuildingController::class);
     Route::resource('rooms', RoomController::class);
@@ -58,40 +58,36 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE MOVIMIENTO DE ACTIVOS
+Route::middleware(['auth' ,'role:1,2'])->prefix('admin')->group(function () {
 Route::get('/movements/mass', [MovementController::class, 'createMass'])->name('movements.mass.create');
 Route::post('/movements/mass', [MovementController::class, 'storeMass'])->name('movements.mass.store');
-// Ruta para exportar el Acta (opcional, por si quieres imprimir el formato luego)
 Route::get('/movements/acta_entrega/{actaNumber}', [MovementController::class, 'exportActa'])->name('movements.exportActa');
+});
 
-// Rutas para la gestión de Responsables (Custodios)
+// RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE RESPONSABLES
+Route::middleware(['auth' ,'role:1'])->prefix('admin')->group(function () {
 Route::resource('custodians', CustodianController::class);
+});
 
-// Esta línea crea automáticamente las rutas para index, create, store, edit, etc.
-Route::resource('assets', AssetController::class);
-
-// Módulo independiente de Soporte Técnico
+// RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE BITACORAS GLOBAL
 Route::resource('maintenances', TechnicalServiceController::class);
-
-Route::get('assets/{asset}/preview', [AssetController::class, 'previewPdf'])->name('assets.preview');
-
-Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'downloadPdf'])->name('assets.download.pdf');
-
-
-
 Route::get('/schedules', [MaintenanceScheduleController::class, 'index'])->name('schedules.index');
+Route::middleware(['auth' ,'role:1,2'])->prefix('admin')->group(function () {
 Route::get('/schedules/create', [MaintenanceScheduleController::class, 'create'])->name('schedules.create');
 Route::post('/schedules', [MaintenanceScheduleController::class, 'store'])->name('schedules.store');
-
-// Rutas para editar programaciones del cronograma
 Route::get('/schedules/{schedule}/edit', [MaintenanceScheduleController::class, 'edit'])->name('schedules.edit');
 Route::put('/schedules/{schedule}', [MaintenanceScheduleController::class, 'update'])->name('schedules.update');
+Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'searchAssets'])->name('schedules.search-assets');
+Route::get('/schedules/export', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'export'])->name('schedules.export'); 
+});
 
-Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'searchAssets'])
-    ->name('schedules.search-assets');
+// RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE INVENTARIO HV
+Route::resource('assets', AssetController::class);
+Route::get('assets/{asset}/preview', [AssetController::class, 'previewPdf'])->name('assets.preview');
+Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'downloadPdf'])->name('assets.download.pdf');
 
-    Route::get('/schedules/export', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'export'])
-    ->name('schedules.export'); // <-- Este es el nombre que Laravel busca
+// RUTAS DE VALIDACION PARA EVITAR CONFLICTOS CON LOS MOVIMIENTOS DE ACTIVOS.
+Route::post('/movements/validate-conflict', [App\Http\Controllers\MovementController::class, 'validateConflict'])->name('movements.validate-conflict');
 
-    Route::post('/movements/validate-conflict', [App\Http\Controllers\MovementController::class, 'validateConflict'])
-     ->name('movements.validate-conflict');
 require __DIR__.'/auth.php';

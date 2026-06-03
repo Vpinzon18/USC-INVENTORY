@@ -105,6 +105,11 @@
                                     {{ $asset->is_agent_managed ? 'readonly' : '' }}>
                             </div>
 
+                            <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Modelo / Versión</label>
+                        <input type="text" name="model_version" value="{{ old('model_version', $asset->model_version) }}" class="w-full mt-1 rounded-lg border-slate-300">
+                    </div>
+
                             <div>
                                 <label class="block text-[10px] font-bold uppercase mb-1 {{ $asset->is_agent_managed ? 'text-slate-400' : 'text-slate-800' }}">Dirección IP</label>
                                 <input type="text" name="ip_address" value="{{ old('ip_address', $asset->ip_address) }}"

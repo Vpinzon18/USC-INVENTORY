@@ -21,18 +21,20 @@
                 <form id="create-asset-form" action="{{ route('assets.store') }}" method="POST" class="p-6 md:p-8 space-y-6">
                     @csrf
                     @if ($errors->any())
-        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl shadow-sm">
-            <div class="flex items-center mb-2">
-                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h3 class="text-sm font-bold text-red-800">No se pudo registrar el equipo. Por favor, corrige lo siguiente:</h3>
-            </div>
-            <ul class="list-disc list-inside text-xs text-red-700 ml-7 space-y-1 font-medium">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl shadow-sm">
+                        <div class="flex items-center mb-2">
+                            <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3 class="text-sm font-bold text-red-800">No se pudo registrar el equipo. Por favor, corrige lo siguiente:</h3>
+                        </div>
+                        <ul class="list-disc list-inside text-xs text-red-700 ml-7 space-y-1 font-medium">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
 
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md">
                         <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
@@ -53,6 +55,10 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">Hostname</label>
                                 <input type="text" name="hostname" value="{{ old('hostname') }}" class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 px-3 py-2 shadow-sm">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase">Modelo / Versión (Comercial)</label>
+                                <input type="text" name="model_version" class="w-full mt-1 rounded-lg border-slate-300 shadow-sm focus:ring-blue-500">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">Dirección IP</label>

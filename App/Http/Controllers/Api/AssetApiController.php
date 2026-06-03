@@ -24,6 +24,7 @@ class AssetApiController extends Controller
             $asset->ram           = $data['ram'] ?? null;
             $asset->os_version    = $data['os_version'] ?? null;
             $asset->domain_name   = $data['domain_name'] ?? null;
+            $asset->model_version = $data['model_version'] ?? null;
             $asset->last_seen_at  = now();
             $asset->ip_address    = $request->ip();
 

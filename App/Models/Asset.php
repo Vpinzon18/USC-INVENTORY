@@ -14,7 +14,7 @@ class Asset extends Model
 
    protected $fillable = [
     // Identificación
-    'hostname', 'serial_number', 'internal_code', 'mac_address', 'ip_address',
+    'hostname', 'serial_number', 'internal_code', 'mac_address', 'ip_address','model_version',
     
     // Relaciones
     'sede_id', 'room_id', 'custodian_id',

@@ -12,55 +12,45 @@ use Carbon\Carbon; // <--- IMPORTANTE: Necesario para los cálculos de tiempo
 
 class InventoryController extends Controller
 {
-    public function index()
+   public function index()
 {
-    // 1. Carga optimizada (Usamos 'room.building.campus' para navegar hasta la sede)
-    $assets = Asset::with(['room.building.campus', 'software'])->latest()->get();
+    // 1. Carga optimizada
+    $assets = \App\Models\Asset::with(['room.building.campus', 'software'])->latest()->get();
     
-    // 2. Datos para la tabla de "Recientes" (los 5 últimos)
-    $recentAssets = $assets->take(5);
-
-    // 3. Métricas clave (Tarjetas del Dashboard)
+    // 2. Cálculos básicos
     $total = $assets->count();
     $online = $assets->filter(function ($asset) {
         return $asset->last_seen_at && \Carbon\Carbon::parse($asset->last_seen_at)->gt(now()->subMinutes(10));
     })->count();
     
-    $offlineCount = $total - $online;
-
-    // 4. Métricas extras
+    // 3. Cálculos de métricas extras (AQUÍ ESTABA EL FALLO)
     $totalUsers = \App\Models\User::count();
     $totalCampuses = \App\Models\Campus::count();
     $totalRooms = \App\Models\Room::count();
 
-    // 5. Datos para las Gráficas (SOLUCIÓN SEGURA)
-    // Usamos el método map sobre los campus para contar los assets filtrando la colección
-    $assetsByCampus = \App\Models\Campus::all()->map(function($campus) use ($assets) {
-        $count = $assets->filter(function($asset) use ($campus) {
-            // Navegamos por la relación: Asset -> Room -> Building -> Campus
-            return $asset->room?->building?->campus_id == $campus->id;
-        })->count();
-        
-        return [
-            'name' => $campus->name,
-            'total' => $count
-        ];
-    });
+    // 4. Datos para Gráficas
+    $modelStats = \Illuminate\Support\Facades\DB::table('assets')
+        ->select('model_version', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+        ->whereNotNull('model_version')
+        ->groupBy('model_version')
+        ->orderBy('total', 'desc')
+        ->limit(10)
+        ->get();
 
-    // Retornamos todo a la vista
+    $mostUsedModel = $modelStats->first();
+
+    // 5. Retorno a la vista (Asegúrate de incluir las variables aquí)
     return view('dashboard', compact(
         'assets', 
-        'recentAssets',
         'total', 
         'online', 
-        'offlineCount', 
         'totalUsers', 
         'totalCampuses', 
         'totalRooms', 
-        'assetsByCampus'
+        'modelStats', 
+        'mostUsedModel'
     ));
 }
-
     public function report(Request $request)
     { 
         $asset = Asset::updateOrCreate(
@@ -70,7 +60,8 @@ class InventoryController extends Controller
                 'ip_address' => $request->ip_address,
                 'cpu'        => $request->cpu,        
                 'ram'        => $request->ram,      
-                'storage'    => $request->storage,    
+                'storage'    => $request->storage,
+                'model_version'=> $request->model_version,    
                 'last_seen_at' => now(),
             ]
         );
