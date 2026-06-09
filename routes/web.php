@@ -15,26 +15,27 @@ use App\Http\Controllers\CustodianController;
 use App\Http\Controllers\Admin\AssetController; 
 use App\Http\Controllers\TechnicalServiceController;
 use App\Http\Controllers\Admin\MaintenanceScheduleController;
+use App\Http\Controllers\DependencyController; 
+use App\Http\Controllers\JobTitleController;
 
-// 1. PÁGINA DE INICIO / LOGIN
+//  PÁGINA DE INICIO / LOGIN
 Route::get('/', function () {
-    // Usamos el Facade Auth para evitar el error P1013 de Intelephense
+    
     if (Auth::check()) { 
         return redirect()->route('selector');
     }
     return view('auth.login');
 })->name('login');
 
-// 2. RUTA POST PARA PROCESAR EL LOGIN
-// Esto soluciona el error "MethodNotAllowedHttpException" al presionar el botón
+//  RUTA POST PARA PROCESAR EL LOGIN
 Route::post('/', [AuthenticatedSessionController::class, 'store'])->name('login.post');
 
-// 3. EL SELECTOR DE MÓDULOS (Tu página welcome)
+//  EL SELECTOR DE MÓDULOS (Tu página welcome)
 Route::get('/seleccion', function () {
     return view('welcome');
 })->middleware(['auth'])->name('selector');
 
-// 4. EL DASHBOARD DE INVENTARIO
+// EL DASHBOARD DE INVENTARIO
 Route::get('/dashboard', [InventoryController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');
@@ -50,7 +51,7 @@ Route::middleware(['auth' ,'role:1'])->prefix('admin')->group(function () {
     Route::resource('buildings', BuildingController::class);
     Route::resource('rooms', RoomController::class);
 });
-
+Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'searchAssets'])->name('schedules.search-assets');
 // RUTAS DE PERFIL
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -80,6 +81,7 @@ Route::get('/schedules/{schedule}/edit', [MaintenanceScheduleController::class, 
 Route::put('/schedules/{schedule}', [MaintenanceScheduleController::class, 'update'])->name('schedules.update');
 Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'searchAssets'])->name('schedules.search-assets');
 Route::get('/schedules/export', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'export'])->name('schedules.export'); 
+Route::get('/maintenance/{maintenanceSchedule}/edit', [MaintenanceScheduleController::class, 'edit'])->name('maintenance.edit');
 });
 
 // RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE INVENTARIO HV
@@ -89,5 +91,13 @@ Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'download
 
 // RUTAS DE VALIDACION PARA EVITAR CONFLICTOS CON LOS MOVIMIENTOS DE ACTIVOS.
 Route::post('/movements/validate-conflict', [App\Http\Controllers\MovementController::class, 'validateConflict'])->name('movements.validate-conflict');
+
+// Solo dejamos 'auth' en el middleware
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    
+    Route::resource('dependencies', DependencyController::class);
+    Route::resource('jobtitles', JobTitleController::class);
+
+});
 
 require __DIR__.'/auth.php';

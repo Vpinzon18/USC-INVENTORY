@@ -14,10 +14,6 @@ class MaintenanceSchedule extends Model
     'status'
     
 ];
-
-    /**
-     * Obtener el equipo al que pertenece esta tarea programada.
-     */
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
@@ -27,7 +23,6 @@ class MaintenanceSchedule extends Model
     return $this->belongsTo(User::class, 'technician_id');
 }
 public function technicalService() {
-    // Si la descripción está en technical_services, asegúrate que haya una relación
     return $this->hasOne(TechnicalService::class, 'maintenance_schedule_id');
 }
 

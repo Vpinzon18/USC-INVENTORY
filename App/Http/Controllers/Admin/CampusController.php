@@ -44,7 +44,6 @@ public function update(Request $request, Campus $campus) {
 }
 
 public function destroy(Campus $campus) {
-    // Nota: Podrías validar que no tenga bloques asociados antes de borrar
     $campus->delete();
     return redirect()->route('campuses.index')->with('success', 'Sede eliminada.');
 }

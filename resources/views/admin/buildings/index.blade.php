@@ -6,7 +6,8 @@
                 
                 <div class="p-6 md:p-8 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div class="flex items-center gap-3">
-                        <div class="p-2.5 bg-indigo-100 rounded-xl text-indigo-600">
+                        <!-- Icono superior cambiado a tonos rojos/rose -->
+                        <div class="p-2.5 bg-rose-100 rounded-xl text-rose-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                         </div>
                         <div>
@@ -15,7 +16,8 @@
                         </div>
                     </div>
                     
-                    <a href="{{ route('buildings.create') }}" class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 text-xs uppercase tracking-wider">
+                    <!-- Botón "Nuevo Bloque" en rojo SIGMA -->
+                    <a href="{{ route('buildings.create') }}" class="inline-flex items-center justify-center bg-[#e11d48] hover:bg-rose-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 focus:ring-2 focus:ring-offset-2 focus:ring-rose-600 text-xs uppercase tracking-wider">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Nuevo Bloque
                     </a>
@@ -33,16 +35,19 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-sm">
                             @forelse ($buildings as $building)
-                                <tr class="hover:bg-blue-50/50 transition-colors group">
+                                <!-- Hover de la fila en tono rojizo muy suave -->
+                                <tr class="hover:bg-rose-50/50 transition-colors group">
                                     <td class="py-4 px-6 text-slate-400 font-mono text-xs font-semibold">
                                         #{{ str_pad($building->id, 4, '0', STR_PAD_LEFT) }}
                                     </td>
-                                    <td class="py-4 px-6 font-bold text-slate-700 group-hover:text-blue-700 transition-colors">
+                                    <!-- Texto al hacer hover cambia a rojo -->
+                                    <td class="py-4 px-6 font-bold text-slate-700 group-hover:text-rose-700 transition-colors">
                                         {{ $building->name }}
                                     </td>
                                     <td class="py-4 px-6">
                                         @if($building->campus)
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            <!-- Badge de la sede en tonos rojos -->
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-100">
                                                 <svg class="w-3 h-3 mr-1.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                                 {{ $building->campus->name }}
                                             </span>
@@ -54,10 +59,12 @@
                                     </td>
                                     <td class="py-4 px-6">
                                         <div class="flex justify-center items-center gap-3">
-                                            <a href="{{ route('buildings.edit', $building) }}" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all" title="Editar Bloque">
+                                            <!-- Botón de editar ahora ilumina en rojo -->
+                                            <a href="{{ route('buildings.edit', $building) }}" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-100 rounded-lg transition-all" title="Editar Bloque">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                             </a>
                                             
+                                            <!-- Botón de eliminar (Se mantiene en red-600 por ser una acción destructiva) -->
                                             <form action="{{ route('buildings.destroy', $building) }}" method="POST" onsubmit="return confirm('¿Está seguro que desea eliminar el bloque: {{ $building->name }}? Tenga en cuenta que esto podría afectar los salones asociados.')">
                                                 @csrf
                                                 @method('DELETE')
@@ -77,7 +84,8 @@
                                             </div>
                                             <h3 class="text-sm font-bold text-slate-700 mb-1">No hay bloques registrados</h3>
                                             <p class="text-xs text-slate-500 mb-4">Aún no se han configurado bloques o edificios en el sistema.</p>
-                                            <a href="{{ route('buildings.create') }}" class="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wide">
+                                            <!-- Enlace vacío en rojo -->
+                                            <a href="{{ route('buildings.create') }}" class="text-xs font-bold text-rose-600 hover:text-rose-800 uppercase tracking-wide">
                                                 + Registrar Primer Bloque
                                             </a>
                                         </div>

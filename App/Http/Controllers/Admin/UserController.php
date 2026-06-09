@@ -10,26 +10,18 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * Muestra la lista de todos los usuarios registrados.
-     */
     public function index()
     {
         $users = User::all();
         return view('admin.users.index', compact('users'));
     }
 
-    /**
-     * Muestra el formulario para editar el rol de un usuario específico.
-     */
-    public function edit(User $user) // <-- Aquí agregamos el $ que faltaba
+    public function edit(User $user)
     {
         return view('admin.users.edit', compact('user'));
     }
 
-    /**
-     * Actualiza el nombre y el rol en la base de datos.
-     */
+    
     public function update(Request $request, User $user)
     {
         $request->validate([
@@ -42,17 +34,13 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente');
     }
 
-    /**
-     * Opcional: Eliminar un usuario (Cuidado: no te elimines a ti mismo).
-     */
-   
-   // Muestra el formulario de creación
+  
 public function create()
 {
     return view('admin.users.create');
 }
 
-// Guarda el nuevo usuario en la base de datos
+
 public function store(Request $request)
 {
     $request->validate([
@@ -72,7 +60,7 @@ public function store(Request $request)
     return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
 } public function destroy(User $user)
 {
-    // Cambia auth()->id() por Auth::id()
+
     if (Auth::id() === $user->id) {
         return redirect()->back()->with('error', 'No puedes eliminar tu propia cuenta.');
     }

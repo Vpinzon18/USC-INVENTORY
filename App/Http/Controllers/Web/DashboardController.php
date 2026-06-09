@@ -10,7 +10,7 @@ class InventoryController extends Controller
 {
     public function index()
     {
-        // Obtenemos todos los equipos ordenados por el último reporte
+        
         $assets = Asset::orderBy('last_seen_at', 'desc')->get();
         
         return view('dashboard', compact('assets'));

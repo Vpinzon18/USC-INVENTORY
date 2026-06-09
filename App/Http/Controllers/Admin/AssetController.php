@@ -19,7 +19,6 @@ class AssetController extends Controller
     public function index(Request $request)
 {
     $search = $request->input('search');
-    // Captura 'per_page'. Si no existe, por defecto es 15.
     $perPage = $request->input('per_page', 15); 
 
     $assets = Asset::with(['room', 'currentCustodian'])
@@ -28,8 +27,8 @@ class AssetController extends Controller
                          ->orWhere('hostname', 'LIKE', "%{$search}%")
                          ->orWhere('internal_code', 'LIKE', "%{$search}%");
         })
-        ->paginate($perPage) // Usamos la variable dinámica aquí
-        ->withQueryString(); // Mantiene 'search' y 'per_page' en los links de paginación
+        ->paginate($perPage) 
+        ->withQueryString(); 
 
     return view('admin.assets.index', compact('assets', 'search', 'perPage'));
 }
@@ -53,13 +52,10 @@ class AssetController extends Controller
             'cpu'           => 'nullable|string',
             'ram'           => 'nullable|string',
             'storage'       => 'nullable|string',
-            'custodian_id'  => 'required|exists:custodians,id', // Para crear la asignación inicial
+            'custodian_id'  => 'required|exists:custodians,id',
         ]);
 
-        // 1. Creamos el equipo
         $asset = Asset::create($validated);
-
-        // 2. Creamos el registro en el historial (Assignment)
         Assignment::create([
             'asset_id' => $asset->id,
             'custodian_id' => $request->custodian_id,
@@ -72,18 +68,18 @@ class AssetController extends Controller
     }
     public function edit(Asset $asset)
 {
-    // Es vital cargar estas dos listas para que los selectores del formulario funcionen
+    
     $rooms = Room::all();
     $custodians = Custodian::all(); 
     $campuses = \App\Models\Campus::all();
 
-    // Enviamos TODO a la vista
+    
     return view('admin.assets.edit', compact('asset', 'rooms', 'custodians','campuses'));
 }
 
 public function update(Request $request, Asset $asset)
 {
-    // 1. Validamos los datos
+
     $validated = $request->validate([
         'room_id'         => 'required|exists:rooms,id',
         'serial_number'   => 'required|unique:assets,serial_number,' . $asset->id,
@@ -107,9 +103,6 @@ public function update(Request $request, Asset $asset)
         'domain_name'     => 'nullable|string',
     ]);
 
-    // 2. FORZAR LA ACTUALIZACIÓN
-    // Si $validated no contiene los campos nuevos (porque el formulario no los envía),
-    // el update no hará nada.
     $asset->update($validated);
 
     return redirect()->route('assets.index')->with('success', 'Hoja de Vida actualizada correctamente.');
@@ -117,10 +110,9 @@ public function update(Request $request, Asset $asset)
 /**
  * Muestra la Hoja de Vida detallada de un equipo específico.
 */
-
 public function previewPdf(Asset $asset)
 {
-    // Cambiamos 'maintenances' por 'technicalServices'
+    
     $asset->load(['currentCustodian', 'room.building', 'assignments', 'technicalServices']);
     
     
@@ -128,14 +120,12 @@ public function previewPdf(Asset $asset)
     
     
 }
- // Asegúrate de importar el Facade al inicio
-
 
 public function downloadPdf(int $id)
 {
     $asset = Asset::with(['currentCustodian', 'room.building', 'technicalServices.user'])->findOrFail($id);
 
-    // Generamos el HTML completo
+    
     $html = view('admin.assets.pdf_export', compact('asset'))->render();
 
     $pdf = Browsershot::html($html)

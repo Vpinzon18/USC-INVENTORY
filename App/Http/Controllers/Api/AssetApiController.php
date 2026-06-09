@@ -33,7 +33,7 @@ class AssetApiController extends Controller
             $asset->cpu_brand     = $data['cpu']['brand'] ?? null;
             $asset->cpu_model     = $data['cpu']['name'] ?? null;
 
-            // Almacenamiento (Como ya tienes columnas marca/modelo, úsalas)
+            // Almacenamiento 
             $asset->storage_brand = $data['storage']['brand'] ?? null;
             $asset->storage_model = $data['storage']['name'] ?? null;
 
@@ -58,7 +58,7 @@ class AssetApiController extends Controller
 
             // 3. Procesar Software (Limpieza)
             if ($asset->id && isset($data['installed_software']) && is_array($data['installed_software'])) {
-                // Borramos solo el software asociado a este asset antes de volver a insertar
+            
                 $asset->software()->delete();
 
                 foreach ($data['installed_software'] as $prog) {

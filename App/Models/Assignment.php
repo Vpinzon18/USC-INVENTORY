@@ -7,22 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 class Assignment extends Model
 {
     protected $fillable = [
-        'asset_id', 
-        'custodian_id', 
-        'room_id', 
-        'started_at', 
-        'ended_at', 
-        'status', 
+        'asset_id',
+        'custodian_id',
+        'room_id',
+        'started_at',
+        'ended_at',
+        'status',
         'observations',
-        'movement_type', // Nuevo
-        'headquarters',  // Nuevo
-        'acta_number',   // Nuevo
-         'user_id'        // Nuevo
+        'movement_type',
+        'headquarters',
+        'acta_number',
+        'user_id'
     ];
-
-    
-    // Relaciones para poder consultar fácilmente
-    public function asset() { return $this->belongsTo(Asset::class); }
-    public function custodian() { return $this->belongsTo(Custodian::class); }
-    public function room() { return $this->belongsTo(Room::class); }
+    public function asset()
+    {
+        return $this->belongsTo(Asset::class);
+    }
+    public function custodian()
+    {
+        return $this->belongsTo(Custodian::class);
+    }
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
 }

@@ -8,29 +8,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Room extends Model
 {
-   // app/Models/Room.php
 
-protected $fillable = [
-    'name',
-    'nomenclatura', // Nuevo campo
-    'building_id',
-    'floor',
-];
-
-    // Relación con los equipos (Un salón tiene muchos equipos)
+    protected $fillable = [
+        'name',
+        'nomenclatura',
+        'building_id',
+        'floor',
+    ];
     public function assets(): HasMany
     {
         return $this->hasMany(Asset::class);
     }
 
-    // Relación inversa con el Bloque
     public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
     }
     public function rooms()
-{
-    return $this->belongsToMany(Room::class, 'custodian_room');
-}
-    
+    {
+        return $this->belongsToMany(Room::class, 'custodian_room');
+    }
 }

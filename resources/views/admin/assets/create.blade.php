@@ -261,6 +261,41 @@
                             </div>
                         </div>
                     </div>
+                    @isset($asset)
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm mt-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <h3 class="font-bold text-gray-700 uppercase tracking-wider text-sm">8. Software Instalado (Auditoría)</h3>
+                        </div>
+
+                        <div class="overflow-x-auto border border-gray-100 rounded-xl">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-gray-50 text-gray-500 uppercase">
+                                    <tr>
+                                        <th class="px-4 py-3">Nombre de la Aplicación</th>
+                                        <th class="px-4 py-3">Versión</th>
+                                        <th class="px-4 py-3">Fecha Registro</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 text-gray-600">
+                                    @forelse($asset->software as $app)
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-4 py-2 font-medium">{{ $app->name }}</td>
+                                        <td class="px-4 py-2">{{ $app->version ?? 'N/A' }}</td>
+                                        <td class="px-4 py-2">{{ $app->created_at ? $app->created_at->format('d/m/Y') : 'N/A' }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-4 text-center text-gray-400 italic">No se detectó software registrado por el agente.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endisset
 
                     <div class="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
                         <a href="{{ route('assets.index') }}" class="px-6 py-2.5 text-xs font-bold text-slate-500 uppercase hover:text-slate-800 transition-colors">

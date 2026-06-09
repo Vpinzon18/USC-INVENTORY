@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="es" x-data="appLayout()">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SOMA | USC</title>
+    <title>SIGMA | USC</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="icon" type="image/png" href="{{ asset('img/logoUSC.png') }}">
 
@@ -25,9 +26,15 @@
 
             <div class="h-20 flex items-center justify-between px-5 bg-[#1a1a27] border-b border-gray-800 shrink-0">
                 <div class="flex items-center gap-3 overflow-hidden cursor-pointer" @click="if(!sidebarOpen) sidebarOpen = true">
-                    <img src="{{ asset('img/logo_acreditacion.png') }}" class="h-10 w-auto shrink-0 object-contain" alt="Logo USC">
+
+                    <img x-show="sidebarOpen"
+                        x-transition.opacity.duration.300ms
+                        src="{{ asset('img/logoUSC.png') }}"
+                        class="h-10 w-auto shrink-0 object-contain"
+                        alt="Logo USC">
+
                     <div class="flex flex-col whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 hidden'">
-                        <span class="font-extrabold text-xl tracking-tight text-white leading-none">SOMA</span>
+                        <span class="font-extrabold text-xl tracking-tight text-white leading-none">SIGMA</span>
                         <span class="text-[9px] text-blue-400 uppercase font-black tracking-widest mt-0.5">Gestión Tecnológica</span>
                     </div>
                 </div>
@@ -53,9 +60,57 @@
                     </svg>
                     <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Dashboard</span>
                 </a>
+                <div>
+                    <a href="{{ route('movements.mass.create') }}"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('movements.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
+                        style="text-decoration: none;">
+
+                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('movements.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+
+                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
+                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
+                            Movimientos Activos
+                        </span>
+                    </a>
+                </div>
+                <div>
+                    <a href="{{ route('custodians.index') }}"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('custodians.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
+                        style="text-decoration: none;">
+
+                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('custodians.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+
+                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
+                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
+                            Responsables
+                        </span>
+                    </a>
+                </div>
+                <div>
+                    <a href="{{ route('assets.index') }}"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('assets.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
+                        style="text-decoration: none;">
+
+                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('assets.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+
+                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
+                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
+                            Inventario / HV
+                        </span>
+                    </a>
+                </div>
 
                 @if(in_array(Auth::user()->role, [1, 2]))
-                
+
                 <div x-data="{ open: {{ request()->is('admin/*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
@@ -70,15 +125,22 @@
                     </button>
                     <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
                         <a href="{{ route('campuses.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('campuses.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('campuses.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('campuses.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
                             Sedes / Convenios
                         </a>
                         <a href="{{ route('buildings.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('buildings.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('buildings.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('buildings.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
                             Bloques / Edificios
                         </a>
                         <a href="{{ route('rooms.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('rooms.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('rooms.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('rooms.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
                             Oficinas / Salones
                         </a>
                     </div>
@@ -99,46 +161,59 @@
                     </button>
                     <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
                         <a href="{{ route('maintenances.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('maintenances.index') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('maintenances.index') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('maintenances.index') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
                             Bitácora Global
                         </a>
                         <a href="{{ route('maintenances.create') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('maintenances.create') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('maintenances.create') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('maintenances.create') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             Nuevo Registro
                         </a>
                         <a href="{{ route('schedules.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('schedules.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('schedules.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('schedules.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
                             Cronograma
                         </a>
                     </div>
                 </div>
 
-                <div x-data="{ open: {{ request()->is('movements/*') || request()->is('assets/*') || request()->is('custodians/*') ? 'true' : 'false' }} }">
+                @endif
+                <div x-data="{ open: {{ request()->routeIs('dependencies.*') || request()->routeIs('jobtitles.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 shrink-0 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Gestión Equipos</span>
+                            <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Configuración de Sistema</span>
                         </div>
-                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
                     </button>
+
                     <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
-                        <a href="{{ route('movements.mass.create') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('movements.mass.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('movements.mass.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                            Traslados Masivos
+
+                        <a href="{{ route('dependencies.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('dependencies.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('dependencies.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Dependencias
                         </a>
-                        <a href="{{ route('assets.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('assets.index') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('assets.index') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
-                            Inventario / HV
+
+                        <a href="{{ route('jobtitles.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('jobtitles.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('jobtitles.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Cargos
                         </a>
-                        <a href="{{ route('custodians.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('custodians.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('custodians.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
-                            Responsables
-                        </a>
+
                     </div>
                 </div>
-                @endif
 
                 @if(Auth::user()->role == 1)
                 <a href="{{ route('users.index') }}" class="flex items-center px-3 py-2.5 rounded-xl font-semibold transition-all duration-200 group {{ request()->routeIs('users.*') ? 'bg-[#2b2b40] text-blue-400' : 'text-gray-400 hover:bg-[#2b2b40] hover:text-white' }}">
@@ -206,9 +281,9 @@
                     window.addEventListener('resize', () => {
                         this.isMobile = window.innerWidth < 1024;
                         if (!this.isMobile && !this.sidebarOpen) {
-                            this.sidebarOpen = false; 
+                            this.sidebarOpen = false;
                         } else if (this.isMobile) {
-                            this.sidebarOpen = false; 
+                            this.sidebarOpen = false;
                         }
                     });
                 }
@@ -231,8 +306,10 @@
         }
 
         .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-            background-color: #475569; /* slate-600 */
+            background-color: #475569;
+            /* slate-600 */
         }
     </style>
 </body>
+
 </html>

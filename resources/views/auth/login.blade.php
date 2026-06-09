@@ -21,7 +21,7 @@
                     
                     <div class="text-left">
                         <h1 class="text-7xl font-black tracking-tighter text-red-600 leading-none drop-shadow-md">INVENTARIO</h1>
-                        <p class="text-xl font-light text-slate-400 uppercase tracking-[0.2em] mt-2">Gestión Tecnológica - Palmira</p>
+                        <p class="text-xl font-light text-slate-400 uppercase tracking-[0.2em] mt-2">Gestión Tecnológica</p>
                     </div>
                 </div>
                 

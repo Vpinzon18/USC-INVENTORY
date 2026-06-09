@@ -489,7 +489,7 @@
   </tr>
 </table>
 <!-- ════════════════════════════ AREAS ════════════════════════════ -->
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed;">
+ <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed;">
     <tr style="background-color: #000; color: #fff; text-align: center;">
         <td colspan="4" style="padding: 4px; font-weight: bold; font-size: 10px;">ÁREA DE ORIGEN (ENTREGA)</td>
         <td colspan="4" style="padding: 4px; font-weight: bold; font-size: 10px;">ÁREA DE DESTINO (RECIBE)</td>
@@ -508,20 +508,20 @@
 
     <tr>
         <td colspan="2" style="border: 1px solid #000; padding: 4px;">
-            <span class="field-label">DCTO. IDENTIDAD</span>
-            <div class="data-value">{{ $responsableAnterior->document_number ?? '-' }}</div>
-        </td>
-        <td colspan="2" style="border: 1px solid #000; padding: 4px;">
             <span class="field-label">DEPENDENCIA</span>
             <div class="data-value">{{ $responsableAnterior->dependency ?? 'N/A' }}</div>
         </td>
         <td colspan="2" style="border: 1px solid #000; padding: 4px;">
-            <span class="field-label">DCTO. IDENTIDAD</span>
-            <div class="data-value">{{ $nuevoResponsable->document_number ?? '-' }}</div>
+            <span class="field-label">C. COSTO (CC)</span>
+            <div class="data-value">{{ $responsableAnterior->cost_center ?? '-' }}</div>
         </td>
         <td colspan="2" style="border: 1px solid #000; padding: 4px;">
             <span class="field-label">DEPENDENCIA</span>
             <div class="data-value">{{ $nuevoResponsable->dependency ?? 'N/A' }}</div>
+        </td>
+        <td colspan="2" style="border: 1px solid #000; padding: 4px;">
+            <span class="field-label">C. COSTO (CC)</span>
+            <div class="data-value">{{ $nuevoResponsable->cost_center ?? '-' }}</div>
         </td>
     </tr>
 
@@ -553,11 +553,11 @@
     </tr>
 
     <tr>
-        <td colspan="4">
+        <td colspan="4" style="border: 1px solid #000; padding: 4px;">
             <span class="field-label">TELÉFONO - EXTENSIÓN</span>
             <div class="data-value">{{ $responsableAnterior->extension ?? 'N/A' }}</div>
         </td>
-        <td colspan="4">
+        <td colspan="4" style="border: 1px solid #000; padding: 4px;">
             <span class="field-label">TELÉFONO - EXTENSIÓN</span>
             <div class="data-value">{{ $nuevoResponsable->extension ?? 'N/A' }}</div>
         </td>

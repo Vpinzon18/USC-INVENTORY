@@ -9,140 +9,116 @@ use Illuminate\Support\Facades\Auth;
 
 class TechnicalServiceController extends Controller
 {
-    /**
-     * Muestra el historial global de mantenimientos.
-     */
-public function index(Request $request)
-{
-    // 1. Capturamos los parámetros de la petición
-    $search = $request->input('search');
-    $fromDate = $request->input('from_date');
-    $toDate = $request->input('to_date');
-    
-    // Capturamos el límite dinámico (por defecto 10 para la bitácora)
-    $perPage = $request->input('per_page', 10);
 
-    // CANDADO DE SEGURIDAD: Validamos que solo acepte límites autorizados para el paginado
-    if (!in_array($perPage, [5, 10, 15, 25, 50])) {
-        $perPage = 10;
+    public function index(Request $request)
+    {
+
+        $search = $request->input('search');
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+        $perPage = $request->input('per_page', 10);
+        if (!in_array($perPage, [5, 10, 15, 25, 50])) {
+            $perPage = 10;
+        }
+
+        $query = TechnicalService::with(['asset.room.building', 'technician']);
+
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($search) {
+
+                $q->whereHas('asset', function ($assetQuery) use ($search) {
+                    $assetQuery->where('serial_number', 'ilike', "%{$search}%")
+                        ->orWhere('internal_code', 'ilike', "%{$search}%");
+                })
+
+                    ->orWhereHas('technician', function ($techQuery) use ($search) {
+                        $techQuery->where('name', 'ilike', "%{$search}%");
+                    })
+
+                    ->orWhere('description', 'ilike', "%{$search}%");
+            });
+        }
+
+
+        if ($request->filled('from_date') && $request->filled('to_date')) {
+            $query->whereBetween('performed_at', [$fromDate, $toDate]);
+        }
+
+
+        $services = $query->latest('performed_at')
+            ->paginate($perPage)
+            ->withQueryString();
+        return view('admin.maintenances.index', compact('services', 'search', 'fromDate', 'toDate', 'perPage'));
     }
 
-    $query = TechnicalService::with(['asset.room.building', 'technician']);
-
-    // 2. Aplicamos el Buscador Unificado
-    if ($request->filled('search')) {
-        $query->where(function($q) use ($search) {
-            // Busca en la tabla de Activos (Serial o Placa)
-            $q->whereHas('asset', function($assetQuery) use ($search) {
-                $assetQuery->where('serial_number', 'ilike', "%{$search}%")
-                           ->orWhere('internal_code', 'ilike', "%{$search}%");
-            })
-            // Busca por el nombre del Técnico
-            ->orWhereHas('technician', function($techQuery) use ($search) {
-                $techQuery->where('name', 'ilike', "%{$search}%");
-            })
-            // Busca en la descripción
-            ->orWhere('description', 'ilike', "%{$search}%");
-        });
-    }
-
-    // 3. Aplicamos Filtros de fecha
-    if ($request->filled('from_date') && $request->filled('to_date')) {
-        $query->whereBetween('performed_at', [$fromDate, $toDate]);
-    }
-
-    // 4. Ejecutamos la paginación con el límite dinámico
-    $services = $query->latest('performed_at')
-                      ->paginate($perPage)
-                      ->withQueryString(); // Mantiene search, from_date, to_date y per_page en los links
-
-    // 5. Retornamos la vista con todos los datos necesarios para mantener los inputs llenos
-    return view('admin.maintenances.index', compact('services', 'search', 'fromDate', 'toDate', 'perPage'));
-}
-    /**
-     * Vista para que el técnico cree un nuevo registro.
-     */
     public function create(Request $request)
-{
-    // 1. Iniciamos la consulta base cargando las relaciones necesarias
-    $query = Asset::with('room.building');
+    {
+        $query = Asset::with('room.building');
 
-    // 2. ¡EL INTERRUPTOR! Si la URL contiene un asset_id (viene desde el cronograma)
-    // filtramos la base de datos para traer ÚNICAMENTE ese equipo
-    if ($request->filled('asset_id')) {
-        $query->where('id', $request->asset_id);
+        if ($request->filled('asset_id')) {
+            $query->where('id', $request->asset_id);
+        }
+
+        $assets = $query->orderBy('serial_number')->get();
+
+        return view('admin.maintenances.create', compact('assets'));
     }
 
-    // 3. Ejecutamos la consulta manteniendo tu orden por número de serial
-    $assets = $query->orderBy('serial_number')->get();
-    
-    return view('admin.maintenances.create', compact('assets'));
-}
+    public function store(Request $request)
+    {
 
-    /**
-     * Almacena la intervención técnica en la base de datos.
-     */
-public function store(Request $request)
-{
-    // 1. Validaciones
-    // Cambié 'type_selector' por 'type' para que coincida con tu <select name="type">
-    $request->validate([
-        'asset_id'      => 'required|exists:assets,id',
-        'performed_at'  => 'required|date',
-        'description'   => 'required|string|min:3',
-        'type'          => 'required', 
-    ]);
+        $request->validate([
+            'asset_id'      => 'required|exists:assets,id',
+            'performed_at'  => 'required|date',
+            'description'   => 'required|string|min:3',
+            'type'          => 'required',
+        ]);
 
-    // 2. Determinar el valor final de 'type'
-    // Como en tu formulario el select tiene name="type", usamos $request->type
-    $finalType = ($request->type === 'Otro') 
-                 ? $request->custom_type 
-                 : $request->type;
+        $finalType = ($request->type === 'Otro')
+            ? $request->custom_type
+            : $request->type;
 
-    // 3. Crear el registro técnico
-    // Asegúrate de incluir 'security_guaya' si también quieres guardarla
-    \App\Models\TechnicalService::create([
-        'asset_id'                => $request->asset_id,
-        'user_id'                 => Auth::user()->id, // Más seguro que Auth::user()->id
-        'performed_at'            => $request->performed_at,
-        'type'                    => $finalType,
-        'description'             => $request->description,
-        'security_guaya'          => $request->security_guaya, // Agregado por si instalaste guaya
-        'maintenance_schedule_id' => $request->input('maintenance_schedule_id'),
-    ]);
 
-    // 4. Actualización del cronograma
-    if (strtoupper($finalType) === 'PREVENTIVO' && $request->filled('maintenance_schedule_id')) {
-        \App\Models\MaintenanceSchedule::where('id', $request->maintenance_schedule_id)
-            ->update(['status' => 'REALIZADO']);
+        \App\Models\TechnicalService::create([
+            'asset_id'                => $request->asset_id,
+            'user_id'                 => Auth::user()->id,
+            'performed_at'            => $request->performed_at,
+            'type'                    => $finalType,
+            'description'             => $request->description,
+            'security_guaya'          => $request->security_guaya,
+            'maintenance_schedule_id' => $request->input('maintenance_schedule_id'),
+        ]);
+
+        if (strtoupper($finalType) === 'PREVENTIVO' && $request->filled('maintenance_schedule_id')) {
+            \App\Models\MaintenanceSchedule::where('id', $request->maintenance_schedule_id)
+                ->update(['status' => 'REALIZADO']);
+        }
+
+        return redirect()->route('maintenances.index')
+            ->with('success', 'Registro guardado correctamente.');
     }
 
-    return redirect()->route('maintenances.index')
-        ->with('success', 'Registro guardado correctamente.');
-}
+    public function edit(int $id)
+    {
 
-public function edit(int $id)
-{
-    // El nombre de esta variable debe ser 'maintenance' para que coincida con tu vista
-    $maintenance = TechnicalService::findOrFail($id); 
-    $assets = \App\Models\Asset::all(); 
+        $maintenance = TechnicalService::findOrFail($id);
+        $assets = \App\Models\Asset::all();
+        return view('admin.maintenances.edit', compact('maintenance', 'assets'));
+    }
+    public function update(Request $request, TechnicalService $maintenance)
+    {
+        $validated = $request->validate([
+            'performed_at' => 'required|date',
+            'type'         => 'required|string',
+            'description'  => 'required|string|min:5',
+            'asset_id'     => 'required|exists:assets,id',
+        ]);
 
-    // Aquí enviamos 'maintenance' (sin el $)
-    return view('admin.maintenances.edit', compact('maintenance', 'assets'));
-}
-public function update(Request $request, TechnicalService $maintenance) 
-{
-    $validated = $request->validate([
-        'performed_at' => 'required|date',
-        'type'         => 'required|string',
-        'description'  => 'required|string|min:5',
-        'asset_id'     => 'required|exists:assets,id',
-    ]);
 
-    // Usamos directamente la instancia inyectada
-    $maintenance->update($validated);
+        $maintenance->update($validated);
 
-    return redirect()->route('maintenances.index')
-        ->with('success', 'Bitácora actualizada correctamente.');
-}
+        return redirect()->route('maintenances.index')
+            ->with('success', 'Bitácora actualizada correctamente.');
+    }
 }

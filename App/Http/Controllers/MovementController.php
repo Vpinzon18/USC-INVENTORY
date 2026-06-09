@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Asset;
 use App\Models\Room;
 use App\Models\Custodian;
-use App\Models\Assignment; // Asegúrate de importar esto
+use App\Models\Assignment;
 use function Spatie\LaravelPdf\Support\pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -31,12 +31,9 @@ class MovementController extends Controller
 
         $actaNumber = 'R-AF001-' . date('Y') . '-' . str_pad(Auth::id(), 3, '0', STR_PAD_LEFT) . '-' . time();
 
-        // 1. CAMBIO: Buscamos el modelo completo del Custodio usando su ID antes de la transacción.
-        // Reemplaza 'Custodian' por el nombre real de tu modelo (ej. Custodio, User, etc.)
         $custodioModel = Custodian::findOrFail($custodianDestino);
 
-        // Iniciamos la transacción
-        // CAMBIO: Agregamos $custodioModel al "use" de la función anónima
+
         DB::transaction(function () use ($request, $custodianDestino, $custodioModel, $salaDestino, &$movedCount, &$ignoredCount, $actaNumber) {
             foreach ($request->selected_assets as $assetId) {
                 $asset = Asset::find($assetId);
@@ -44,24 +41,18 @@ class MovementController extends Controller
 
                 $current = $asset->currentAssignment;
 
-                // LÓGICA DE FILTRADO: Si el activo ya está en el destino, lo omitimos
-                // Sigue funcionando igual porque $custodianDestino sigue siendo el ID
                 if ($current && $current->custodian_id == $custodianDestino && $current->room_id == $salaDestino) {
                     $ignoredCount++;
                     continue;
                 }
 
-                // Si llega aquí, es porque el activo sí requiere movimiento
                 if ($current) {
                     $current->update(['status' => 'inactive', 'ended_at' => now()]);
                 }
 
                 $asset->assignments()->create([
-                    'custodian_id'  => $custodianDestino, // Mantiene el ID enviado
-
-                    // 2. CAMBIO: Ahora le pedimos el cost_center al modelo que encontramos arriba
+                    'custodian_id'  => $custodianDestino,
                     'cost_center'   => $custodioModel->cost_center,
-
                     'room_id'       => $salaDestino,
                     'started_at'    => now(),
                     'status'        => 'active',
@@ -77,7 +68,6 @@ class MovementController extends Controller
             }
         });
 
-        // Validación final: si nada se movió (y nada se ignoró), es un error
         if ($movedCount === 0 && $ignoredCount === 0) {
             return back()->with('error', 'No se pudieron procesar los activos seleccionados.');
         }
@@ -94,16 +84,21 @@ class MovementController extends Controller
 
         return redirect()->route('movements.mass.create')->with('success', $mensaje);
     }
+    
     public function createMass()
     {
-        $assets = Asset::with('room')->orderBy('serial_number')->get();
+        // ✅ AQUÍ ESTÁ EL CAMBIO: 
+        // 1. Agregamos 'currentAssignment' para solucionar el problema N+1 y cargar rápido.
+        // 2. Agregamos take(150) para que el navegador no se congele dibujando 1000 checkboxes.
+        $assets = Asset::with(['room', 'currentAssignment'])->orderBy('serial_number')->take(150)->get();
+        
         $custodians = Custodian::with('rooms.building')->orderBy('full_name')->get();
 
         return view('admin.movements.mass', compact('custodians', 'assets'));
     }
+    
     public function exportActa(string $actaNumber)
     {
-        // 1. Obtener todas las asignaciones del acta actual
         $assignments = Assignment::with(['asset', 'custodian', 'room'])
             ->where('acta_number', $actaNumber)
             ->get();
@@ -114,16 +109,13 @@ class MovementController extends Controller
 
         $assets = $assignments->pluck('asset');
 
-        // 2. Responsable Actual (El que recibe - Lado derecho del PDF)
         $nuevoResponsable = $assignments->first()->custodian;
         $salaDestino = $assignments->first()->room;
 
-        // 3. Responsable Anterior (El que entrega - Lado izquierdo del PDF)
-        // Buscamos la última asignación que tenía el activo ANTES de este acta
         $primeraAsignacion = $assignments->first();
         $asignacionAnterior = Assignment::where('asset_id', $primeraAsignacion->asset_id)
             ->where('status', 'inactive')
-            ->where('id', '<', $primeraAsignacion->id) // Asignación previa al ID actual
+            ->where('id', '<', $primeraAsignacion->id)
             ->orderBy('ended_at', 'desc')
             ->with(['custodian', 'room'])
             ->first();
@@ -143,20 +135,22 @@ class MovementController extends Controller
             ->format('letter')
             ->download("Acta_{$actaNumber}.pdf");
     }
+    
     public function validateConflict(Request $request)
     {
-        // Buscamos equipos que ya tengan una asignación activa en el destino solicitado
+
         $conflicts = \App\Models\Asset::whereIn('id', $request->selected_assets)
             ->whereHas('currentAssignment', function ($query) use ($request) {
                 $query->where('custodian_id', $request->custodian_id)
                     ->where('room_id', $request->room_id)
                     ->where('status', 'active');
             })
-            ->pluck('internal_code'); // O 'serial_number'
+            ->pluck('internal_code'); 
 
         return response()->json([
             'has_conflict' => $conflicts->isNotEmpty(),
             'conflicts' => $conflicts
         ]);
     }
+    
 }
