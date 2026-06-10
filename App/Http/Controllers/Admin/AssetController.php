@@ -123,7 +123,8 @@ public function previewPdf(Asset $asset)
 
 public function downloadPdf(int $id)
 {
-    $asset = Asset::with(['currentCustodian', 'room.building', 'technicalServices.user'])->findOrFail($id);
+    $asset = Asset::with(['currentCustodian', 'room.building', 'currentCustodian.jobTitle',   // <-- AGREGADO
+        'currentCustodian.dependency','technicalServices.user'])->findOrFail($id);
 
     
     $html = view('admin.assets.pdf_export', compact('asset'))->render();

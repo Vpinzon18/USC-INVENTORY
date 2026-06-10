@@ -1,25 +1,24 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Administrar Dependencias') }}
-            </h2>
-            
-            <a href="{{ route('dependencies.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-sm" style="text-decoration: none;">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Nueva Dependencia
-            </a>
-        </div>
-    </x-slot>
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-xl border border-gray-100">
                 
                 <div class="p-6 bg-white border-b border-gray-100">
+                    
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <h2 class="font-bold text-xl text-gray-800 tracking-tight">
+                            Gestión de Dependencias
+                        </h2>
+                        
+                        <a href="{{ route('dependencies.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 transition ease-in-out duration-150 shadow-sm" style="text-decoration: none;">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Nueva Dependencia
+                        </a>
+                    </div>
+
                     <form method="GET" action="{{ route('dependencies.index') }}" class="flex flex-col sm:flex-row justify-between items-center gap-4">
                         
                         <div class="flex items-center text-sm text-gray-500 font-medium">
@@ -29,8 +28,8 @@
                                 <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
                                 <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15</option>
                                 <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
-                                <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>50</option>
-                                <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>100</option>
+                                <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
                             </select>
                             <span>registros</span>
                         </div>

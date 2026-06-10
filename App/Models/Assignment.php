@@ -31,4 +31,10 @@ class Assignment extends Model
     {
         return $this->belongsTo(Room::class);
     }
+    // Relación hacia el Técnico / Usuario que registró el movimiento en el sistema
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id'); 
+        // Nota: Si en tu base de datos la columna se llama 'technician_id', cámbialo aquí arriba.
+    }
 }

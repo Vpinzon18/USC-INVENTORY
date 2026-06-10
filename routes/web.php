@@ -60,10 +60,18 @@ Route::middleware('auth')->group(function () {
 });
 
 // RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE MOVIMIENTO DE ACTIVOS
-Route::middleware(['auth' ,'role:1,2'])->prefix('admin')->group(function () {
-Route::get('/movements/mass', [MovementController::class, 'createMass'])->name('movements.mass.create');
-Route::post('/movements/mass', [MovementController::class, 'storeMass'])->name('movements.mass.store');
-Route::get('/movements/acta_entrega/{actaNumber}', [MovementController::class, 'exportActa'])->name('movements.exportActa');
+// RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE MOVIMIENTO DE ACTIVOS
+Route::middleware(['auth', 'role:1,2'])->prefix('admin')->group(function () {
+    
+    // 🆕 NUEVAS RUTAS: Historial, Formulario de Edición y Guardado de Corrección
+    Route::get('/movements', [MovementController::class, 'index'])->name('movements.index');
+    Route::get('/movements/{id}/edit', [MovementController::class, 'edit'])->name('movements.edit');
+    Route::put('/movements/{id}', [MovementController::class, 'update'])->name('movements.update');
+
+    // 🛠️ RUTAS QUE YA TENÍAS: Creación Masiva y Exportación de Actas
+    Route::get('/movements/mass', [MovementController::class, 'createMass'])->name('movements.mass.create');
+    Route::post('/movements/mass', [MovementController::class, 'storeMass'])->name('movements.mass.store');
+    Route::get('/movements/acta_entrega/{actaNumber}', [MovementController::class, 'exportActa'])->name('movements.exportActa');
 });
 
 // RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE RESPONSABLES

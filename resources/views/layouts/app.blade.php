@@ -60,21 +60,47 @@
                     </svg>
                     <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Dashboard</span>
                 </a>
-                <div>
-                    <a href="{{ route('movements.mass.create') }}"
-                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('movements.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
-                        style="text-decoration: none;">
+                <div x-data="{ open: {{ request()->routeIs('movements.*') ? 'true' : 'false' }} }">
 
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('movements.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('movements.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}">
+
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('movements.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+
+                            <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
+                                Movimientos de Activos
+                            </span>
+                        </div>
+
+                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
+                    </button>
 
-                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
-                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
-                            Movimientos Activos
-                        </span>
-                    </a>
+                    <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
+
+                        <a href="{{ route('movements.mass.create') }}"
+                            class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('movements.mass.create') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group"
+                            style="text-decoration: none;">
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('movements.mass.create') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Registrar Movimiento
+                        </a>
+
+                        <a href="{{ route('movements.index') }}"
+                            class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('movements.index') || request()->routeIs('movements.edit') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group"
+                            style="text-decoration: none;">
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('movements.index') || request()->routeIs('movements.edit') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Historial de Actas
+                        </a>
+
+                    </div>
                 </div>
                 <div>
                     <a href="{{ route('custodians.index') }}"

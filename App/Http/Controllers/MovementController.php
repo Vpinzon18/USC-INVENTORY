@@ -13,6 +13,111 @@ use Illuminate\Support\Facades\Auth;
 
 class MovementController extends Controller
 {
+    /**
+     * Historial de Movimientos (Index)
+     */
+    public function index(Request $request)
+    {
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+
+        // Agregamos 'user' al ->with() para cargar la relación
+        $movements = \App\Models\Assignment::with(['custodian', 'user'])
+            ->select(
+                'acta_number',
+                'movement_type',
+                'custodian_id',
+                'user_id', // <-- NUEVO: Traemos el ID del técnico
+                DB::raw('MAX(created_at) as created_at'),
+                DB::raw('MIN(id) as id'),
+                DB::raw('COUNT(asset_id) as total_equipos')
+            )
+            ->when($search, function ($query, $search) {
+                return $query->where('acta_number', 'LIKE', "%{$search}%")
+                             ->orWhere('movement_type', 'LIKE', "%{$search}%")
+                             ->orWhereHas('custodian', function ($q) use ($search) {
+                                 $q->where('full_name', 'LIKE', "%{$search}%");
+                             })
+                             // Opcional: Permitir buscar también por el nombre del técnico
+                             ->orWhereHas('user', function ($q) use ($search) {
+                                 $q->where('name', 'LIKE', "%{$search}%");
+                             });
+            })
+            // NUEVO: Añadimos 'user_id' a la regla de agrupación
+            ->groupBy('acta_number', 'movement_type', 'custodian_id', 'user_id') 
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('admin.movements.index', compact('movements', 'search', 'perPage'));
+    }
+    public function edit(string $id)
+    {
+        // 1. Buscamos el movimiento base para obtener el número de acta
+        $baseMovement = \App\Models\Assignment::findOrFail($id);
+        
+        // 2. Traemos todos los equipos que comparten esa acta y fecha
+        $batchMovements = \App\Models\Assignment::with(['asset', 'custodian'])
+            ->where('acta_number', $baseMovement->acta_number)
+            ->get();
+
+        // 3. Catálogos para los selectores
+        $custodians = \App\Models\Custodian::orderBy('full_name', 'asc')->get();
+        $assets = \App\Models\Asset::orderBy('serial_number', 'asc')->get();
+
+        return view('admin.movements.edit', compact('baseMovement', 'batchMovements', 'custodians', 'assets'));
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $baseMovement = \App\Models\Assignment::findOrFail($id);
+
+        $validated = $request->validate([
+            'movement_type' => 'required|string',
+            'custodian_id'  => 'required|exists:custodians,id',
+            'observations'  => 'nullable|string',
+            'asset_ids'     => 'required|array|min:1', // El array de equipos que se quedan/añaden
+            'asset_ids.*'   => 'exists:assets,id',
+        ]);
+
+        // Convertimos los IDs enviados a enteros para comparar con seguridad
+        $newAssetIds = array_map('intval', $request->asset_ids);
+
+        // 1. OBTENER ESTADO ACTUAL: Equipos que están registrados hoy en esa acta
+        $currentAssetIds = \App\Models\Assignment::where('acta_number', $baseMovement->acta_number)
+            ->pluck('asset_id')
+            ->toArray();
+
+        // 2. EQUIPOS A ELIMINAR (Están en la BD pero el usuario los quitó en la vista)
+        $assetsToRemove = array_diff($currentAssetIds, $newAssetIds);
+        if (!empty($assetsToRemove)) {
+            \App\Models\Assignment::where('acta_number', $baseMovement->acta_number)
+                ->whereIn('asset_id', $assetsToRemove)
+                ->delete();
+        }
+
+       // 3. ACTUALIZAR EXISTENTES Y CREAR NUEVOS
+        foreach ($newAssetIds as $assetId) {
+            \App\Models\Assignment::updateOrCreate(
+                [
+                    'acta_number' => $baseMovement->acta_number,
+                    'asset_id'    => $assetId
+                ],
+                [
+                    'movement_type' => $request->movement_type,
+                    'custodian_id'  => $request->custodian_id,
+                    'observations'  => $request->observations,
+                    'room_id'       => $baseMovement->room_id,
+                    'started_at'    => $baseMovement->started_at ?? now(),
+                    'status'        => $baseMovement->status ?? 'active',
+                    'user_id'       => Auth::user()->id,
+                ]
+            );
+        }
+
+        return redirect()->route('movements.index')
+                         ->with('success', 'El lote del acta ' . $baseMovement->acta_number . ' ha sido reestructurado y actualizado con éxito.');
+    }
     public function storeMass(Request $request)
     {
         $request->validate([
@@ -87,9 +192,6 @@ class MovementController extends Controller
     
     public function createMass()
     {
-        // ✅ AQUÍ ESTÁ EL CAMBIO: 
-        // 1. Agregamos 'currentAssignment' para solucionar el problema N+1 y cargar rápido.
-        // 2. Agregamos take(150) para que el navegador no se congele dibujando 1000 checkboxes.
         $assets = Asset::with(['room', 'currentAssignment'])->orderBy('serial_number')->take(150)->get();
         
         $custodians = Custodian::with('rooms.building')->orderBy('full_name')->get();
