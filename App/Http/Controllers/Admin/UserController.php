@@ -68,4 +68,20 @@ public function store(Request $request)
     $user->delete();
     return redirect()->route('users.index')->with('success', 'Usuario eliminado.');
 }
+public function resetPassword(Request $request, User $user)
+{
+    // 1. Validamos que llegue la nueva clave correctamente
+    $request->validate([
+        'new_password' => 'required|min:8'
+    ]);
+    
+    // 2. ASIGNACIÓN DIRECTA: Evita problemas si 'password' no está en el $fillable
+    // Usamos Hash::make de forma estándar
+    $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+    
+    // 3. Guardamos directamente el modelo en la base de datos
+    $user->save();
+
+    return back()->with('success', 'La contraseña de ' . $user->name . ' ha sido actualizada exitosamente.');
+}
 }

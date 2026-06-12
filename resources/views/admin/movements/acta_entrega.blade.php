@@ -27,6 +27,10 @@
       background: #fff;
     }
 
+    .page-break {
+      page-break-before: always;
+    }
+
     /* ── HEADER ── */
     .header-table {
       width: 100%;
@@ -113,17 +117,14 @@
       border: 1px solid #000;
       margin-top: 3px;
       display: block;
+      text-align: center;
+      line-height: 30px;
+      font-size: 11px;
+      font-weight: bold;
     }
 
     .fecha-block {
       padding: 3px 5px;
-    }
-
-    .fecha-row {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      margin-top: 4px;
     }
 
     .fecha-label {
@@ -131,23 +132,6 @@
       font-weight: bold;
       text-transform: uppercase;
       margin-right: 3px;
-    }
-
-    .fecha-casilla {
-      flex: 1;
-      text-align: center;
-    }
-
-    .fecha-casilla span {
-      font-size: 7px;
-      font-weight: bold;
-      display: block;
-    }
-
-    .fecha-input-box {
-      border: 1px solid #000;
-      height: 18px;
-      width: 100%;
     }
 
     .version-text {
@@ -170,19 +154,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* ── GENERAL TABLE ── */
-    .form-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .form-table td,
-    .form-table th {
-      border: 1px solid #000;
-      padding: 3px 5px;
-      vertical-align: middle;
-    }
-
     /* ── TIPO DE MOVIMIENTO ── */
     .tipo-table {
       width: 100%;
@@ -203,6 +174,7 @@
       padding: 0 !important;
       vertical-align: middle;
       text-align: center;
+      font-weight: bold;
     }
 
     .otro-line {
@@ -233,29 +205,7 @@
       padding: 0 !important;
       text-align: center;
       vertical-align: middle;
-    }
-
-    /* ── AREAS ── */
-    .areas-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .areas-table td {
-      border: 1px solid #000;
-      padding: 3px 5px;
-      vertical-align: middle;
-      font-size: 9px;
-    }
-
-    .area-label {
-      background-color: #000;
-      color: #fff;
       font-weight: bold;
-      text-transform: uppercase;
-      font-size: 9.5px;
-      text-align: center;
-      padding: 4px 5px;
     }
 
     .field-label {
@@ -265,11 +215,10 @@
       white-space: nowrap;
     }
 
-    .field-value {
-      border-bottom: 1px solid #999;
-      min-height: 14px;
-      display: block;
-      width: 100%;
+    .data-value {
+      font-size: 10px;
+      font-weight: bold;
+      margin-top: 2px;
     }
 
     /* ── ACTIVOS FIJOS TABLE ── */
@@ -294,24 +243,6 @@
       text-transform: uppercase;
     }
 
-    .activos-table .col-sticker {
-      width: 15%;
-      text-align: center;
-    }
-
-    .activos-table .col-desc {
-      width: 65%;
-    }
-
-    .activos-table .col-serial {
-      width: 20%;
-      text-align: center;
-    }
-
-    .activos-row-empty {
-      height: 18px;
-    }
-
     /* ── CLAUSULA ── */
     .clausula-text {
       border: 1px solid #000;
@@ -320,23 +251,6 @@
       font-size: 7.5px;
       line-height: 1.4;
       text-align: justify;
-      min-height: 120px;
-    }
-
-    /* ── OBSERVACIONES ── */
-    .obs-lines {
-      border: 1px solid #000;
-      border-top: 0;
-    }
-
-    .obs-line {
-      border-bottom: 1px solid #ccc;
-      height: 18px;
-      padding: 2px 7px;
-    }
-
-    .obs-line:last-child {
-      border-bottom: none;
     }
 
     /* ── FIRMAS ── */
@@ -364,16 +278,44 @@
     }
 
     .firma-space {
-      height: 90px;
+      height: 75px;
       display: block;
     }
 
-    /* ── PRINT ── */
+    /* Anexo Styles */
+    .anexo-title-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    .anexo-title-table td {
+      vertical-align: middle;
+    }
+    .anexo-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    .anexo-table th {
+      background-color: #000;
+      color: #fff;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 6px;
+      border: 1px solid #000;
+      font-size: 9px;
+      text-align: center;
+    }
+    .anexo-table td {
+      border: 1px solid #000;
+      padding: 6px;
+      text-align: center;
+    }
+
     @media print {
       body {
         margin: 0;
       }
-
       .page {
         width: 216mm;
         padding: 8mm;
@@ -386,10 +328,8 @@
 <body>
   <div class="page">
 
-    <!-- ════════════════════════════ HEADER ════════════════════════════ -->
     <table class="header-table">
       <tr>
-        <!-- Logo -->
         <td class="header-logo">
           <div class="logo-box">
             <span class="logo-usc">USC</span>
@@ -397,18 +337,16 @@
           </div>
         </td>
 
-        <!-- Título central -->
         <td class="header-title">
           <p>FORMATO UNICO PARA</p>
           <p>EL MOVIMIENTO</p>
           <p>DE ACTIVOS</p>
         </td>
 
-        <!-- Consecutivo + Fecha -->
         <td class="header-right">
           <div class="consecutivo-block">
             <span class="consecutivo-label">CONSECUTIVO No.</span>
-            <div class="consecutivo-box"></div>
+            <div class="consecutivo-box">{{ $actaNumber }}</div>
           </div>
           <div class="fecha-block">
             <table style="width:100%; border-collapse:collapse;">
@@ -416,15 +354,15 @@
                 <td style="border:1px solid #000; padding:2px 4px; font-size:8px; font-weight:bold; text-transform:uppercase; white-space:nowrap;">FECHA</td>
                 <td style="border:1px solid #000; padding:2px; text-align:center; width:28px;">
                   <span style="font-size:7px; font-weight:bold; display:block;">DD</span>
-                  <div style="height:14px;"></div>
+                  <div style="height:14px; line-height:14px; font-weight:bold;">{{ date('d') }}</div>
                 </td>
                 <td style="border:1px solid #000; padding:2px; text-align:center; width:28px;">
                   <span style="font-size:7px; font-weight:bold; display:block;">MM</span>
-                  <div style="height:14px;"></div>
+                  <div style="height:14px; line-height:14px; font-weight:bold;">{{ date('m') }}</div>
                 </td>
                 <td style="border:1px solid #000; padding:2px; text-align:center; width:28px;">
                   <span style="font-size:7px; font-weight:bold; display:block;">AA</span>
-                  <div style="height:14px;"></div>
+                  <div style="height:14px; line-height:14px; font-weight:bold;">{{ date('y') }}</div>
                 </td>
               </tr>
             </table>
@@ -434,9 +372,8 @@
       </tr>
     </table>
 
-    <!-- ════════════════════════════ TIPO DE MOVIMIENTO ════════════════════════════ -->
     @php
-    $movType = $assets->first()->assignments->first()->movement_type ?? '';
+      $movType = $assets->first()->assignments->where('acta_number', $actaNumber)->first()->movement_type ?? '';
     @endphp
 
     <table class="tipo-table">
@@ -445,7 +382,7 @@
         <td>TRASLADO EN CALIDAD DE ASIGNACION</td>
 
         <td class="checkbox-cell">{{ $movType == 'PRESTAMO FUERA USC' ? 'X' : '' }}</td>
-        <td>PRESTAMO FUERA DE LAS INSTLACIONES DE LA USC</td>
+        <td>PRESTAMO FUERA DE LAS INSTALACIONES DE LA USC</td>
       </tr>
       <tr>
         <td class="checkbox-cell">{{ $movType == 'REPARACION DENTRO USC' ? 'X' : '' }}</td>
@@ -459,17 +396,16 @@
         <td>TRASLADO EN CALIDAD DE REPARACION FUERA DE LA USC</td>
 
         <td class="checkbox-cell">{{ $movType == 'OTRO' ? 'X' : '' }}</td>
-        <td>OTRO: <span class="otro-line">{{ $movType == 'OTRO' ? '' : '' }}</span></td>
+        <td>OTRO: <span class="otro-line">{{ $movType == 'OTRO' ? 'X' : '' }}</span></td>
       </tr>
       <tr>
         <td class="checkbox-cell">{{ $movType == 'PRESTAMO DENTRO USC' ? 'X' : '' }}</td>
-        <td colspan="3">PRESTAMO DENTRO DE LA INSTALACIONES DE LA USC</td>
+        <td colspan="3">PRESTAMO DENTRO DE LAS INSTALACIONES DE LA USC</td>
       </tr>
     </table>
 
-    <!-- ════════════════════════════ SEDE ════════════════════════════ -->
     @php
-    $sede = strtoupper($assets->first()->assignments->first()->headquarters ?? '');
+      $sede = strtoupper($assets->first()->assignments->where('acta_number', $actaNumber)->first()->headquarters ?? '');
     @endphp
 
     <div class="section-header">SEDE</div>
@@ -486,14 +422,14 @@
         <td class="sede-checkbox">{{ $sede == 'PALMIRA' ? 'X' : '' }}</td>
 
         <td style="font-weight:bold; font-size:9.5px;">OTRO</td>
-        <td style="width:35%;">
+        <td style="width:35%; font-weight:bold; padding-left:5px;">
           @if(!in_array($sede, ['PAMPALINDA', 'CENTRO', 'PALMIRA']) && $sede != '')
-          {{ $sede }}
+            {{ $sede }}
           @endif
         </td>
       </tr>
     </table>
-    <!-- ════════════════════════════ AREAS ════════════════════════════ -->
+
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; table-layout: fixed;">
       <tr style="background-color: #000; color: #fff; text-align: center;">
         <td colspan="4" style="padding: 4px; font-weight: bold; font-size: 10px;">ÁREA DE ORIGEN (ENTREGA)</td>
@@ -572,58 +508,75 @@
         </td>
       </tr>
     </table>
-    <!-- ════════════════════════════ ACTIVOS FIJOS ════════════════════════════ -->
+
     <div class="section-header">INFORMACION DE LOS ACTIVOS FIJOS</div>
 
     <table class="activos-table" style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
       <thead>
         <tr style="background-color: #eee;">
-          <th style="border: 1px solid #000; padding: 5px;">No. Sticker</th>
-          <th style="border: 1px solid #000; padding: 5px;">DESCRIPCION DEL ACTIVO FIJO</th>
-          <th style="border: 1px solid #000; padding: 5px;">No. Serial</th>
+          <th style="border: 1px solid #000; padding: 5px; width: 20%;">No. Sticker</th>
+          <th style="border: 1px solid #000; padding: 5px; width: 60%;">DESCRIPCION DEL ACTIVO FIJO</th>
+          <th style="border: 1px solid #000; padding: 5px; width: 20%;">No. Serial</th>
         </tr>
       </thead>
       <tbody>
-        {{-- Datos dinámicos --}}
-        @foreach($assets as $asset)
-        <tr>
-          <td style="border: 1px solid #000; padding: 5px; text-align: center;">{{ $asset->internal_code }}</td>
-          <td style="border: 1px solid #000; padding: 5px;">{{ $asset->hostname }} - {{ $asset->cpu }}</td>
-          <td style="border: 1px solid #000; padding: 5px; text-align: center;">{{ $asset->serial_number }}</td>
-        </tr>
-        @endforeach
-
-        {{-- Relleno para mantener el diseño (si hay menos de 6 activos) --}}
-        @for($i = count($assets); $i < 6; $i++)
+        @if(count($assets) > 5)
+          {{-- Si son más de 5, SIGMA escribe la alerta institucional y delega la visualización al anexo --}}
           <tr>
-          <td style="border: 1px solid #000; padding: 5px; color: transparent;">&nbsp;</td>
-          <td style="border: 1px solid #000; padding: 5px;">&nbsp;</td>
-          <td style="border: 1px solid #000; padding: 5px;">&nbsp;</td>
+            <td colspan="3" style="border: 1px solid #000; padding: 12px; text-align: center; font-weight: bold; color: #000; background-color: #f9fafb;">
+              ⚠️ MOVIMIENTO MASIVO DETECTADO ({{ count($assets) }} EQUIPOS)<br>
+              <span style="font-size: 8.5px; font-weight: normal; margin-top: 4px; display: block; color: #444;">
+                Debido al volumen de hardware de esta transacción, SIGMA ha estructurado la relación pormenorizada de marcas, modelos, placas y seriales de forma automatizada en la hoja técnica adjunta como <strong>ANEXO TÉCNICO</strong> de este documento.
+              </span>
+            </td>
           </tr>
+          {{-- Relleno estético para cuadrar el alto del formato original --}}
+          @for($i = 1; $i < 5; $i++)
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px; color: transparent;">&nbsp;</td>
+              <td style="border: 1px solid #000; padding: 5px;">&nbsp;</td>
+              <td style="border: 1px solid #000; padding: 5px;">&nbsp;</td>
+            </tr>
           @endfor
+        @else
+          {{-- Flujo tradicional estándar de 1 a 5 equipos --}}
+          @foreach($assets as $asset)
+          <tr>
+            <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">{{ $asset->internal_code }}</td>
+            <td style="border: 1px solid #000; padding: 5px;">{{ $asset->hostname ?? 'EQUIPO DE CÓMPUTO' }} - {{ $asset->cpu ?? 'HARDWARE' }} ({{ $asset->model }})</td>
+            <td style="border: 1px solid #000; padding: 5px; text-align: center; font-weight: bold;">{{ $asset->serial_number }}</td>
+          </tr>
+          @endforeach
+
+          {{-- Relleno para mantener las proporciones exactas del diseño institucional si faltan filas --}}
+          @for($i = count($assets); $i < 5; $i++)
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px; color: transparent;">&nbsp;</td>
+              <td style="border: 1px solid #000; padding: 5px;">&nbsp;</td>
+              <td style="border: 1px solid #000; padding: 5px;">&nbsp;</td>
+            </tr>
+          @endfor
+        @endif
       </tbody>
     </table>
 
-    <!-- ════════════════════════════ CLAUSULA DE COMPROMISO ════════════════════════════ -->
     <div class="section-header">CLAUSULA DE COMPROMISO</div>
 
     <div class="clausula-text">
-      <p>Como funcionario de la Universidad Santiago de Cali declaro que los activos relacionen en el presente documento están bajo mi responsabilidad, por lo cual les daré un uso adecuado al desempeño de mis funciones y a la destinación Institucional prevista para cada uno de ellos. En consecuencia, serán asumidos por mí, el daño o la pérdida de los mismos debidos a mi negligencia o incumplimiento de los instructivos relacionados con su uso y conservación.</p>
+      <p>Como funcionario de la Universidad Santiago de Cali declaro que los activos relacionados en el presente documento están bajo mi responsabilidad, por lo cual les daré un uso adecuado al desempeño de mis funciones y a la destinación Institucional prevista para cada uno de ellos. En consecuencia, serán asumidos por mí, el daño o la pérdida de los mismos debidos a mi negligencia o incumplimiento de los instructivos relacionados con su uso y conservación.</p>
       <br>
-      <p>Me comprometo a informar oportunamente a la oficina de Vicerrectoría Administrativa cualquier desplazamiento, traslado temporal o definitivo de dichos activos media la tramitación de los formatos respectivos y sobre cualquier situación que ponga en inminente riesgo los bienes relacionados.</p>
+      <p>Me comprometo a informar oportunamente a la oficina de Vicerrectoría Administrativa cualquier desplazamiento, traslado temporal o definitivo de dichos activos mediante la tramitación de los formatos respectivos y sobre cualquier situación que ponga en inminente riesgo los bienes relacionados.</p>
       <br>
       <p>Dado que la omisión de estas disposiciones se considera falta por el reglamento interno de trabajo, asumo las consecuencias económicas que conlleven el o la pérdida de los bienes mencionados si ocurren por mi negligencia o incumplimiento de los Instructivos correspondientes, y en tal evento autorizo a la Universidad Santiago de Cali a efectuar el descuento correspondiente al valor de reposición del bien afectado, deduciéndolo de mis salarios y prestaciones sociales o eventuales indemnizaciones a mi favor.</p>
     </div>
 
-    <!-- ════════════════════════════ OBSERVACIONES ADICIONALES ════════════════════════════ -->
     <div class="section-header">OBSERVACIONES ADICIONALES</div>
 
-    <div class="obs-container" style="border: 1px solid #000; border-top: 0; padding: 7px; font-size: 9px; line-height: 20px; min-height: 80px; background-image: linear-gradient(#ccc 1px, transparent 1px); background-size: 100% 20px;">
-      {{ $assets->first()->assignments->where('acta_number', $actaNumber)->first()->observations }}
+    <div class="obs-container" style="border: 1px solid #000; border-top: 0; padding: 7px; font-size: 9px; line-height: 20px; min-height: 70px; background-image: linear-gradient(#ccc 1px, transparent 1px); background-size: 100% 20px; font-weight: bold;">
+      {{ $assets->first()->assignments->where('acta_number', $actaNumber)->first()->observations ?? 'Movimiento masivo gestionado en SIGMA' }}
     </div>
 
-    <!-- ════════════════════════════ FIRMAS ════════════════════════════ -->
-    <table class="firmas-table">
+    <table class="firmas-table" style="margin-top: 5px;">
       <tr>
         <td>
           <div class="firma-header">FIRMA Y SELLO RESPONSABLE<br>ACTUAL DEL ACTIVO</div>
@@ -641,6 +594,56 @@
     </table>
 
   </div>
+
+  {{-- ════════════════════════════ ANEXO AUTOMÁTICO DE EQUIPOS (>5) ════════════════════════════ --}}
+  @if(count($assets) > 5)
+    <div class="page page-break">
+      
+      <table class="anexo-title-table">
+        <tr>
+          <td style="width: 70%;">
+            <h2 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 0.5px;">SIGMA - ANEXO TÉCNICO</h2>
+            <p style="margin: 3px 0 0 0; font-size: 10px; color: #555; text-transform: uppercase; font-weight: bold;">Relación detallada de Hardware por volumen de movimiento masivo</p>
+          </td>
+          <td style="width: 30%; text-align: right; font-size: 10px; line-height: 1.4;">
+            <strong>CONSECUTIVO:</strong> {{ $actaNumber }}<br>
+            <strong>FECHA:</strong> {{ date('d/m/Y H:i') }}
+          </td>
+        </tr>
+      </table>
+
+      <div style="border-top: 2px solid #000; margin-bottom: 15px;"></div>
+
+      <table class="anexo-table">
+        <thead>
+          <tr>
+            <th style="width: 5%;">Item</th>
+            <th style="width: 25%;">No. Sticker / Placa</th>
+            <th style="width: 45%;">Descripción / Modelo de Hardware</th>
+            <th style="width: 25%;">Número de Serial</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($assets as $index => $asset)
+            <tr>
+              <td style="color: #555;">{{ $index + 1 }}</td>
+              <td style="font-weight: bold; font-size: 10.5px;">{{ $asset->internal_code ?? 'S/N' }}</td>
+              <td style="text-align: left; padding-left: 10px;">
+                <strong>{{ $asset->hostname ?? 'COMPUTADOR' }}</strong> - {{ $asset->cpu ?? 'PROCESADOR' }} ({{ $asset->model }})
+              </td>
+              <td style="font-weight: bold; font-size: 10.5px;">{{ $asset->serial_number }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+
+      <div style="margin-top: 25px; border: 1px solid #000; padding: 10px; font-size: 8.5px; line-height: 1.5; text-align: justify; background-color: #fafafa;">
+        <strong>NOTIFICACIÓN DE AUDITORÍA DE INVENTARIOS USC:</strong> Este documento anexo forma parte integral e indivisible del Acta de Movimiento N° <strong>{{ $actaNumber }}</strong>. Los activos y componentes de hardware aquí descritos han sido validados y cruzados de forma nativa por la base de datos central de <strong>SIGMA</strong>, vinculados al inicio de sesión y registro del técnico operario actual de Activos Fijos. Exime al personal de soporte del diligenciamiento e impresión de libros u hojas de cálculo secundarias en Excel.
+      </div>
+
+    </div>
+  @endif
+
 </body>
 
 </html>

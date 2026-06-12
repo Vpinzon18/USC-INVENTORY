@@ -45,6 +45,9 @@ Route::middleware(['auth', 'role:1'])->group(function () {
     Route::resource('users', UserController::class);
 });
 
+Route::post('/users/{user}/reset-password', [App\Http\Controllers\Admin\UserController::class, 'resetPassword'])
+    ->name('users.reset-password');
+
 // RUTAS PROTEGIDAS PARA LA ADMINISTRACION DE LA INFRAESTRUCCTURA
 Route::middleware(['auth' ,'role:1'])->prefix('admin')->group(function () {
     Route::resource('campuses', CampusController::class);
@@ -91,6 +94,10 @@ Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceSc
 Route::get('/schedules/export', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'export'])->name('schedules.export'); 
 Route::get('/maintenance/{maintenanceSchedule}/edit', [MaintenanceScheduleController::class, 'edit'])->name('maintenance.edit');
 });
+
+Route::get('/schedules/calendar', function () {
+        return view('admin.schedules.calendar');
+    })->name('schedules.calendar');
 
 // RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE INVENTARIO HV
 Route::resource('assets', AssetController::class);

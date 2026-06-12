@@ -12,7 +12,7 @@
                         <h2 class="font-extrabold text-2xl text-slate-800 tracking-tight">
                             Editar Usuario: <span class="text-violet-600">{{ $user->name }}</span>
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1 font-medium">Modifique los datos principales o cambie el nivel de acceso al sistema.</p>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">Modifique los datos principales o asigne una nueva clave de acceso.</p>
                     </div>
                 </div>
 
@@ -71,6 +71,15 @@
                             @endif
                         </div>
 
+                        <div class="mt-2">
+                            <button type="button" onclick="promptForPassword()" 
+                                    class="inline-flex items-center text-sm font-medium text-orange-500 hover:text-orange-700 transition-colors bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                Asignar Nueva Clave
+                            </button>
+                        </div>
                     </div>
 
                     <div class="mt-4 flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
@@ -87,4 +96,40 @@
             </div>
         </div>
     </div>
+
+    <form id="reset-password-form" action="{{ route('users.reset-password', $user->id) }}" method="POST" class="hidden">
+        @csrf
+        <input type="hidden" name="new_password" id="new-password-input">
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function promptForPassword() {
+            Swal.fire({
+                title: 'Asignar nueva contraseña',
+                text: 'Escribe la contraseña temporal para este usuario:',
+                input: 'text',
+                inputPlaceholder: 'Mínimo 8 caracteres...',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f97316',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Guardar y Restablecer',
+                cancelButtonText: 'Cancelar',
+                preConfirm: (password) => {
+                    if (!password || password.length < 8) {
+                        Swal.showValidationMessage('La contraseña debe tener al menos 8 caracteres para ser segura.');
+                        return false;
+                    }
+                    return password;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Pasamos el valor al input oculto y enviamos el formulario secundario
+                    document.getElementById('new-password-input').value = result.value;
+                    document.getElementById('reset-password-form').submit();
+                }
+            })
+        }
+    </script>
 </x-app-layout>

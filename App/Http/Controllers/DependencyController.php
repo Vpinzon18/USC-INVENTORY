@@ -40,7 +40,7 @@ class DependencyController extends Controller
         $request->validate(['name' => 'required|unique:dependencies|max:255']);
         Dependency::create(['name' => $request->name]);
 
-        return redirect()->route('admin.dependencies.index')->with('success', 'Dependencia creada.');
+        return redirect()->route('dependencies.index')->with('success', 'Dependencia creada.');
     }
 
     // Mostrar el formulario para editar

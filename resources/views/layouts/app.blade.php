@@ -60,6 +60,76 @@
                     </svg>
                     <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Dashboard</span>
                 </a>
+
+                <div>
+                    <a href="{{ route('custodians.index') }}"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('custodians.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
+                        style="text-decoration: none;">
+
+                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('custodians.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+
+                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
+                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
+                            Responsables
+                        </span>
+                    </a>
+                </div>
+                <div>
+                    <a href="{{ route('assets.index') }}"
+                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('assets.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
+                        style="text-decoration: none;">
+
+                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('assets.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+
+                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
+                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
+                            Inventario / HV
+                        </span>
+                    </a>
+                </div>
+                <div x-data="{ open: {{ request()->routeIs('schedules.*') ? 'true' : 'false' }} }">
+
+                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('schedules.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}">
+
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('schedules.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span title="Cronograma de Mantenimientos" class="ml-3 truncate transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
+                                Plan Mantenimientos
+                            </span>
+                        </div>
+
+                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
+
+                        <a href="{{ route('schedules.index') }}"
+                            class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('schedules.index') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            Agendamiento
+                        </a>
+                        <a href="{{ route('schedules.calendar') }}"
+                            class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('admin.schedules.calendar') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-9 2h10m-9 2h10m-9 2h10" />
+                            </svg>
+                            Cronograma Visual
+                        </a>
+                    </div>
+                </div>
                 <div x-data="{ open: {{ request()->routeIs('movements.*') ? 'true' : 'false' }} }">
 
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
@@ -101,38 +171,6 @@
                         </a>
 
                     </div>
-                </div>
-                <div>
-                    <a href="{{ route('custodians.index') }}"
-                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('custodians.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
-                        style="text-decoration: none;">
-
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('custodians.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-
-                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
-                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
-                            Responsables
-                        </span>
-                    </a>
-                </div>
-                <div>
-                    <a href="{{ route('assets.index') }}"
-                        class="w-full flex items-center px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('assets.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}"
-                        style="text-decoration: none;">
-
-                        <svg class="w-5 h-5 shrink-0 {{ request()->routeIs('assets.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-
-                        <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300"
-                            :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">
-                            Inventario / HV
-                        </span>
-                    </a>
                 </div>
 
                 @if(in_array(Auth::user()->role, [1, 2]))
@@ -197,12 +235,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Nuevo Registro
-                        </a>
-                        <a href="{{ route('schedules.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('schedules.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('schedules.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Cronograma
                         </a>
                     </div>
                 </div>

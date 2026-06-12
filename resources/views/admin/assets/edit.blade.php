@@ -44,7 +44,7 @@
                         </svg>
                         <div>
                             <h4 class="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-0.5">Hardware Protegido</h4>
-                            <p class="text-[11px] text-slate-500 leading-relaxed">El hardware de este equipo es reportado por el Agente SOMA. Solo puede editar los Periféricos.</p>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">El hardware de este equipo es reportado por el Agente SIGMA. Solo puede editar los Periféricos.</p>
                         </div>
                     </div>
                     @else
@@ -54,27 +54,10 @@
                         </svg>
                         <div>
                             <h4 class="text-[10px] font-bold text-amber-800 uppercase tracking-widest mb-0.5">Modo de Edición Manual</h4>
-                            <p class="text-[11px] text-amber-700 leading-relaxed">Este equipo no cuenta con agente SOMA. Puede editar libremente sus componentes de hardware.</p>
+                            <p class="text-[11px] text-amber-700 leading-relaxed">Este equipo no cuenta con agente SIGMA. Puede editar libremente sus componentes de hardware.</p>
                         </div>
                     </div>
                     @endif
-
-
-                    <!-- @if($asset->is_agent_managed)
-                    <div class="absolute top-0 right-0 bg-emerald-100 text-emerald-700 text-[9px] font-extrabold px-3 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm border-b border-l border-emerald-200 uppercase tracking-wider">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Agente SOMA (Solo Lectura)
-                    </div>
-                    @else
-                    <div class="absolute top-0 right-0 bg-amber-100 text-amber-700 text-[9px] font-extrabold px-3 py-1 rounded-bl-lg flex items-center gap-1 shadow-sm border-b border-l border-amber-200 uppercase tracking-wider">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                        Registro Manual (Editable)
-                    </div>
-                    @endif -->
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all relative overflow-hidden mb-6">
                         <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100 mt-2">
                             <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +142,7 @@
                                 <div>
                                     <h4 class="text-[10px] font-bold text-blue-900 uppercase tracking-widest mb-0.5">Gestión de Traslados y Asignaciones</h4>
                                     <p class="text-[11px] text-blue-700 leading-relaxed">
-                                        Para reubicar este equipo (Sede, Bloque u Oficina) o cambiar al responsable asignado, debe gestionar el traslado a través del <strong>Módulo de Movimientos</strong> para garantizar la trazabilidad del activo.
+                                        Para reubicar este equipo (Sede, Bloque u Oficina) o cambiar al responsable asignado, debe gestionar el traslado a través del <strong>Módulo de Movimientos de Activos</strong> para garantizar la trazabilidad del activo.
                                     </p>
                                 </div>
                             </div>
@@ -353,40 +336,69 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm mt-6">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
+
+                        {{-- ENCABEZADO DE SECCIÓN CON FILTRO INTEGRADO --}}
+                        <div class="p-4 bg-gray-50/75 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                             <div class="flex items-center gap-2">
                                 <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <h3 class="font-bold text-gray-700 uppercase tracking-wider text-sm">8. Software Instalado</h3>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 uppercase tracking-wider text-xs">8. Software Instalado</h3>
+                                    <p class="text-[10px] text-gray-400 font-medium">Historial pormenorizado de aplicaciones detectadas en el sistema informático.</p>
+                                </div>
                             </div>
-                            <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md font-bold uppercase">Detectado por Agente SOMA</span>
+
+                            <div class="flex items-center gap-3 w-full sm:w-auto">
+                                {{-- Buscador dinámico en el frontend --}}
+                                <div class="relative w-full sm:w-64">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <input type="text" id="softwareSearch" placeholder="Filtrar por nombre o versión..."
+                                        class="w-full bg-white pl-8 p-1.5 border border-gray-200 rounded-lg text-xs font-medium focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 outline-none shadow-sm">
+                                </div>
+
+                                <span class="text-[10px] bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md font-bold uppercase shrink-0 border border-indigo-100/50">
+                                    Detectado por Agente SIGMA
+                                </span>
+                            </div>
                         </div>
 
-                        <div class="overflow-x-auto border border-gray-100 rounded-xl">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-gray-50 text-gray-500 uppercase">
+                        {{-- CONTENEDOR CON SCROLL VERTICAL FIJO (ELIMINA EL SCROLL MASIVO) --}}
+                        <div class="overflow-x-auto max-h-[340px] overflow-y-auto bg-white" id="softwareTableContainer">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider sticky top-0 z-10 border-b border-gray-200 shadow-2xs">
                                     <tr>
-                                        <th class="px-4 py-3">Nombre de la Aplicación</th>
-                                        <th class="px-4 py-3">Versión</th>
-                                        <th class="px-4 py-3">Fecha de Registro</th>
+                                        <th class="px-4 py-3 font-bold text-gray-700">Nombre de la Aplicación</th>
+                                        <th class="px-4 py-3 font-bold text-gray-700 text-center w-40">Versión</th>
+                                        <th class="px-4 py-3 font-bold text-gray-700 text-center w-48">Fecha de Registro</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 text-gray-600">
+                                <tbody class="divide-y divide-gray-100 text-gray-600" id="softwareTableBody">
                                     @forelse($asset->software as $app)
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-4 py-2 font-medium text-gray-800">{{ $app->name }}</td>
-                                        <td class="px-4 py-2">{{ $app->version ?? 'N/A' }}</td>
-                                        <td class="px-4 py-2">{{ $app->created_at ? $app->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
+                                    <tr class="software-row hover:bg-gray-50/70 transition-colors duration-150">
+                                        <td class="px-4 py-2 font-medium text-gray-800 software-name">{{ $app->name }}</td>
+                                        <td class="px-4 py-2 text-center font-mono text-[11px] text-gray-500">{{ $app->version ?? 'N/A' }}</td>
+                                        <td class="px-4 py-2 text-center text-gray-400">{{ $app->created_at ? $app->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="3" class="px-4 py-6 text-center text-gray-400 italic">
-                                            No hay aplicaciones registradas en este equipo por el agente SOMA.
+                                        <td colspan="3" class="px-4 py-12 text-center text-gray-400 italic bg-gray-50/20">
+                                            No hay aplicaciones registradas en este equipo por el agente SIGMA.
                                         </td>
                                     </tr>
                                     @endforelse
+
+                                    {{-- Fila informativa por si la búsqueda no encuentra coincidencia --}}
+                                    <tr id="noSoftwareResults" class="hidden">
+                                        <td colspan="3" class="px-4 py-8 text-center text-xs font-bold text-amber-600 bg-amber-50/20">
+                                            ⚠️ No se encontraron aplicaciones que coincidan con la búsqueda.
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -405,6 +417,31 @@
                         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                         <script>
+                            document.getElementById('softwareSearch').addEventListener('input', function(e) {
+                                const term = e.target.value.toLowerCase().trim();
+                                const rows = document.querySelectorAll('.software-row');
+                                let visibles = 0;
+
+                                rows.forEach(row => {
+                                    const name = row.querySelector('.software-name').textContent.toLowerCase();
+
+                                    if (name.includes(term)) {
+                                        row.classList.remove('hidden');
+                                        visibles++;
+                                    } else {
+                                        row.classList.add('hidden');
+                                    }
+                                });
+
+                                // Manejo del estado vacío del filtro
+                                const noResultsRow = document.getElementById('noSoftwareResults');
+                                if (visibles === 0 && term.length > 0) {
+                                    noResultsRow.classList.remove('hidden');
+                                } else {
+                                    noResultsRow.classList.add('hidden');
+                                }
+                            });
+
                             function confirmSave() {
                                 Swal.fire({
                                     title: '¿Guardar cambios?',

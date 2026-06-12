@@ -3,9 +3,17 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Hoja de Vida SOMA - {{ $asset->internal_code ?? $asset->serial_number }}</title>
+    <title>Hoja de Vida SIGMA - {{ $asset->internal_code ?? $asset->serial_number }}</title>
     <style>
-        /* 1. Fondo gris para todo el documento */
+        /* 1. CONFIGURACIÓN GLOBAL DE IMPRESIÓN (Corrige el pegado al borde superior) */
+        @page {
+            margin-top: 1.5cm;    /* Separa el encabezado del borde físico de la hoja impresa o PDF */
+            margin-bottom: 1.2cm;
+            margin-left: 1.2cm;
+            margin-right: 1.2cm;
+        }
+
+        /* 2. Fondo gris para la simulación en pantalla */
         body {
             background-color: #525659 !important;
             margin: 0;
@@ -13,26 +21,27 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
-        /* 2. Definición del contenedor de la hoja */
+        /* 3. Definición del contenedor de la hoja */
         .hoja-carta {
             background-color: white !important;
             width: 21.59cm !important;
             min-height: 27.94cm !important;
             margin: 0 auto 2cm auto !important;
-            /* El 'margin: 0 auto' centra la hoja */
-            padding: 0.8cm 1cm !important;
+            padding: 1.2cm 1.2cm !important; /* Incrementado para dar más aire interno al formato */
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            /* Esta es la sombra que da el efecto de hoja */
             display: flex;
             flex-direction: column;
             color: black;
             overflow: hidden;
             position: relative;
-            /* Importante para el posicionamiento del footer */
         }
 
-        /* 3. Ajuste para que la página impresa sea limpia */
+        /* 4. Ajuste para que la página impresa sea limpia */
         @media print {
+            @page {
+                margin-top: 1.5cm; /* Reafirma la separación en el controlador de impresión */
+            }
+            
             body {
                 background-color: white !important;
                 padding: 0 !important;
@@ -40,12 +49,13 @@
 
             .hoja-carta {
                 margin: 0 !important;
+                padding: 0 !important; /* El margen lo controla @page, evitamos duplicación de espacio */
                 box-shadow: none !important;
                 border: none !important;
             }
         }
 
-        /* Resto de tus estilos de tabla... */
+        /* 5. Estilos de tabla del formato R-GT004 */
         table {
             width: 100% !important;
             border-collapse: collapse !important;
@@ -55,10 +65,9 @@
             text-transform: uppercase;
         }
 
-        td,
-        th {
+        td, th {
             border: 1px solid #000 !important;
-            padding: 3px !important;
+            padding: 4px 3px !important; /* Un poco más de respiro vertical interno en las celdas */
             text-align: center;
             vertical-align: middle;
         }
@@ -291,7 +300,7 @@
                 @endfor
         </table>
 
-        <div style="margin-top: auto; text-align: right; font-size: 8px; font-weight: bold;">SOMA - PÁGINA 1 DE 2</div>
+        <div style="margin-top: auto; text-align: right; font-size: 8px; font-weight: bold;">SIGMA - PÁGINA 1 DE 2</div>
     </div>
 
     <div class="hoja-carta">
@@ -374,7 +383,7 @@
                 @endfor
         </table>
         <div style="margin-top: auto; text-align: right; font-size: 9px; font-weight: bold; border-top: 1px solid black; padding-top: 5px;">
-            SOMA - SISTEMA DE GESTIÓN TECNOLÓGICA USC | PÁGINA 2 DE 2
+            SIGMA  - SISTEMA DE GESTIÓN TECNOLÓGICA USC | PÁGINA 2 DE 2
         </div>
     </div>
 </body>
