@@ -84,4 +84,5 @@ public function resetPassword(Request $request, User $user)
 
     return back()->with('success', 'La contraseña de ' . $user->name . ' ha sido actualizada exitosamente.');
 }
+
 }

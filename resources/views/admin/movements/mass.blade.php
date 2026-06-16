@@ -93,7 +93,7 @@
                                         <div class="ml-3 flex-1 min-w-0">
                                             <span class="block text-xs font-bold text-gray-700 group-hover:text-indigo-600 transition">{{ $asset->serial_number }}</span>
                                             <span class="block text-[10px] text-gray-400 font-semibold tracking-wide">{{ $asset->internal_code }}</span>
-                                            <span class="warning-text block text-[9px] text-amber-600 font-bold mt-0.5 hidden">⚠️ UBICADO EN EL DESTINO ACTUAL</span>
+                                            <span class="warning-text block text-[9px] text-amber-600 font-bold mt-0.5 hidden"> UBICADO EN EL DESTINO ACTUAL</span>
                                         </div>
                                     </label>
                                     @endforeach

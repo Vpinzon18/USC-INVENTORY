@@ -206,7 +206,7 @@ class MovementController extends Controller
     
     public function createMass()
     {
-        $assets = Asset::with(['room', 'currentAssignment'])->orderBy('serial_number')->take(150)->get();
+        $assets = Asset::with(['room', 'currentAssignment'])->orderBy('serial_number')->take(300)->get();
         
         $custodians = Custodian::with('rooms.building')->orderBy('full_name')->get();
 

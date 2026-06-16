@@ -42,15 +42,37 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+        // 1. Preparamos los datos en el idioma de Active Directory
+        $ldapCredentials = [
+            'mail' => $this->input('email'), 
+            'password' => $this->input('password'),
+        ];
 
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+        // 2. INTENTO A: Servidor de la Universidad (Active Directory)
+        if (\Illuminate\Support\Facades\Auth::attempt($ldapCredentials, $this->boolean('remember'))) {
+            \Illuminate\Support\Facades\RateLimiter::clear($this->throttleKey());
+            return; // ¡Login exitoso por AD!
         }
 
-        RateLimiter::clear($this->throttleKey());
+        // 3. INTENTO B: Base de datos Local (El Respaldo Infalible)
+        // Buscamos si el correo existe físicamente en nuestra tabla 'users'
+        $localUser = \App\Models\User::where('email', $this->input('email'))->first();
+
+        // Si el usuario existe Y su contraseña local coincide con la que escribió
+        if ($localUser && \Illuminate\Support\Facades\Hash::check($this->input('password'), $localUser->password)) {
+            
+            // Le iniciamos sesión forzosamente (Bypass de LDAP)
+            \Illuminate\Support\Facades\Auth::login($localUser, $this->boolean('remember'));
+            \Illuminate\Support\Facades\RateLimiter::clear($this->throttleKey());
+            return; // ¡Login exitoso por Base de Datos Local!
+        }
+
+        // 4. Si no está en la Universidad ni en la Base de datos local, lo rechazamos
+        \Illuminate\Support\Facades\RateLimiter::hit($this->throttleKey());
+
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            'email' => trans('auth.failed'), // 'Estas credenciales no coinciden con nuestros registros.'
+        ]);
     }
 
     /**
