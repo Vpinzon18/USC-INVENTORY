@@ -10,6 +10,7 @@ use App\Models\Assignment;
 use function Spatie\LaravelPdf\Support\pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Mews\Purifier\Facades\Purifier;
 
 class MovementController extends Controller
 {
@@ -76,19 +77,25 @@ class MovementController extends Controller
             'movement_type' => 'required|string',
             'custodian_id'  => 'required|exists:custodians,id',
             'observations'  => 'nullable|string',
-            'asset_ids'     => 'required|array|min:1', // El array de equipos que se quedan/añaden
+            'asset_ids'     => 'required|array|min:1', 
             'asset_ids.*'   => 'exists:assets,id',
         ]);
 
-        // Convertimos los IDs enviados a enteros para comparar con seguridad
+        // 2. ESCUDO MIXTO ANTI-XSS
+        // Textos cortos usan strip_tags
+        $validated['movement_type'] = strip_tags($validated['movement_type']);
+        
+        // Textos largos/enriquecidos usan Purifier
+        if (isset($validated['observations'])) {
+            $validated['observations'] = Purifier::clean($validated['observations']);
+        }
+
         $newAssetIds = array_map('intval', $request->asset_ids);
 
-        // 1. OBTENER ESTADO ACTUAL: Equipos que están registrados hoy en esa acta
         $currentAssetIds = \App\Models\Assignment::where('acta_number', $baseMovement->acta_number)
             ->pluck('asset_id')
             ->toArray();
 
-        // 2. EQUIPOS A ELIMINAR (Están en la BD pero el usuario los quitó en la vista)
         $assetsToRemove = array_diff($currentAssetIds, $newAssetIds);
         if (!empty($assetsToRemove)) {
             \App\Models\Assignment::where('acta_number', $baseMovement->acta_number)
@@ -96,7 +103,6 @@ class MovementController extends Controller
                 ->delete();
         }
 
-       // 3. ACTUALIZAR EXISTENTES Y CREAR NUEVOS
         foreach ($newAssetIds as $assetId) {
             \App\Models\Assignment::updateOrCreate(
                 [
@@ -104,9 +110,9 @@ class MovementController extends Controller
                     'asset_id'    => $assetId
                 ],
                 [
-                    'movement_type' => $request->movement_type,
+                    'movement_type' => $validated['movement_type'], // Usamos el dato limpio
                     'custodian_id'  => $request->custodian_id,
-                    'observations'  => $request->observations,
+                    'observations'  => $validated['observations'],  // Usamos el dato purificado
                     'room_id'       => $baseMovement->room_id,
                     'started_at'    => $baseMovement->started_at ?? now(),
                     'status'        => $baseMovement->status ?? 'active',
@@ -116,93 +122,96 @@ class MovementController extends Controller
         }
 
         return redirect()->route('movements.index')
-                         ->with('success', 'El lote del acta ' . $baseMovement->acta_number . ' ha sido reestructurado y actualizado con éxito.');
+                         ->with('success', 'El lote del acta ' . $baseMovement->acta_number . ' ha sido reestructurado y actualizado con seguridad.');
     }
-    public function storeMass(Request $request)
-{
-    // Validamos únicamente los parámetros del formulario de SIGMA
-    $request->validate([
-        'selected_assets' => 'required|array|min:1',
-        'selected_assets.*' => 'exists:assets,id',
-        'room_id' => 'required|exists:rooms,id',
-        'custodian_id' => 'required|exists:custodians,id',
-        'movement_type' => 'required|string',
-        'headquarters' => 'required|string',
-    ]);
+   public function storeMass(Request $request)
+    {
+        // 3. CERRAMOS LA PUERTA OCULTA: Agregamos 'observation' a la validación
+        $validated = $request->validate([
+            'selected_assets' => 'required|array|min:1',
+            'selected_assets.*' => 'exists:assets,id',
+            'room_id'         => 'required|exists:rooms,id',
+            'custodian_id'    => 'required|exists:custodians,id',
+            'movement_type'   => 'required|string',
+            'headquarters'    => 'required|string',
+            'observation'     => 'nullable|string', // ¡Aduana activada!
+        ]);
 
-    $custodianDestino = $request->custodian_id;
-    $salaDestino = $request->room_id;
-    $movedCount = 0;
-    $ignoredCount = 0;
+        $custodianDestino = $request->custodian_id;
+        $salaDestino = $request->room_id;
+        $movedCount = 0;
+        $ignoredCount = 0;
 
-    // Generación del consecutivo de Acta de SIGMA
-    $actaNumber = 'R-AF001-' . date('Y') . '-' . str_pad(Auth::id(), 3, '0', STR_PAD_LEFT) . '-' . time();
-    $custodioModel = Custodian::findOrFail($custodianDestino);
+        // 4. ESCUDO ANTI-XSS PARA LOS DATOS RECIBIDOS
+        $tipoMovimientoLimpio = strip_tags($validated['movement_type']);
+        $sedeLimpia           = strip_tags($validated['headquarters']);
+        
+        // Limpiamos las observaciones base con Purifier
+        $observacionesBase = isset($validated['observation']) 
+                                ? Purifier::clean($validated['observation']) 
+                                : 'Movimiento masivo gestionado en SIGMA';
 
-    // Evaluamos si el soporte TI requiere la cláusula de "Relación de Equipos" (> 5)
-    $totalActivos = count($request->selected_assets);
-    $observacionesFinales = $request->observation ?? 'Movimiento masivo gestionado en SIGMA';
+        $actaNumber = 'R-AF001-' . date('Y') . '-' . str_pad(Auth::id(), 3, '0', STR_PAD_LEFT) . '-' . time();
+        $custodioModel = Custodian::findOrFail($custodianDestino);
 
-    if ($totalActivos > 5) {
-        $observacionesFinales .= "\n\n[SOPORTE TI: Debido al volumen del movimiento (>5 equipos), SIGMA generó automáticamente la relación detallada de hardware en el anexo del Acta Técnica].";
-    }
+        $totalActivos = count($request->selected_assets);
+        $observacionesFinales = $observacionesBase;
 
-    DB::transaction(function () use ($request, $custodianDestino, $custodioModel, $salaDestino, &$movedCount, &$ignoredCount, $actaNumber, $observacionesFinales) {
-        foreach ($request->selected_assets as $assetId) {
-            $asset = Asset::find($assetId);
-            if (!$asset) continue;
-
-            $current = $asset->currentAssignment;
-
-            // Omitir si ya está asignado al mismo destino
-            if ($current && $current->custodian_id == $custodianDestino && $current->room_id == $salaDestino) {
-                $ignoredCount++;
-                continue;
-            }
-
-            // Desactivar asignación previa
-            if ($current) {
-                $current->update(['status' => 'inactive', 'ended_at' => now()]);
-            }
-
-            // Registrar nueva asignación en lote
-            $asset->assignments()->create([
-                'custodian_id'  => $custodianDestino,
-                'cost_center'   => $custodioModel->cost_center,
-                'room_id'       => $salaDestino,
-                'started_at'    => now(),
-                'status'        => 'active',
-                'observations'  => $observacionesFinales,
-                'movement_type' => $request->movement_type,
-                'headquarters'  => $request->headquarters,
-                'acta_number'   => $actaNumber,
-                'user_id'       => Auth::id(),
-                // excel_relation_path ya no es necesario ya que el PDF se genera dinámicamente con la relación
-            ]);
-
-            // Actualizar ubicación física del hardware
-            $asset->update(['room_id' => $salaDestino]);
-            $movedCount++;
+        if ($totalActivos > 5) {
+            // Nota de diseño: Si usas editor enriquecido, quizás prefieras poner <br><br> en vez de \n\n
+            $observacionesFinales .= "<br><br><strong>[SOPORTE TI: Debido al volumen del movimiento (>5 equipos), SIGMA generó automáticamente la relación detallada de hardware en el anexo del Acta Técnica].</strong>";
         }
-    });
 
-    if ($movedCount === 0 && $ignoredCount === 0) {
-        return back()->with('error', 'No se pudieron procesar los activos seleccionados.');
+        DB::transaction(function () use ($request, $custodianDestino, $custodioModel, $salaDestino, &$movedCount, &$ignoredCount, $actaNumber, $observacionesFinales, $tipoMovimientoLimpio, $sedeLimpia) {
+            foreach ($request->selected_assets as $assetId) {
+                $asset = Asset::find($assetId);
+                if (!$asset) continue;
+
+                $current = $asset->currentAssignment;
+
+                if ($current && $current->custodian_id == $custodianDestino && $current->room_id == $salaDestino) {
+                    $ignoredCount++;
+                    continue;
+                }
+
+                if ($current) {
+                    $current->update(['status' => 'inactive', 'ended_at' => now()]);
+                }
+
+                $asset->assignments()->create([
+                    'custodian_id'  => $custodianDestino,
+                    'cost_center'   => $custodioModel->cost_center,
+                    'room_id'       => $salaDestino,
+                    'started_at'    => now(),
+                    'status'        => 'active',
+                    'observations'  => $observacionesFinales, // Usamos la variable blindada
+                    'movement_type' => $tipoMovimientoLimpio, // Variable limpia
+                    'headquarters'  => $sedeLimpia,           // Variable limpia
+                    'acta_number'   => $actaNumber,
+                    'user_id'       => Auth::id(),
+                ]);
+
+                $asset->update(['room_id' => $salaDestino]);
+                $movedCount++;
+            }
+        });
+
+        if ($movedCount === 0 && $ignoredCount === 0) {
+            return back()->with('error', 'No se pudieron procesar los activos seleccionados.');
+        }
+
+        $mensaje = "¡Traslado seguro y exitoso! $movedCount equipos procesados por SIGMA.";
+        if ($ignoredCount > 0) {
+            $mensaje .= " (Se omitieron $ignoredCount equipos con ubicación destino idéntica).";
+        }
+
+        if ($request->has('generate_pdf')) {
+            return redirect()->route('movements.exportActa', ['actaNumber' => $actaNumber])
+                ->with('success', $mensaje);
+        }
+
+        return redirect()->route('movements.mass.create')->with('success', $mensaje);
     }
-
-    $mensaje = "¡Traslado exitoso! $movedCount equipos procesados por SIGMA.";
-    if ($ignoredCount > 0) {
-        $mensaje .= " (Se omitieron $ignoredCount equipos con ubicación destino idéntica).";
-    }
-
-    // El sistema redirige automáticamente al generador de PDF usando el acta única compartida por el lote
-    if ($request->has('generate_pdf')) {
-        return redirect()->route('movements.exportActa', ['actaNumber' => $actaNumber])
-            ->with('success', $mensaje);
-    }
-
-    return redirect()->route('movements.mass.create')->with('success', $mensaje);
-}
     
     public function createMass()
     {

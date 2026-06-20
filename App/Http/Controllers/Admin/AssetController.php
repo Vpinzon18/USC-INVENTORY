@@ -17,21 +17,112 @@ use Illuminate\Support\Facades\Log;
 class AssetController extends Controller
 {
     public function index(Request $request)
-{
-    $search = $request->input('search');
-    $perPage = $request->input('per_page', 15); 
+    {
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 15); 
 
-    $assets = Asset::with(['room', 'currentCustodian'])
-        ->when($search, function ($query, $search) {
-            return $query->where('serial_number', 'LIKE', "%{$search}%")
-                         ->orWhere('hostname', 'LIKE', "%{$search}%")
-                         ->orWhere('internal_code', 'LIKE', "%{$search}%");
-        })
-        ->paginate($perPage) 
-        ->withQueryString(); 
+        // 1. NOMBRES PARA COMPONENTES AJAX (Evita cargar miles de registros, solo busca el seleccionado)
+        $selectedCustodianName = $request->filled('custodian_id') ? \App\Models\Custodian::find($request->custodian_id)?->full_name : '';
+        $selectedCampusName    = $request->filled('campus_id')    ? \App\Models\Campus::find($request->campus_id)?->name : '';
+        $selectedBuildingName  = $request->filled('building_id')  ? \App\Models\Building::find($request->building_id)?->name : '';
+        $selectedRoomName      = $request->filled('room_id')      ? \App\Models\Room::find($request->room_id)?->nomenclatura : '';
 
-    return view('admin.assets.index', compact('assets', 'search', 'perPage'));
-}
+        // Catálogo estático (Solo SO porque son muy poquitos)
+        $osVersions = \App\Models\Asset::whereNotNull('os_version')->distinct()->pluck('os_version');
+
+        // 2. CONSTRUIR LA CONSULTA BASE
+        $query = \App\Models\Asset::with(['room.building.campus', 'currentCustodian']);
+
+        // Búsqueda de texto libre (Serial, Hostname, Placa)
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('serial_number', 'LIKE', "%{$search}%")
+                  ->orWhere('hostname', 'LIKE', "%{$search}%")
+                  ->orWhere('internal_code', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // ==========================================
+        // 3. APLICAR FILTROS AVANZADOS SI EXISTEN
+        // ==========================================
+
+        // Filtros de Ubicación (Sede > Bloque > Oficina)
+        if ($request->filled('campus_id')) {
+            $query->whereHas('room.building', function ($q) use ($request) {
+                $q->where('campus_id', $request->campus_id);
+            });
+        }
+        if ($request->filled('building_id')) {
+            $query->whereHas('room', function ($q) use ($request) {
+                $q->where('building_id', $request->building_id);
+            });
+        }
+        if ($request->filled('room_id')) {
+            $query->where('room_id', $request->room_id);
+        }
+
+        // Filtro: Responsable
+        if ($request->filled('custodian_id')) {
+            $query->whereHas('currentAssignment', function ($q) use ($request) {
+                $q->where('custodian_id', $request->custodian_id);
+            });
+        }
+
+        // Filtro: Sistema Operativo
+        if ($request->filled('os_version')) {
+            $query->where('os_version', $request->os_version);
+        }
+
+        // Filtro: Agente SIGMA
+        if ($request->filled('agent')) {
+            $query->where('is_agent_managed', $request->agent);
+        }
+
+        // Filtro: Ficha Técnica
+        if ($request->filled('inventory_status')) {
+            if ($request->inventory_status == 'completo') {
+                $query->whereNotNull('monitor_serial')->whereNotNull('keyboard_serial')->whereNotNull('security_guaya');
+            } else {
+                $query->where(function ($q) {
+                    $q->whereNull('monitor_serial')->orWhereNull('keyboard_serial')->orWhereNull('security_guaya');
+                });
+            }
+        }
+
+        // Filtro: Conectividad
+        if ($request->filled('connectivity')) {
+            if ($request->connectivity == 'online') {
+                $query->where('last_seen_at', '>=', now()->subMinutes(10));
+            } else {
+                $query->where(function($q) {
+                    $q->where('last_seen_at', '<', now()->subMinutes(10))->orWhereNull('last_seen_at');
+                });
+            }
+        }
+
+        // Ejecutar consulta paginada
+        $assets = $query->latest()->paginate($perPage)->withQueryString(); 
+
+        // 4. CÁLCULO DE KPIs
+        $total = \App\Models\Asset::count();
+        $online = \App\Models\Asset::where('last_seen_at', '>=', now()->subMinutes(10))->count();
+        $offline = $total - $online;
+        $agentManaged = \App\Models\Asset::where('is_agent_managed', true)->count();
+        $unassigned = \App\Models\Asset::whereDoesntHave('assignments', function($q) {
+            $q->where('status', 'active');
+        })->count();
+        $incomplete = \App\Models\Asset::whereNull('monitor_serial')
+            ->orWhereNull('keyboard_serial')
+            ->orWhereNull('security_guaya')
+            ->count();
+
+        // ENVIAR TODO A LA VISTA
+        return view('admin.assets.index', compact(
+            'assets', 'search', 'perPage', 'total', 'online', 'offline', 
+            'agentManaged', 'unassigned', 'incomplete', 'osVersions',
+            'selectedCustodianName', 'selectedCampusName', 'selectedBuildingName', 'selectedRoomName' // Variables limpias para AJAX
+        ));
+    }
 
     public function create()
     {
@@ -148,5 +239,24 @@ public function downloadPdf(int $id)
         ->header('Content-Type', 'application/pdf')
         ->header('Content-Disposition', 'attachment; filename="Hoja_Vida_USC_'.$asset->internal_code.'.pdf"');
 }
+public function destroy(Asset $asset)
+    {
+        try {
+  
+            $asset->delete();
+
+            return redirect()->route('assets.index')
+                ->with('success', 'El activo ha sido dado de baja y eliminado del CMDB exitosamente.');
+                
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Si la base de datos bloquea el borrado por llaves foráneas (Integridad referencial)
+            return redirect()->route('assets.index')
+                ->with('error', 'No se puede dar de baja el equipo porque tiene historiales de movimiento o mantenimientos asociados en el sistema.');
+        } catch (\Exception $e) {
+            // Cualquier otro error inesperado
+            return redirect()->route('assets.index')
+                ->with('error', 'Ocurrió un error al intentar eliminar el activo.');
+        }
+    }
 
 }

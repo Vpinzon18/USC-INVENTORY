@@ -46,18 +46,37 @@ class InventoryController extends Controller
         'mostUsedModel'
     ));
 }
-    public function report(Request $request)
+   public function report(Request $request)
     { 
+        // 1. LA ADUANA (Validar estructura y longitud)
+        $validated = $request->validate([
+            'serial_number' => 'required|string|max:100',
+            'hostname'      => 'nullable|string|max:100',
+            'ip_address'    => 'nullable|ip', // Validamos que sea una IP real
+            'cpu'           => 'nullable|string|max:100',
+            'ram'           => 'nullable|string|max:50',
+            'storage'       => 'nullable|string|max:100',
+            'model_version' => 'nullable|string|max:100',
+        ]);
+
+        // 2. EL COLADOR (Sanitizar XSS)
+        foreach ($validated as $key => $value) {
+            if (is_string($value)) {
+                $validated[$key] = strip_tags($value);
+            }
+        }
+
+        // 3. GUARDADO SEGURO (Usando los datos limpios en vez del $request directo)
         $asset = Asset::updateOrCreate(
-            ['serial_number' => $request->serial_number],
+            ['serial_number' => $validated['serial_number']],
             [
-                'hostname'   => $request->hostname,
-                'ip_address' => $request->ip_address,
-                'cpu'        => $request->cpu,        
-                'ram'        => $request->ram,      
-                'storage'    => $request->storage,
-                'model_version'=> $request->model_version,    
-                'last_seen_at' => now(),
+                'hostname'      => $validated['hostname'] ?? null,
+                'ip_address'    => $validated['ip_address'] ?? null,
+                'cpu'           => $validated['cpu'] ?? null,        
+                'ram'           => $validated['ram'] ?? null,      
+                'storage'       => $validated['storage'] ?? null,
+                'model_version' => $validated['model_version'] ?? null,    
+                'last_seen_at'  => now(),
             ]
         );
 
@@ -66,15 +85,17 @@ class InventoryController extends Controller
             'ip_registrada' => $asset->ip_address
         ]);
     }
+
+
     public function heartbeat(Request $request)
     {
-     
-        $request->validate([
-            'mac_address' => 'required|string'
+        // Añadimos límite de longitud para evitar ataques de denegación de servicio (DoS)
+        $validated = $request->validate([
+            'mac_address' => 'required|string|max:50' 
         ]);
 
-
-        $asset = \App\Models\Asset::where('mac_address', $request->mac_address)->first();
+        // Buscamos usando el dato validado y limpio
+        $asset = \App\Models\Asset::where('mac_address', strip_tags($validated['mac_address']))->first();
 
         if ($asset) {
             $asset->update([
@@ -91,5 +112,4 @@ class InventoryController extends Controller
             'status' => 'error', 
             'message' => 'Equipo no encontrado en SOMA.'
         ], 404);
-    }
-}
+    }}

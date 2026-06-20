@@ -55,17 +55,22 @@ class CustodianController extends Controller
 
         return view('admin.custodians.create', compact('rooms', 'jobtitles', 'dependencies'));
     }
+ public function edit(Custodian $custodian)
+    {
+        $rooms = Room::with('building')->orderBy('nomenclatura')->get();
+        
+        // Cargamos los catálogos para el formulario de edición
+        $jobtitles = JobTitle::orderBy('name')->get();
+        $dependencies = Dependency::orderBy('name')->get();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+        return view('admin.custodians.edit', compact('custodian', 'rooms', 'jobtitles', 'dependencies'));
+    }
+   public function store(Request $request)
     {
         $validated = $request->validate([
             'full_name'       => 'required|string|max:255',
             'cost_center'     => 'required|string|max:50',
             'document_number' => 'required|string|unique:custodians,document_number',
-            // Reemplazado por los IDs de la relación
             'dependency_id'   => 'required|exists:dependencies,id',
             'job_title_id'    => 'required|exists:job_titles,id',
             'email'           => 'nullable|email|max:255',
@@ -76,40 +81,24 @@ class CustodianController extends Controller
             'job_title_id.required'  => 'Debe seleccionar un cargo.'
         ]);
 
+        // ESCUDO ANTI-XSS DINÁMICO: Limpia nombres, centros de costo, extensiones...
+        foreach ($validated as $key => $value) {
+            if (is_string($value)) {
+                $validated[$key] = strip_tags($value);
+            }
+        }
+
         Custodian::create($validated);
 
         return redirect()->route('custodians.index')
-            ->with('success', 'El responsable ha sido creado exitosamente.');
+            ->with('success', 'El responsable ha sido creado exitosamente de forma segura.');
     }
 
-    public function show(string $id)
-    {
-        // Usualmente vacío en este tipo de CRUDs
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Custodian $custodian)
-    {
-        $rooms = Room::with('building')->orderBy('nomenclatura')->get();
-        
-        // Cargamos los catálogos para el formulario de edición
-        $jobtitles = JobTitle::orderBy('name')->get();
-        $dependencies = Dependency::orderBy('name')->get();
-
-        return view('admin.custodians.edit', compact('custodian', 'rooms', 'jobtitles', 'dependencies'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Custodian $custodian)
     {
         $validated = $request->validate([
             'full_name'       => 'required|string|max:255',
             'cost_center'     => 'required|string|max:50',
-            // Reemplazado por los IDs de la relación
             'dependency_id'   => 'required|exists:dependencies,id',
             'job_title_id'    => 'required|exists:job_titles,id',
             'email'           => 'nullable|email|max:255',
@@ -122,18 +111,26 @@ class CustodianController extends Controller
             'job_title_id.required'  => 'Debe seleccionar un cargo.'
         ]);
 
+        // ESCUDO ANTI-XSS DINÁMICO
+        foreach ($validated as $key => $value) {
+            if (is_string($value)) {
+                $validated[$key] = strip_tags($value);
+            }
+        }
+
         $custodian->update($validated);
 
-        $custodian->rooms()->sync($request->input('rooms', []));
+        if (isset($validated['rooms'])) {
+            $custodian->rooms()->sync($validated['rooms']);
+        } else {
+            $custodian->rooms()->detach();
+        }
 
-        return redirect()->route('custodians.index')
-            ->with('success', 'Información del responsable y sus ubicaciones actualizadas correctamente.');
+        return redirect()->route('custodians.index')->with('success', 'Responsable actualizado de forma segura.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Custodian $custodian) // Cambiado para inyección directa de modelo
+
+    public function destroy(Custodian $custodian) 
     {
         $custodian->delete();
 

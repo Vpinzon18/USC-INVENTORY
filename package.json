@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "apexcharts": "^5.13.0",
+        "dompurify": "^3.4.11",
         "puppeteer": "^25.0.2",
         "sweetalert2": "^11.26.25"
     }

@@ -31,11 +31,15 @@ class BuildingController extends Controller
         'name.unique'        => 'Ya existe un bloque con este nombre.',
     ]);
 
-    Building::create($validated);
+    if (isset($validated['name'])) {
+            $validated['name'] = strip_tags($validated['name']);
+        }
 
-    return redirect()->route('buildings.index')
-                     ->with('success', 'El bloque se ha creado correctamente.');
-}
+        Building::create($validated);
+
+        return redirect()->route('buildings.index')
+                         ->with('success', 'El bloque se ha creado correctamente.');
+    }
     public function show(string $id)
     {
         
@@ -45,14 +49,22 @@ class BuildingController extends Controller
     return view('admin.buildings.edit', compact('building', 'campuses'));
 }
 
-public function update(Request $request, Building $building) {
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'campus_id' => 'required|exists:campuses,id',
-    ]);
-    $building->update($validated);
-    return redirect()->route('buildings.index')->with('success', 'Bloque actualizado.');
-}
+public function update(Request $request, Building $building) 
+    {
+        $validated = $request->validate([
+            'name'      => 'required|string|max:255',
+            'campus_id' => 'required|exists:campuses,id',
+        ]);
+
+        // ESCUDO ANTI-XSS
+        if (isset($validated['name'])) {
+            $validated['name'] = strip_tags($validated['name']);
+        }
+
+        $building->update($validated);
+
+        return redirect()->route('buildings.index')->with('success', 'Bloque actualizado.');
+    }
 
 public function destroy(Building $building) {
     $building->delete();

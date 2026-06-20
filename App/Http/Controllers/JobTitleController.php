@@ -46,21 +46,45 @@ class JobTitleController extends Controller
     public function store(Request $request)
     {
         // 1. Validar los datos
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255|unique:job_titles,name', // Asegura que el cargo no exista ya
         ], [
             'name.required' => 'El nombre del cargo es obligatorio.',
             'name.unique' => 'Este cargo ya se encuentra registrado.'
         ]);
 
-        // 2. Guardar en base de datos
-        \App\Models\JobTitle::create([
-            'name' => $request->name
-        ]);
+        // ESCUDO ANTI-XSS: Limpiamos el nombre del cargo
+        $validated['name'] = strip_tags($validated['name']);
+
+        // 2. Guardar en base de datos usando el array limpio
+        \App\Models\JobTitle::create($validated);
 
         // 3. Redireccionar con mensaje de éxito
         return redirect()->route('jobtitles.index')
-                         ->with('success', 'Cargo creado exitosamente.');
+                         ->with('success', 'Cargo creado de forma segura.');
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $jobtitle = \App\Models\JobTitle::findOrFail($id);
+
+        // 1. Validar los datos (ignorando el ID actual para la regla unique)
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:job_titles,name,' . $jobtitle->id,
+        ], [
+            'name.required' => 'El nombre del cargo es obligatorio.',
+            'name.unique' => 'Este cargo ya se encuentra registrado.'
+        ]);
+
+        // ESCUDO ANTI-XSS: Limpiamos el nombre antes de actualizar
+        $validated['name'] = strip_tags($validated['name']);
+
+        // 2. Actualizar el registro con los datos limpios
+        $jobtitle->update($validated);
+
+        // 3. Redireccionar con mensaje
+        return redirect()->route('jobtitles.index')
+                         ->with('success', 'Cargo actualizado de forma segura.');
     }
 
     /**
@@ -86,27 +110,7 @@ class JobTitleController extends Controller
     /**
      * Actualizar el recurso especificado en la base de datos.
      */
-    public function update(Request $request, string $id)
-    {
-        $jobtitle = \App\Models\JobTitle::findOrFail($id);
-
-        // 1. Validar los datos (ignorando el ID actual para la regla unique)
-        $request->validate([
-            'name' => 'required|string|max:255|unique:job_titles,name,' . $jobtitle->id,
-        ], [
-            'name.required' => 'El nombre del cargo es obligatorio.',
-            'name.unique' => 'Este cargo ya se encuentra registrado.'
-        ]);
-
-        // 2. Actualizar el registro
-        $jobtitle->update([
-            'name' => $request->name
-        ]);
-
-        // 3. Redireccionar con mensaje
-        return redirect()->route('jobtitles.index')
-                         ->with('success', 'Cargo actualizado exitosamente.');
-    }
+    
 
     /**
      * Eliminar el recurso especificado de la base de datos.

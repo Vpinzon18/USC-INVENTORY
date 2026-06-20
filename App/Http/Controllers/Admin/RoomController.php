@@ -22,18 +22,25 @@ public function create()
 }
 
 public function store(Request $request)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'nomenclatura' => 'nullable|string|unique:rooms,nomenclatura', // Validación
-        'building_id' => 'required|exists:buildings,id',
-        'floor' => 'required|integer',
-    ]);
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'nomenclatura' => 'nullable|string|unique:rooms,nomenclatura', 
+            'building_id' => 'required|exists:buildings,id',
+            'floor' => 'required|integer',
+        ]);
 
-    Room::create($validated);
+        // ESCUDO ANTI-XSS DINÁMICO para 'name' y 'nomenclatura'
+        foreach ($validated as $key => $value) {
+            if (is_string($value)) {
+                $validated[$key] = strip_tags($value);
+            }
+        }
 
-    return redirect()->route('rooms.index')->with('success', 'Oficina creada correctamente.');
-}
+        Room::create($validated);
+
+        return redirect()->route('rooms.index')->with('success', 'Oficina creada de forma segura.');
+    }
   
     public function show(string $id)
     {
@@ -46,18 +53,25 @@ public function edit(Room $room)
 }
 
 public function update(Request $request, Room $room)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'nomenclatura' => 'nullable|string|unique:rooms,nomenclatura,' . $room->id,
-        'building_id' => 'required|exists:buildings,id',
-        'floor' => 'required|integer',
-    ]);
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'nomenclatura' => 'nullable|string|unique:rooms,nomenclatura,' . $room->id,
+            'building_id' => 'required|exists:buildings,id',
+            'floor' => 'required|integer',
+        ]);
 
-    $room->update($validated);
+        // ESCUDO ANTI-XSS DINÁMICO
+        foreach ($validated as $key => $value) {
+            if (is_string($value)) {
+                $validated[$key] = strip_tags($value);
+            }
+        }
 
-    return redirect()->route('rooms.index')->with('success', 'Oficina actualizada correctamente.');
-}
+        $room->update($validated);
+
+        return redirect()->route('rooms.index')->with('success', 'Oficina actualizada de forma segura.');
+    }
 
 public function destroy(Room $room)
 {

@@ -33,20 +33,26 @@ class DependencyController extends Controller
     {
         return view('admin.dependencies.create');
     }
-
-    // Guardar en la base de datos
-    public function store(Request $request)
-    {
-        $request->validate(['name' => 'required|unique:dependencies|max:255']);
-        Dependency::create(['name' => $request->name]);
-
-        return redirect()->route('dependencies.index')->with('success', 'Dependencia creada.');
-    }
-
-    // Mostrar el formulario para editar
+// Mostrar el formulario para editar
     public function edit(Dependency $dependency)
     {
         return view('admin.dependencies.edit', compact('dependency'));
+    }
+
+    // Guardar en la base de datos
+   // Guardar en la base de datos
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|unique:dependencies|max:255'
+        ]);
+
+        // ESCUDO ANTI-XSS: Limpiamos el nombre antes de crear el registro
+        $validated['name'] = strip_tags($validated['name']);
+
+        Dependency::create($validated);
+
+        return redirect()->route('dependencies.index')->with('success', 'Dependencia creada de forma segura.');
     }
 
     // Actualizar en la base de datos
@@ -54,17 +60,17 @@ class DependencyController extends Controller
     {
         // Nota clave: Agregamos el ID al final de la regla 'unique' para que 
         // Laravel no marque error si guardamos sin cambiar el nombre original.
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|max:255|unique:dependencies,name,' . $dependency->id
         ]);
 
-        $dependency->update([
-            'name' => $request->name
-        ]);
+        // ESCUDO ANTI-XSS: Limpiamos el nombre antes de actualizar
+        $validated['name'] = strip_tags($validated['name']);
 
-        return redirect()->route('dependencies.index')->with('success', 'Dependencia actualizada correctamente.');
+        $dependency->update($validated);
+
+        return redirect()->route('dependencies.index')->with('success', 'Dependencia actualizada de forma segura.');
     }
-
     // Eliminar de la base de datos
     public function destroy(Dependency $dependency)
     {

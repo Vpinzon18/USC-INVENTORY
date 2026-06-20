@@ -6,6 +6,7 @@ use App\Models\TechnicalService;
 use App\Models\Asset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Mews\Purifier\Facades\Purifier;
 
 class TechnicalServiceController extends Controller
 {
@@ -65,60 +66,76 @@ class TechnicalServiceController extends Controller
         return view('admin.maintenances.create', compact('assets'));
     }
 
-    public function store(Request $request)
-    {
-
-        $request->validate([
-            'asset_id'      => 'required|exists:assets,id',
-            'performed_at'  => 'required|date',
-            'description'   => 'required|string|min:3',
-            'type'          => 'required',
-        ]);
-
-        $finalType = ($request->type === 'Otro')
-            ? $request->custom_type
-            : $request->type;
-
-
-        \App\Models\TechnicalService::create([
-            'asset_id'                => $request->asset_id,
-            'user_id'                 => Auth::user()->id,
-            'performed_at'            => $request->performed_at,
-            'type'                    => $finalType,
-            'description'             => $request->description,
-            'security_guaya'          => $request->security_guaya,
-            'maintenance_schedule_id' => $request->input('maintenance_schedule_id'),
-        ]);
-
-        if (strtoupper($finalType) === 'PREVENTIVO' && $request->filled('maintenance_schedule_id')) {
-            \App\Models\MaintenanceSchedule::where('id', $request->maintenance_schedule_id)
-                ->update(['status' => 'REALIZADO']);
-        }
-
-        return redirect()->route('maintenances.index')
-            ->with('success', 'Registro guardado correctamente.');
-    }
-
-    public function edit(int $id)
+        public function edit(int $id)
     {
 
         $maintenance = TechnicalService::findOrFail($id);
         $assets = \App\Models\Asset::all();
         return view('admin.maintenances.edit', compact('maintenance', 'assets'));
     }
+
+   public function store(Request $request)
+    {
+        // 1. LA ADUANA: Validamos TODOS los campos que van a entrar a la BD
+        $validated = $request->validate([
+            'asset_id'                => 'required|exists:assets,id',
+            'performed_at'            => 'required|date',
+            'description'             => 'required|string|min:3',
+            'type'                    => 'required|string',
+            'custom_type'             => 'nullable|string|max:150', // Agregado
+            'security_guaya'          => 'nullable|string|max:100', // Agregado
+            'maintenance_schedule_id' => 'nullable|exists:maintenance_schedules,id', // Agregado
+        ]);
+
+        // 2. ESCUDO LIGERO (strip_tags) para campos cortos
+        $tipoBase = strip_tags($validated['type']);
+        $tipoPersonalizado = isset($validated['custom_type']) ? strip_tags($validated['custom_type']) : null;
+        
+        $finalType = ($tipoBase === 'Otro') ? $tipoPersonalizado : $tipoBase;
+
+        $cleanGuaya = isset($validated['security_guaya']) ? strip_tags($validated['security_guaya']) : null;
+
+        // 3. ARTILLERÍA PESADA (Purifier) para el texto enriquecido
+        $cleanDescription = Purifier::clean($validated['description']);
+
+        // 4. GUARDADO SEGURO
+        \App\Models\TechnicalService::create([
+            'asset_id'                => $validated['asset_id'],
+            'user_id'                 => Auth::user()->id,
+            'performed_at'            => $validated['performed_at'],
+            'type'                    => $finalType,
+            'description'             => $cleanDescription, // Salvado por Purifier
+            'security_guaya'          => $cleanGuaya,
+            'maintenance_schedule_id' => $validated['maintenance_schedule_id'],
+        ]);
+
+        if (strtoupper($finalType) === 'PREVENTIVO' && !empty($validated['maintenance_schedule_id'])) {
+            \App\Models\MaintenanceSchedule::where('id', $validated['maintenance_schedule_id'])
+                ->update(['status' => 'REALIZADO']);
+        }
+
+        return redirect()->route('maintenances.index')
+            ->with('success', 'Registro de servicio guardado de forma segura.');
+    }
+
+
     public function update(Request $request, TechnicalService $maintenance)
     {
+        // 1. LA ADUANA
         $validated = $request->validate([
             'performed_at' => 'required|date',
-            'type'         => 'required|string',
+            'type'         => 'required|string|max:150',
             'description'  => 'required|string|min:5',
             'asset_id'     => 'required|exists:assets,id',
         ]);
 
+        // 2. DEFENSA MIXTA
+        $validated['type'] = strip_tags($validated['type']); // Escudo Ligero
+        $validated['description'] = Purifier::clean($validated['description']); // Artillería Pesada
 
+        // 3. ACTUALIZACIÓN SEGURA
         $maintenance->update($validated);
 
         return redirect()->route('maintenances.index')
-            ->with('success', 'Bitácora actualizada correctamente.');
-    }
-}
+            ->with('success', 'Bitácora actualizada de forma segura.');
+    }}

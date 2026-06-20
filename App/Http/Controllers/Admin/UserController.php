@@ -21,44 +21,44 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user'));
     }
 
-    
-    public function update(Request $request, User $user)
+    public function create()
+{
+    return view('admin.users.create');
+}
+   public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|integer|in:1,2,3',
         ]);
 
-        $user->update($request->only('name', 'role'));
+        // ESCUDO ANTI-XSS: Limpiamos solo el nombre
+        $validated['name'] = strip_tags($validated['name']);
 
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente');
+        $user->update($validated);
+
+        return redirect()->route('users.index')->with('success', 'Usuario actualizado de forma segura');
     }
 
-  
-public function create()
-{
-    return view('admin.users.create');
-}
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|integer|in:1,2,3',
+        ]);
 
+        User::create([
+            // Limpiamos el nombre en el momento de guardarlo
+            'name' => strip_tags($validated['name']), 
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']), // Contraseña intacta y hasheada
+            'role' => $validated['role'],
+        ]);
 
-public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
-        'password' => 'required|string|min:8|confirmed',
-        'role' => 'required|integer|in:1,2,3',
-    ]);
-
-    User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'role' => $request->role,
-    ]);
-
-    return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
-} public function destroy(User $user)
+        return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
+    } public function destroy(User $user)
 {
 
     if (Auth::id() === $user->id) {

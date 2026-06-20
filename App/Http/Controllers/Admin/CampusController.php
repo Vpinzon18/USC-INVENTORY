@@ -25,23 +25,35 @@ class CampusController extends Controller
             'name' => 'required|string|max:255|unique:campuses,name',
         ]);
 
+        // ESCUDO ANTI-XSS: Limpiamos el nombre
+        if (isset($validated['name'])) {
+            $validated['name'] = strip_tags($validated['name']);
+        }
+
         Campus::create($validated);
 
         return redirect()->route('campuses.index')->with('success', 'Sede creada correctamente.');
     }
 
-    public function edit(Campus $campus) {
-    return view('admin.campuses.edit', compact('campus'));
-}
+    public function update(Request $request, Campus $campus) 
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:campuses,name,' . $campus->id,
+            'address' => 'nullable|string|max:255',
+        ]);
 
-public function update(Request $request, Campus $campus) {
-    $validated = $request->validate([
-        'name' => 'required|string|max:255|unique:campuses,name,' . $campus->id,
-        'address' => 'nullable|string|max:255',
-    ]);
-    $campus->update($validated);
-    return redirect()->route('campuses.index')->with('success', 'Sede actualizada.');
-}
+        // ESCUDO ANTI-XSS DINÁMICO: Limpia 'name', 'address' y cualquier 
+        // otro texto que agregues en el futuro.
+        foreach ($validated as $key => $value) {
+            if (is_string($value)) {
+                $validated[$key] = strip_tags($value);
+            }
+        }
+
+        $campus->update($validated);
+        
+        return redirect()->route('campuses.index')->with('success', 'Sede actualizada de forma segura.');
+    }
 
 public function destroy(Campus $campus) {
     $campus->delete();

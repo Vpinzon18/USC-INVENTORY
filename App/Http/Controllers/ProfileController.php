@@ -20,8 +20,17 @@ class ProfileController extends Controller
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
 
+        foreach ($validated as $key => $value) {
+            if (is_string($value)) {
+                $validated[$key] = strip_tags($value);
+            }
+        }
+
+        $request->user()->fill($validated);
+
+      
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }

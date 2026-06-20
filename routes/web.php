@@ -17,6 +17,7 @@ use App\Http\Controllers\TechnicalServiceController;
 use App\Http\Controllers\Admin\MaintenanceScheduleController;
 use App\Http\Controllers\DependencyController; 
 use App\Http\Controllers\JobTitleController;
+use App\Http\Controllers\Api\FilterApiController;
 
 //  PÁGINA DE INICIO / LOGIN
 Route::get('/', function () {
@@ -29,6 +30,8 @@ Route::get('/', function () {
 
 //  RUTA POST PARA PROCESAR EL LOGIN
 Route::post('/', [AuthenticatedSessionController::class, 'store'])->name('login.post');
+
+
 
 //  EL SELECTOR DE MÓDULOS (Tu página welcome)
 Route::get('/seleccion', function () {
@@ -115,4 +118,21 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
 });
 
+// =========================================================
+// RUTAS API INTERNAS (Para componentes dinámicos y AJAX)
+// =========================================================
+Route::prefix('api/filters')->name('api.filters.')->group(function () {
+
+    // Búsqueda dinámica de Responsables
+    Route::get('/custodians', [FilterApiController::class, 'custodians'])
+        ->name('custodians');
+
+    // Búsqueda dinámica de Ubicaciones / Salones
+    Route::get('/locations', [FilterApiController::class, 'locations'])
+        ->name('locations');
+    Route::get('/campuses', [FilterApiController::class, 'campuses'])->name('campuses');
+    Route::get('/buildings', [FilterApiController::class, 'buildings'])->name('buildings');
+    Route::get('/rooms', [FilterApiController::class, 'rooms'])->name('rooms');
+
+});
 require __DIR__.'/auth.php';
