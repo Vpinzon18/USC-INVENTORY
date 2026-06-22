@@ -1,139 +1,180 @@
 <x-app-layout>
-    <div class="py-12">
-        <div class="max-w-[95%] mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-
-                <div class="p-6 border-b border-gray-100 bg-white">
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div>
-                            <h2 class="font-bold text-2xl text-gray-800">Responsables</h2>
-                            <p class="text-sm text-gray-500">Gestión y búsqueda de personal.</p>
+    <div class="py-4 px-2 sm:px-4 max-w-full mx-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[calc(100vh-130px)] min-h-[500px]">
+            
+           <div class="p-4 border-b border-gray-100 bg-white shrink-0 space-y-4">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                         </div>
-
-                        <div class="flex flex-col md:flex-row flex-1 max-w-2xl gap-3">
-                            <form action="{{ route('custodians.index') }}" method="GET" class="w-full flex flex-col md:flex-row gap-3 items-center">
-
-                                <div class="flex items-center gap-2 shrink-0">
-                                    <span class="text-xs font-bold text-gray-400 uppercase">Ver:</span>
-                                    <select name="per_page" onchange="this.form.submit()"
-                                        class="block pl-3 pr-8 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 text-sm transition-all shadow-sm">
-                                        <option value="5" {{ $perPage == 5 ? 'selected' : '' }}>5</option>
-                                        <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
-                                        <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
-                                        <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
-                                        <option value="1000" {{ $perPage == 1000 ? 'selected' : '' }}>Todo</option>
-                                    </select>
-                                </div>
-
-                                <div class="relative group flex-1 w-full">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                    <input type="text" name="search" value="{{ $search }}" placeholder="Buscar por nombre, cédula o área..."
-                                        class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 sm:text-sm transition-all shadow-sm">
-                                </div>
-                            </form>
-
-                            <a href="{{ route('custodians.create') }}"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl text-sm transition-all shadow-md shrink-0 text-center">
-                                + Nuevo Responsable
-                            </a>
+                        <div>
+                            <h2 class="font-bold text-xl text-gray-800 tracking-tight uppercase">Directorio de Responsables</h2>
+                            <p class="text-xs text-gray-500">Gestión operativa del personal con activos asignados.</p>
                         </div>
                     </div>
+                    <a href="{{ route('custodians.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-2 px-4 rounded-xl text-xs transition-all shadow-md shrink-0 text-center uppercase tracking-wide flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Nuevo Responsable
+                    </a>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-                            <tr>
-                                <th class="px-6 py-4">Nombre Completo</th>
-                                <th class="px-6 py-4">Cargo</th>
-                                <th class="px-6 py-4 text-center">Ubicaciones a Cargo</th>
-                                <th class="px-6 py-4">Documento</th>
-                                <th class="px-6 py-4">Dependencia</th>
-                                <th class="px-6 py-4">Centro de Costos</th>
-                                <th class="px-6 py-4 text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse ($custodians as $custodian)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="font-medium text-gray-900">{{ $custodian->full_name }}</div>
-                                    <div class="text-[10px] text-gray-400 font-mono">{{ $custodian->email ?? 'Sin correo' }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-1">
-                                        {{ $custodian->jobTitle->name ?? 'Sin asignar' }}
-                                    </span>
+                <div class="pt-3 border-t border-gray-100 flex flex-col xl:flex-row justify-between gap-4">
+                    
+                    <form id="search-form" method="GET" action="{{ route('custodians.index') }}" class="w-full xl:w-1/2">
+                        @if(request('per_page'))
+                            <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+                        @endif
+                        @if(request('quick'))
+                            <input type="hidden" name="quick" value="{{ request('quick') }}">
+                        @endif
 
-                                    <div class="text-[10px] text-gray-400 italic ml-1">
-                                        Ext: {{ $custodian->extension ?? '---' }}
-                                    </div>
-                                </td>
+                        <div class="w-full">
+                            <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Buscador Inteligente</label>
+                            <div class="relative group">
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                       placeholder="Escribe nombre, documento o área..." 
+                                       class="w-full border-gray-200 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all shadow-sm text-gray-700 placeholder-gray-400 outline-none">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
 
-                                <td class="px-6 py-4">
-                                    <div class="flex flex-wrap justify-center gap-1.5 max-w-[200px] mx-auto">
-                                        @forelse($custodian->rooms as $room)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200"
-                                            title="{{ $room->building->name ?? 'Ubicación General' }}">
-                                            <svg class="w-2.5 h-2.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            </svg>
-                                            {{ $room->nomenclatura }}
-                                        </span>
-                                        @empty
-                                        <span class="text-[10px] text-gray-300 italic">Sin asignar</span>
-                                        @endforelse
-                                    </div>
-                                </td>
+                    <div class="flex items-end gap-2 overflow-x-auto pb-1 xl:pb-0 hide-scrollbar w-full xl:w-auto">
+                        <a href="{{ route('custodians.index') }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ !request('quick') ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Todos</a>
+                        <a href="{{ route('custodians.index', ['quick' => 'with_assets']) }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ request('quick') === 'with_assets' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Tienen Equipos</a>
+                        <a href="{{ route('custodians.index', ['quick' => 'no_assets']) }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ request('quick') === 'no_assets' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Sin Equipos</a>
+                    </div>
 
-                                <td class="px-6 py-4 font-mono text-xs text-gray-500">{{ $custodian->document_number }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-[10px] font-bold uppercase">{{ $custodian->dependency->name ?? 'Sin asignar' }}</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="font-mono text-xs text-blue-700 font-bold bg-blue-50 px-2 py-1 rounded">
-                                        {{ $custodian->cost_center ?? 'N/A' }}
-                                    </span>
-                                </td>
-
-                                <td class="px-6 py-4 text-center">
-                                    <div class="flex justify-center items-center gap-2">
-                                        <a href="{{ route('custodians.edit', $custodian) }}" class="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all" title="Editar">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </a>
-                                        <form action="{{ route('custodians.destroy', $custodian) }}" method="POST" class="inline">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" onclick="return confirm('¿Eliminar responsable?')" class="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all" title="Eliminar">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-10 text-center text-gray-400 italic">
-                                    No se encontraron responsables que coincidan con "{{ $search }}".
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
                 </div>
+            </div>
 
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+            <div class="overflow-x-auto overflow-y-auto flex-1 bg-white relative" id="tableContainer">
+                <table class="w-full text-sm text-left table-auto whitespace-nowrap">
+                    <thead class="text-[11px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 border-b border-gray-100 sticky top-0 z-20 shadow-sm">
+                        <tr>
+                            <th class="px-6 py-3 bg-gray-50 text-center w-16">Estado</th>
+                            <th class="px-6 py-3 bg-gray-50">Funcionario / Responsable</th>
+                            <th class="px-6 py-3 bg-gray-50">Cargo / Dependencia</th>
+                            <th class="px-6 py-3 bg-gray-50 text-center">Equipos</th>
+                            <th class="px-6 py-3 bg-gray-50 text-center w-24">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        @forelse($custodians as $custodian)
+                        <tr class="transition-all duration-200 {{ $custodian->status === 'inactive' ? 'bg-gray-50/50 opacity-50 select-none hover:bg-gray-100/50' : 'hover:bg-blue-50/30' }}">
+                            
+                            <td class="px-6 py-3 text-center">
+                                @if($custodian->status === 'active')
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 shadow-sm">
+                                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 text-gray-400 shadow-sm">
+                                        <div class="w-2 h-2 rounded-full bg-gray-400"></div>
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-sm shrink-0
+                                        {{ $custodian->status === 'active' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-gray-200 text-gray-400 border-gray-300' }}">
+                                        {{ mb_substr($custodian->full_name, 0, 2) }}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-xs uppercase {{ $custodian->status === 'inactive' ? 'line-through text-gray-400' : 'text-gray-900' }}">
+                                            {{ $custodian->full_name }}
+                                            @if($custodian->status === 'inactive')
+                                                <span class="ml-2 px-1.5 py-0.5 rounded text-[9px] bg-gray-200 text-gray-600 font-extrabold tracking-wider border border-gray-300">INACTIVO</span>
+                                            @endif
+                                        </div>
+                                        <div class="text-[10px] text-gray-500 font-mono mt-0.5 tracking-tight">CC: {{ $custodian->document_number }}</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-3">
+                                @if($custodian->status === 'active')
+                                    <div class="font-bold text-gray-700 text-xs flex items-center gap-1.5 uppercase">
+                                        <span class="truncate max-w-[200px]" title="{{ $custodian->jobTitle->name ?? 'Sin Cargo' }}">{{ $custodian->jobTitle->name ?? 'Sin Cargo' }}</span>
+                                    </div>
+                                    <div class="text-[10px] text-blue-600 font-black uppercase mt-0.5 flex items-center gap-1.5 tracking-wider">
+                                        <span class="truncate max-w-[200px]" title="{{ $custodian->dependency->name ?? 'Sin Dependencia' }}">{{ $custodian->dependency->name ?? 'Sin Dependencia' }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-[10px] text-gray-400 italic font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                        Liberado
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-3 text-center">
+                                <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider 
+                                    {{ $custodian->assets_count > 0 
+                                        ? ($custodian->status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-500') 
+                                        : 'bg-gray-100 text-gray-400' }}">
+                                    {{ $custodian->assets_count }}
+                                </span>
+                            </td>
+
+                            <td class="px-6 py-3 text-center">
+                                <a href="{{ route('custodians.edit', $custodian) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all shadow-sm">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-12 text-center text-gray-400 italic bg-white">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-10 h-10 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    No se encontraron responsables con los filtros aplicados.
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 z-30">
+                <div class="flex items-center gap-2">
+                    <form action="{{ route('custodians.index') }}" method="GET" class="flex items-center gap-2">
+                        
+                        @if(request('search'))
+                            <input type="hidden" name="search" value="{{ request('search') }}">
+                        @endif
+                        @if(request('quick'))
+                            <input type="hidden" name="quick" value="{{ request('quick') }}">
+                        @endif
+                        
+                        <label for="per_page_bottom" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mostrar:</label>
+                        <select name="per_page" id="per_page_bottom" onchange="this.form.submit()" 
+                                class="border-gray-200 rounded-xl py-1.5 pl-3 pr-8 text-xs font-bold text-gray-700 bg-white shadow-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all cursor-pointer">
+                            <option value="5" {{ $perPage == 5 ? 'selected' : '' }}>5 filas</option>
+                            <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 filas</option>
+                            <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 filas</option>
+                            <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 filas</option>
+                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 filas</option>
+                            <option value="1000" {{ $perPage == 1000 ? 'selected' : '' }}>Todo</option>
+                        </select>
+                    </form>
+                </div>
+                <div class="w-full sm:w-auto font-medium text-xs text-gray-600">
                     {{ $custodians->links() }}
                 </div>
-
             </div>
+
         </div>
     </div>
 </x-app-layout>

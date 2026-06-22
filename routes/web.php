@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE MOVIMIENTO DE ACTIVOS
+
 // RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE MOVIMIENTO DE ACTIVOS
 Route::middleware(['auth', 'role:1,2'])->prefix('admin')->group(function () {
     
@@ -133,6 +133,11 @@ Route::prefix('api/filters')->name('api.filters.')->group(function () {
     Route::get('/campuses', [FilterApiController::class, 'campuses'])->name('campuses');
     Route::get('/buildings', [FilterApiController::class, 'buildings'])->name('buildings');
     Route::get('/rooms', [FilterApiController::class, 'rooms'])->name('rooms');
+    Route::get('/dependencies', [FilterApiController::class, 'dependencies'])->name('api.dependencies');
+    Route::get('/job-titles', [FilterApiController::class, 'jobTitles'])->name('api.job-titles');
+   Route::middleware(['auth'])->group(function () {
+    Route::get('/api/rooms-status', [CustodianController::class, 'getRoomsData']);
+});
 
 });
 require __DIR__.'/auth.php';

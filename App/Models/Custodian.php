@@ -14,8 +14,9 @@ class Custodian extends Model
         'email',
         'extension',
         'cost_center',
-        'job_title_id',    // <-- Muy importante
-        'dependency_id'
+        'job_title_id',    
+        'dependency_id',
+        'status'
     ];
 
     public function assets()
@@ -34,5 +35,18 @@ class Custodian extends Model
     public function jobTitle()
     {
         return $this->belongsTo(JobTitle::class);
+    }
+    
+    /**
+     * Relación para obtener los ACTIVOS (Equipos) asignados actualmente.
+     */
+    public function activeAssets()
+    {
+        // Esto le dice a Laravel: 
+        // 1. Busca modelos Asset.
+        // 2. A través de la tabla 'assignments'.
+        // 3. Donde el status de la asignación sea 'active'.
+        return $this->belongsToMany(\App\Models\Asset::class, 'assignments', 'custodian_id', 'asset_id')
+                    ->wherePivot('status', 'active');
     }
 }

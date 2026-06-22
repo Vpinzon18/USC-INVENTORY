@@ -104,4 +104,37 @@ class FilterApiController extends Controller
             ];
         }));
     }
+    // Búsqueda de Dependencias
+    public function dependencies(Request $request)
+    {
+        $q = $request->q;
+        $results = \App\Models\Dependency::when($q, function($query, $q) {
+                $query->where('name', 'LIKE', "%{$q}%");
+            })->take(20)->get();
+
+        return response()->json($results->map(function ($item) {
+            return [
+                'id' => $item->id, 
+                'primary' => $item->name, 
+                'secondary' => 'Dependencia / Área'
+            ];
+        }));
+    }
+
+    // Búsqueda de Cargos
+    public function jobTitles(Request $request)
+    {
+        $q = $request->q;
+        $results = \App\Models\JobTitle::when($q, function($query, $q) {
+                $query->where('name', 'LIKE', "%{$q}%");
+            })->take(20)->get();
+
+        return response()->json($results->map(function ($item) {
+            return [
+                'id' => $item->id, 
+                'primary' => $item->name, 
+                'secondary' => 'Cargo Institucional'
+            ];
+        }));
+    }
 }
