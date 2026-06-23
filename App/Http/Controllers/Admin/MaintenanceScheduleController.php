@@ -51,7 +51,7 @@ class MaintenanceScheduleController extends Controller
                             });
                     }
 
-                    // REGLA CORREGIDA: Filtrar por Campus (Usa relación 'campus' y campus_id)
+                    // REGLA: Filtrar por Campus (Sede)
                     elseif ($field === 'sede') {
                         $q->whereHas('asset.room.building', function ($buildingQ) use ($value) {
                             $buildingQ->where('campus_id', $value); // Sincronizado con el modelo Campus
@@ -62,6 +62,20 @@ class MaintenanceScheduleController extends Controller
                     elseif ($field === 'building') {
                         $q->whereHas('asset.room', function ($roomQ) use ($value) {
                             $roomQ->where('building_id', $value);
+                        });
+                    }
+
+                    // 🚀 NUEVA REGLA: Filtrar por Salón / Espacio Físico (AJAX)
+                    elseif ($field === 'room') {
+                        $q->whereHas('asset', function ($assetQ) use ($value) {
+                            $assetQ->where('room_id', $value);
+                        });
+                    }
+
+                    // 🚀 NUEVA REGLA: Filtrar por Dependencia Organizacional (AJAX)
+                    elseif ($field === 'dependency') {
+                        $q->whereHas('asset.custodian', function ($custodianQ) use ($value) {
+                            $custodianQ->where('dependency_id', $value);
                         });
                     }
 
@@ -94,11 +108,12 @@ class MaintenanceScheduleController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $technicians = \App\Models\User::orderBy('name', 'asc')->get();
-        $sedes = \App\Models\Campus::orderBy('name', 'asc')->get();
-        $buildings = \App\Models\Building::orderBy('name', 'asc')->get();
+        $technicians = [];
+        $sedes = [];
+        $buildings = [];
 
-        $currentRules = $request->input('rules', [['field' => 'asset', 'operator' => 'contains', 'value' => '']]);
+        // Aseguramos que la estructura inicial tenga la variable 'text' para el buscador AJAX
+        $currentRules = $request->input('rules', [['field' => 'asset', 'operator' => 'contains', 'value' => '', 'text' => '']]);
 
         return view('admin.schedules.index', compact('schedules', 'technicians', 'sedes', 'buildings', 'perPage', 'currentRules'));
     }
@@ -134,44 +149,43 @@ class MaintenanceScheduleController extends Controller
     return view('admin.schedules.edit', compact('schedule', 'assets', 'technicians'));
 }
 
-    public function update(Request $request, MaintenanceSchedule $schedule)
-    {
-        $request->validate([
-            'asset_id'       => 'required|exists:assets,id',
-            'technician_id'  => 'required|exists:users,id',
-            'scheduled_date' => 'required|date|after_or_equal:today',
-        ]);
+   public function update(Request $request, MaintenanceSchedule $schedule)
+{
+    // 1. Validamos. Permitimos asset_ids como array.
+    $request->validate([
+        'asset_ids'      => 'required|array|min:1',
+        'asset_ids.*'    => 'exists:assets,id',
+        'technician_id'  => 'required|exists:users,id',
+        'scheduled_date' => 'required|date',
+        'status'         => 'required|in:PENDIENTE,REALIZADO,VENCIDO',
+    ]);
 
-        $schedule->update([
-            'asset_id'       => $request->asset_id,
+    $assetIds = $request->input('asset_ids');
+
+    // 2. Extraemos el primer ID para actualizar la instancia actual ($schedule)
+    $firstAssetId = array_shift($assetIds); 
+
+    // Actualizamos el registro principal
+    $schedule->update([
+        'asset_id'       => $firstAssetId,
+        'technician_id'  => $request->technician_id,
+        'scheduled_date' => $request->scheduled_date,
+        'status'         => $request->status,
+    ]);
+
+    // 3. Si se añadieron más equipos (nuevos IDs), creamos registros nuevos
+    foreach ($assetIds as $asset_id) {
+        MaintenanceSchedule::create([
+            'asset_id'       => $asset_id,
             'technician_id'  => $request->technician_id,
             'scheduled_date' => $request->scheduled_date,
+            'status'         => 'PENDIENTE',
         ]);
-
-        return redirect()->route('schedules.index')
-            ->with('success', 'Programación de mantenimiento actualizada con éxito.');
     }
-    public function store(Request $request)
-    {
-        $request->validate([
-            'asset_ids'      => 'required|array|min:1',
-            'asset_ids.*'    => 'exists:assets,id',
-            'technician_id'  => 'required|exists:users,id',
-            'scheduled_date' => 'required|date|after_or_equal:today',
-        ]);
 
-        foreach ($request->asset_ids as $asset_id) {
-            MaintenanceSchedule::create([
-                'asset_id'       => $asset_id,
-                'technician_id'  => $request->technician_id,
-                'scheduled_date' => $request->scheduled_date,
-                'status'         => 'PENDIENTE',
-            ]);
-        }
-
-        return redirect()->route('schedules.index')
-            ->with('success', 'Se han programado ' . count($request->asset_ids) . ' equipos con éxito para mantenimiento.');
-    }
+    return redirect()->route('schedules.index')
+        ->with('success', 'Agenda actualizada y nuevos equipos procesados.');
+}
     public function export(Request $request)
     {
         $query = MaintenanceSchedule::with([

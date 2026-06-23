@@ -135,8 +135,18 @@ Route::prefix('api/filters')->name('api.filters.')->group(function () {
     Route::get('/rooms', [FilterApiController::class, 'rooms'])->name('rooms');
     Route::get('/dependencies', [FilterApiController::class, 'dependencies'])->name('api.dependencies');
     Route::get('/job-titles', [FilterApiController::class, 'jobTitles'])->name('api.job-titles');
-   Route::middleware(['auth'])->group(function () {
-    Route::get('/api/rooms-status', [CustodianController::class, 'getRoomsData']);
+
+
+// Esta es la definición correcta
+Route::get('/api/rooms-status', [CustodianController::class, 'getRoomsData'])->name('api.rooms.status');
+
+Route::prefix('api/sigma-filters')->group(function () {
+    Route::get('/sedes', [FilterApiController::class, 'getSedes']);
+    Route::get('/buildings', [FilterApiController::class, 'getBuildings']);
+    Route::get('/rooms', [FilterApiController::class, 'getRooms']);
+    Route::get('/dependencies', [FilterApiController::class, 'getDependencies']);
+    Route::get('/technicians', [FilterApiController::class, 'getTechnicians']);
+    Route::get('/assets', [\App\Http\Controllers\Api\FilterApiController::class, 'getAssets']);
 });
 
 });

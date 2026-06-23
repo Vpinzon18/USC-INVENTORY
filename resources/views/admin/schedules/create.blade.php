@@ -1,213 +1,291 @@
 <x-app-layout>
-    <div class="py-6">
-        {{-- Expandimos el layout al ancho máximo institucional del sistema (max-w-7xl) --}}
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
-                 x-data="multiAssetSearch()">
-                
-                {{-- ENCABEZADO MINIMALISTA UNIFICADO --}}
-                <div class="p-5 bg-white border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="flex flex-col">
-                        <h2 class="font-bold text-xl text-gray-800 tracking-tight">Programación Masiva de Mantenimientos</h2>
-                        <p class="text-xs text-gray-500">Ordene y agende revisiones de hardware asignando lotes de equipos a un responsable técnico.</p>
+    <div class="py-8 bg-slate-50 min-h-screen">
+        <div class="max-w-[1200px] w-[96%] mx-auto space-y-6">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
+
+                <div class="flex items-center gap-5 pl-2">
+                    <a href="{{ route('schedules.index') }}" class="text-slate-400 hover:text-blue-600 transition-colors bg-slate-50 p-2 rounded-lg border border-slate-100 hidden sm:block" title="Volver al Cronograma">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    </a>
+                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="font-extrabold text-2xl text-slate-800 leading-tight">Programar Mantenimientos</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">Asigna un técnico y agenda una fecha para uno o varios equipos.</p>
                     </div>
                 </div>
+            </div>
 
-                <form action="{{ route('schedules.store') }}" method="POST" class="p-6">
-                    @csrf
-                    <input type="hidden" name="schedule_id" value="{{ request('schedule_id') }}">
-                    <template x-for="asset in selectedAssets" :key="asset.id">
-                        <input type="hidden" name="asset_ids[]" :value="asset.id">
-                    </template>
-                    
-                    {{-- ARQUITECTURA DE TRABAJO EN DOS COLUMNAS SIMÉTRICAS --}}
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <form action="{{ route('schedules.store') }}" method="POST" id="scheduleCreateForm" x-data="scheduleFormEngine()">
+                @csrf
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <div class="lg:col-span-2 space-y-6">
                         
-                        {{-- COLUMNA IZQUIERDA (5 Espacios): MOTOR DE BÚSQUEDA Y SELECCIÓN EN TIEMPO REAL --}}
-                        <div class="lg:col-span-5 space-y-4">
-                            <div class="flex flex-col space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                        1. Busque y Seleccione los Equipos 
-                                        <span class="text-indigo-600 font-extrabold" x-text="selectedAssets.length > 0 ? '(' + selectedAssets.length + ' añadidos)' : ''"></span>
-                                    </label>
-                                    
-                                    <button type="button" x-show="selectedAssets.length > 0"
-                                            @click="selectedAssets = []"
-                                            class="text-[10px] font-bold uppercase tracking-wider text-red-500 hover:text-red-700 transition focus:outline-none">
-                                        Vaciar Lista
-                                    </button>
-                                </div>
-
-                                <div class="relative z-50">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                        </svg>
-                                    </div>
-                                    <input type="text" x-ref="searchInput"
-                                           x-model="searchQuery" 
-                                           @input.debounce.300ms="fetchAssets()"
-                                           @focus="isOpen = true"
-                                           @click.away="isOpen = false"
-                                           placeholder="Escriba Serial, Placa o Aula para buscar..." 
-                                           class="w-full bg-gray-50/50 pl-9 p-2.5 border border-gray-200 rounded-lg text-sm font-medium focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 outline-none shadow-sm"
-                                           autocomplete="off">
-                                    
-                                    {{-- Loader Spinner AJAX --}}
-                                    <div x-show="isLoading" class="absolute right-3 top-3 text-indigo-600">
-                                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </div>
-
-                                    {{-- Desplegable de Resultados Encontrados --}}
-                                    <ul x-show="isOpen && results.length > 0"
-                                        x-transition
-                                        class="absolute w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto divide-y divide-gray-100">
-                                        <template x-for="asset in results" :key="asset.id">
-                                            <li @click="selectAsset(asset)"
-                                                class="p-2.5 hover:bg-indigo-50/60 cursor-pointer transition group flex items-center justify-between">
-                                                <div class="min-w-0">
-                                                    <div class="font-bold text-gray-700 text-xs uppercase group-hover:text-indigo-600 transition" x-text="asset.serial_number"></div>
-                                                    <div class="text-[10px] text-gray-400 font-medium mt-0.5">
-                                                        Placa: <span class="text-indigo-600 font-mono font-bold" x-text="asset.internal_code || 'S/P'"></span> 
-                                                        — Aula: <span x-text="asset.room ? asset.room.nomenclatura : 'NO ASIGNADO'"></span>
-                                                    </div>
-                                                </div>
-                                                <div class="text-indigo-600 font-bold text-xs bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white w-5 h-5 rounded flex items-center justify-center transition border border-indigo-100">+</div>
-                                            </li>
-                                        </template>
-                                    </ul>
-
-                                    <div x-show="isOpen && searchQuery.length >= 2 && results.length === 0 && !isLoading"
-                                         class="absolute w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-md p-3 text-center text-xs text-amber-600 font-bold">
-                                        ⚠️ No se encontraron equipos disponibles con ese criterio.
-                                    </div>
-                                </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                                <h3 class="font-bold text-slate-800">Detalles de Programación</h3>
                             </div>
+                            <div class="p-6 space-y-8">
+                                
+                                <div class="relative z-[60]" @click.away="dropdowns.assets.open = false">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide">1. Seleccione los Equipos <span class="text-rose-500">*</span></label>
+                                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded shadow-sm border border-blue-100"><span x-text="form.assets.length"></span> Seleccionados</span>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-2 mb-3" x-show="form.assets.length > 0">
+                                        <template x-for="asset in form.assets" :key="asset.id">
+                                            <span class="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all hover:bg-blue-100">
+                                                <span x-text="asset.label" class="truncate max-w-[300px]"></span>
+                                                <button type="button" @click="removeAsset(asset.id)" class="text-blue-400 hover:text-rose-500 transition-colors ml-1 focus:outline-none" title="Quitar equipo">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                                <input type="hidden" name="asset_ids[]" :value="asset.id">
+                                            </span>
+                                        </template>
+                                    </div>
 
-                            {{-- Canasta de Equipos Agendados (Aparece dinámicamente) --}}
-                            <div x-show="selectedAssets.length > 0" x-transition class="pt-1">
-                                <p class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 tracking-wider">Equipos en la orden de programación:</p>
-                                <div class="max-h-[260px] overflow-y-auto border border-gray-200 rounded-xl p-2 bg-gray-50/30 space-y-1.5">
-                                    <template x-for="asset in selectedAssets" :key="asset.id">
-                                        <div class="flex items-center p-2 bg-white border border-gray-100 rounded-lg shadow-sm transition group">
-                                            <div class="bg-indigo-600 w-3.5 h-3.5 rounded mr-2.5 flex items-center justify-center text-white shrink-0">
-                                                <svg class="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    <div class="relative">
+                                        <input type="text" x-model="dropdowns.assets.search" x-ref="assetSearch"
+                                               @focus="dropdowns.assets.open = true; if(dropdowns.assets.search.length > 0) fetch('assets')" 
+                                               @input.debounce.300ms="fetch('assets')"
+                                               placeholder="Escriba el Serial o Placa del equipo para añadirlo..." autocomplete="off"
+                                               class="w-full border-slate-300 rounded-lg py-3 pl-4 pr-12 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 shadow-sm transition-all cursor-text">
+                                        
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <svg x-show="!dropdowns.assets.loading" class="w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                            <svg x-show="dropdowns.assets.loading" class="w-5 h-5 text-blue-500 animate-spin pointer-events-none" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        </div>
+                                    </div>
+                                    @error('asset_ids') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+
+                                    <div x-show="dropdowns.assets.open" x-transition.opacity.duration.200ms
+                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                        
+                                        <div x-show="dropdowns.assets.results.length === 0 && dropdowns.assets.search.length === 0 && !dropdowns.assets.loading" class="p-6 text-center">
+                                            <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                             </div>
+                                            <p class="text-sm font-bold text-slate-600">Busca los equipos a programar</p>
+                                            <p class="text-xs text-slate-400 mt-1">Ingresa el serial o la placa interna.</p>
+                                        </div>
 
-                                            <div class="flex-1 min-w-0">
-                                                <p class="text-xs font-bold text-gray-700 uppercase truncate" x-text="asset.serial_number"></p>
-                                                <p class="text-[9px] text-gray-400 font-semibold truncate" x-text="'Placa: ' + (asset.internal_code || 'S/P') + ' — ' + (asset.room ? asset.room.nomenclatura : 'Sin Área')"></p>
+                                        <div x-show="dropdowns.assets.results.length === 0 && dropdowns.assets.search.length > 0 && !dropdowns.assets.loading" class="p-6 text-center">
+                                            <p class="text-sm font-bold text-slate-600">No se encontraron equipos</p>
+                                            <p class="text-xs text-slate-400 mt-1">Verifica el número ingresado e intenta de nuevo.</p>
+                                        </div>
+
+                                        <template x-for="item in dropdowns.assets.results" :key="item.id">
+                                            <div @mousedown.prevent="select('assets', item)" 
+                                                 class="group px-4 py-3 cursor-pointer flex items-center gap-3 transition-colors"
+                                                 :class="isAssetSelected(item.id) ? 'bg-slate-50 opacity-50 cursor-not-allowed' : 'hover:bg-blue-50/80'">
+                                                
+                                                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                                                     :class="isAssetSelected(item.id) ? 'bg-slate-200 text-slate-400' : 'bg-slate-100 group-hover:bg-blue-200 text-slate-500 group-hover:text-blue-700'">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-bold truncate transition-colors" 
+                                                       :class="isAssetSelected(item.id) ? 'text-slate-400' : 'text-slate-700 group-hover:text-blue-800'" 
+                                                       x-text="item.label"></p>
+                                                </div>
+                                                <div x-show="isAssetSelected(item.id)" class="text-[9px] font-bold uppercase tracking-widest text-slate-400 bg-slate-200 px-2 py-0.5 rounded">
+                                                    Añadido
+                                                </div>
                                             </div>
+                                        </template>
+                                    </div>
+                                </div>
 
-                                            <button type="button" @click="removeAsset(asset.id)" 
-                                                    class="ml-2 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition" title="Quitar de la lista">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                <div class="relative z-[59]" @click.away="dropdowns.technicians.open = false">
+                                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">2. Asignar Técnico de Soporte <span class="text-rose-500">*</span></label>
+                                    <input type="hidden" name="technician_id" x-model="form.technician_id" required>
+                                    
+                                    <div class="relative">
+                                        <input type="text" x-model="dropdowns.technicians.search"
+                                               @focus="dropdowns.technicians.open = true; if(dropdowns.technicians.search.length === 0) fetch('technicians')" 
+                                               @input.debounce.300ms="fetch('technicians')"
+                                               :readonly="form.technician_id !== ''"
+                                               placeholder="Buscar nombre del técnico..." autocomplete="off"
+                                               class="w-full border-slate-300 rounded-lg py-3 pl-4 pr-12 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 shadow-sm transition-all cursor-text"
+                                               :class="{'border-emerald-400 bg-emerald-50 focus:ring-emerald-500 cursor-default': form.technician_id !== ''}">
+                                        
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <svg x-show="!dropdowns.technicians.loading && form.technician_id === ''" class="w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                            <svg x-show="dropdowns.technicians.loading" class="w-5 h-5 text-blue-500 animate-spin pointer-events-none" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            
+                                            <button type="button" x-show="form.technician_id !== ''" @click="clearSelection('technicians')" class="p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors" title="Limpiar selección">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                             </button>
                                         </div>
-                                    </template>
+                                    </div>
+                                    @error('technician_id') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+
+                                    <div x-show="dropdowns.technicians.open && form.technician_id === ''" x-transition.opacity.duration.200ms
+                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                        
+                                        <div x-show="dropdowns.technicians.results.length === 0 && !dropdowns.technicians.loading" class="p-6 text-center">
+                                            <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                            </div>
+                                            <p class="text-sm font-bold text-slate-600">No hay técnicos disponibles</p>
+                                        </div>
+
+                                        <template x-for="item in dropdowns.technicians.results" :key="item.id">
+                                            <div @mousedown.prevent="select('technicians', item)" class="group px-4 py-3 hover:bg-blue-50/80 cursor-pointer flex items-center gap-3 transition-colors">
+                                                <div class="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-blue-200 flex items-center justify-center text-slate-500 group-hover:text-blue-700 transition-colors shrink-0 font-black text-xs uppercase" x-text="item.label.substring(0,2)">
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm font-bold text-slate-700 group-hover:text-blue-800 truncate" x-text="item.label"></p>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">3. Fecha Programada <span class="text-rose-500">*</span></label>
+                                        <input type="date" name="scheduled_date" required min="{{ date('Y-m-d') }}" value="{{ old('scheduled_date', date('Y-m-d')) }}" 
+                                               class="w-full rounded-lg border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm transition-all bg-slate-50 focus:bg-white text-slate-700 font-medium cursor-pointer py-2.5">
+                                        @error('scheduled_date') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Estado Inicial <span class="text-rose-500">*</span></label>
+                                        <select name="status" class="w-full rounded-lg border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-500 text-sm transition-all bg-amber-50 border-amber-200 text-amber-700 font-bold uppercase tracking-wider cursor-not-allowed pointer-events-none py-2.5">
+                                            <option value="PENDIENTE" selected>PENDIENTE</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- COLUMNA DERECHA (7 Espacios): PARAMETRIZACIÓN OPERATIVA DE ASIGNACIÓN --}}
-                        <div class="lg:col-span-7 space-y-5 border-t lg:border-t-0 lg:border-l border-gray-100 pt-5 lg:pt-0 lg:pl-6">
-                            
-                            {{-- Selector de Técnico --}}
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                                    2. Técnico Asignado
-                                </label>
-                                <select name="technician_id" class="w-full max-w-md rounded-lg border-gray-200 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2.5 bg-white text-gray-800" required>
-                                    <option value="" disabled selected>Seleccione el responsable técnico...</option>
-                                    @foreach($technicians as $technician)
-                                        <option value="{{ $technician->id }}">{{ $technician->name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 text-[9px] text-gray-400 font-medium">* Funcionario del área técnico/soporte encargado de realizar la intervención física.</p>
-                            </div>
-
-                            {{-- Selector de Fecha --}}
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                                    3. Fecha Proyectada
-                                </label>
-                                <input type="date" 
-                                       name="scheduled_date" 
-                                       min="{{ date('Y-m-d') }}"
-                                       value="{{ date('Y-m-d', strtotime('+1 week')) }}"
-                                       class="w-full max-w-xs border-gray-200 rounded-lg p-2 bg-white text-sm font-medium focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 shadow-sm"
-                                       required>
-                                <p class="mt-1 text-[9px] text-gray-400 font-medium">* Plazo máximo sugerido y pactado para ejecutar la revisión semestral de inventario.</p>
-                            </div>
-
-                            {{-- BOTONES DE CONFIRMACIÓN ALINEADOS AL FINAL --}}
-                            <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
-                                <a href="{{ route('schedules.index') }}" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600 transition">
-                                    Cancelar
-                                </a>
-                                <button type="submit" 
-                                        :disabled="selectedAssets.length === 0"
-                                        :class="selectedAssets.length === 0 ? 'opacity-40 cursor-not-allowed bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm'"
-                                        class="text-white font-bold text-xs uppercase tracking-widest py-2.5 px-6 rounded-lg transition ease-in-out duration-150">
-                                    Agendar Equipos
-                                </button>
-                            </div>
-
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <a href="{{ route('schedules.index') }}" class="px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 rounded-lg shadow-sm transition-all text-center">
+                                Cancelar
+                            </a>
+                            <button type="submit" :disabled="form.assets.length === 0 || form.technician_id === ''" 
+                                    class="px-8 py-2.5 text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2"
+                                    :class="form.assets.length === 0 || form.technician_id === '' ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                Crear Agendas (<span x-text="form.assets.length"></span>)
+                            </button>
                         </div>
                     </div>
-                </form>
-            </div>
+
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sticky top-6 space-y-5">
+                            <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Tips Operativos
+                            </h3>
+                            <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                                <div class="bg-blue-50 border border-blue-100 p-3 rounded-lg flex gap-3">
+                                    <span class="text-blue-500 font-bold">1.</span>
+                                    <p><strong class="text-slate-700 block mb-0.5">Múltiples Equipos:</strong> Puede buscar y seleccionar varios equipos a la vez. Al guardar, el sistema generará una agenda individual para cada equipo seleccionado bajo el mismo técnico y fecha.</p>
+                                </div>
+                                <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg flex gap-3">
+                                    <span class="text-slate-400 font-bold">2.</span>
+                                    <p><strong class="text-slate-700 block mb-0.5">Control de Duplicados:</strong> Si selecciona un equipo que ya tiene un mantenimiento pendiente en la misma fecha, el sistema lo advertirá antes de guardar.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
-    {{-- LÓGICA DE JAVASCRIPT / ALPINE INTACTA --}}
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('multiAssetSearch', () => ({
-                searchQuery: '',
-                results: [],
-                isOpen: false,
-                isLoading: false,
-                selectedAssets: [],
+            Alpine.data('scheduleFormEngine', () => ({
+                
+                form: {
+                    assets: [], // Array de objetos {id, label}
+                    technician_id: ''
+                },
 
-                async fetchAssets() {
-                    if (this.searchQuery.length < 2) {
-                        this.results = [];
-                        this.isOpen = false;
-                        return;
-                    }
-                    this.isLoading = true;
-                    this.isOpen = true;
+                dropdowns: {
+                    assets:       { open: false, search: '', results: [], loading: false },
+                    technicians:  { open: false, search: '', results: [], loading: false }
+                },
+
+                // Verifica si un equipo ya está seleccionado para deshabilitarlo en la lista
+                isAssetSelected(id) {
+                    return this.form.assets.some(a => a.id === id);
+                },
+
+                async fetch(type) {
+                    const dd = this.dropdowns[type];
+                    
+                    // En el caso del técnico, si ya hay uno seleccionado, no buscamos
+                    if (type === 'technicians' && this.form.technician_id !== '') return;
+
+                    dd.loading = true;
+
+                    const endpoints = {
+                        'assets': '/api/filters/api/sigma-filters/assets',
+                        'technicians': '/api/filters/api/sigma-filters/technicians'
+                    };
+
+                    let url = new URL(endpoints[type], window.location.origin);
+                    url.searchParams.append('search', dd.search);
 
                     try {
-                        const response = await fetch(`/schedules/search-assets?q=${encodeURIComponent(this.searchQuery)}`);
-                        const data = await response.json();
+                        let res = await fetch(url);
+                        let raw = await res.json();
+                        let items = Array.isArray(raw) ? raw : (raw.data || raw.items || []);
                         
-                        this.results = data.filter(asset => !this.selectedAssets.some(s => s.id === asset.id));
-                    } catch (error) {
-                        console.error('Error buscando equipos:', error);
-                        this.results = [];
-                    } finally {
-                        this.isLoading = false;
+                        dd.results = items.map(i => {
+                            let label = i.name || i.nomenclatura || i.full_name || i.label || `ID: ${i.id}`;
+                            return { id: i.id, label: label };
+                        });
+                    } catch(e) {
+                        dd.results = [];
+                    }
+                    dd.loading = false;
+                },
+
+                select(type, item) {
+                    const dd = this.dropdowns[type];
+                    
+                    if(type === 'assets') {
+                        // Evita agregar duplicados
+                        if(!this.isAssetSelected(item.id)) {
+                            this.form.assets.push({ id: item.id, label: item.label });
+                        }
+                        // Limpia el buscador para permitir buscar el siguiente
+                        dd.search = '';
+                        this.$refs.assetSearch.focus(); 
+                    }
+                    
+                    if(type === 'technicians') {
+                        this.form.technician_id = item.id;
+                        dd.search = item.label;
+                        dd.open = false;
                     }
                 },
 
-                selectAsset(asset) {
-                    this.selectedAssets.push(asset);
-                    this.searchQuery = '';
-                    this.results = [];
-                    this.isOpen = false;
-                    this.$refs.searchInput.focus(); 
+                removeAsset(id) {
+                    this.form.assets = this.form.assets.filter(a => a.id !== id);
                 },
 
-                removeAsset(assetId) {
-                    this.selectedAssets = this.selectedAssets.filter(s => s.id !== assetId);
+                clearSelection(type) {
+                    const dd = this.dropdowns[type];
+                    dd.search = '';
+                    dd.results = [];
+                    if(type === 'technicians')  this.form.technician_id = '';
+                    
+                    setTimeout(() => {
+                        this.$el.querySelector(`input[name=technician_id]`).previousElementSibling.focus();
+                    }, 50);
                 }
-            }))
-        })
+            }));
+        });
     </script>
 </x-app-layout>
