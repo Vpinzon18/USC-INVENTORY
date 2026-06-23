@@ -2,25 +2,36 @@
     <div x-data="{ viewMode: 'list', showFilters: false }" class="py-8 bg-slate-50 min-h-screen">
         <div class="max-w-[98%] mx-auto sm:px-6 lg:px-8">
 
-            <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                <div>
-                    <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row justify-between items-center gap-6 relative overflow-hidden mb-8">
+                {{-- mb-8 crea el espacio necesario antes de los KPIs --}}
+
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
+
+                <div class="flex items-center gap-5 w-full sm:w-auto">
+                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+
                         </svg>
-                        CMDB - Hojas de Vida
-                    </h1>
-                    <p class="text-sm text-slate-500 mt-1">Gestión centralizada de configuración y activos TI.</p>
+
+                    </div>
+                    <div>
+                        <h2 class="font-extrabold text-2xl text-slate-800 tracking-tight leading-tight">Inventario de Activos Tecnológicos</h2>
+                        <p class="text-sm text-slate-500 font-medium mt-0.5">Gestión centralizada de configuración y activos TI.</p>
+                    </div>
                 </div>
 
-                <a href="{{ route('assets.create') }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg text-sm transition-all shadow-sm ring-1 ring-blue-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Nuevo Activo
-                </a>
+                <div class="shrink-0 w-full sm:w-auto">
+                    <a href="{{ route('assets.create') }}"
+                        class="inline-flex items-center justify-center gap-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-6 rounded-xl text-sm transition-all shadow-md shadow-blue-200 ring-1 ring-blue-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Nuevo Activo
+                    </a>
+                </div>
             </div>
-
             <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
                 <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition duration-200">
                     <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Activos</div>
@@ -322,4 +333,4 @@
             });
         });
     </script>
-</x-app-layout> 
+</x-app-layout>

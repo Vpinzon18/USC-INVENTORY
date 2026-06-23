@@ -1,154 +1,257 @@
 <x-app-layout>
-    <div class="py-6">
-        {{-- Expandimos el contenedor al máximo ancho del sistema (max-w-7xl) --}}
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                
-                {{-- ENCABEZADO TOTALMENTE INTEGRADO --}}
-                <div class="p-5 bg-white border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div class="flex flex-col">
-                        <h2 class="font-bold text-xl text-gray-800 tracking-tight">Nuevo Registro Técnico</h2>
-                        <p class="text-xs text-gray-500">Gestione e introduzca la intervención técnica del equipo en su hoja de vida.</p>
+    <div class="py-8 bg-slate-50 min-h-screen">
+        <div class="max-w-[1200px] w-[96%] mx-auto space-y-6">
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500"></div>
+
+                <div class="flex items-center gap-5 pl-2">
+                    <a href="{{ route('schedules.index') }}" class="text-slate-400 hover:text-emerald-600 transition-colors bg-slate-50 p-2 rounded-lg border border-slate-100 hidden sm:block" title="Volver al Cronograma">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </a>
+                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
-                    @if($assets->count() === 1)
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 tracking-wide uppercase">
-                            Asignación Automática
-                        </span>
-                    @endif
+                    <div>
+                        <h2 class="font-extrabold text-2xl text-slate-800 leading-tight">Registro de Intervención Técnica</h2>
+                        <p class="text-sm text-slate-500 mt-0.5">Ejecuta y documenta el mantenimiento para actualizar la hoja de vida del equipo.</p>
+                    </div>
                 </div>
 
-                <form action="{{ route('maintenances.store') }}" method="POST" 
-                      x-data="{ 
-                          type: 'Preventivo', 
-                          cambioGuaya: false, 
-                          currentGuaya: '{{ $assets->count() === 1 ? ($assets->first()->security_guaya ?? 'Sin Guaya Registrada') : 'Seleccione un equipo...' }}' 
-                      }" 
-                      class="p-6">
-                    @csrf
-                    
-                    <input type="hidden" name="maintenance_schedule_id" value="{{ request('schedule_id') }}">
+                @if($assets->count() === 1)
+                <div class="shrink-0 flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg shadow-sm">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-[11px] font-black text-emerald-700 uppercase tracking-widest">Asignación Directa</span>
+                </div>
+                @endif
+            </div>
 
-                    {{-- GRID PRINCIPAL DE DOS COLUMNAS DE TRABAJO (Distribución de espacio) --}}
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                        
-                        {{-- COLUMNA IZQUIERDA (4 u 5 Espacios): CONTROL DE EQUIPOS --}}
-                        <div class="lg:col-span-5 space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">1. Seleccione el Equipo</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                        </svg>
-                                    </div>
-                                    <input type="text" id="assetSearch" placeholder="Buscar por serial o placa..." 
-                                           class="w-full bg-gray-50/50 pl-9 p-2.5 border border-gray-200 rounded-lg text-sm font-medium focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 outline-none shadow-sm"
-                                           {{ $assets->count() === 1 ? 'disabled' : '' }}>
-                                </div>
+            <form action="{{ route('maintenances.store') }}" method="POST" id="maintenanceForm"
+                data-assets="{{ json_encode($assets->map(fn($a) => ['id' => $a->id, 'serial' => $a->serial_number, 'code' => $a->internal_code, 'guaya' => $a->security_guaya])) }}"
+                x-data="maintenanceEngine()">
+                @csrf
+                <input type="hidden" name="maintenance_schedule_id" value="{{ request('schedule_id') }}">
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <div class="lg:col-span-2 space-y-6">
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <h3 class="font-bold text-slate-800">Detalles de la Intervención</h3>
                             </div>
 
-                            {{-- Contenedor con altura controlada para evitar desbordes --}}
-                            <div class="max-h-[300px] overflow-y-auto border border-gray-200 rounded-xl p-2 bg-gray-50/30 space-y-1.5" id="assetContainer">
-                                @foreach($assets as $asset)
-                                    <label class="asset-option flex items-center p-2.5 bg-white border border-gray-100 rounded-lg cursor-pointer hover:border-indigo-300 hover:bg-gray-50/50 transition duration-150 group relative">
-                                        <input type="radio" name="asset_id" value="{{ $asset->id }}" class="hidden peer" required
-                                               {{ $assets->count() === 1 ? 'checked' : '' }}
-                                               x-on:change="currentGuaya = '{{ $asset->security_guaya ?? 'Sin Guaya Registrada' }}'">
-                                        
-                                        <div class="w-4 h-4 rounded-full border border-gray-300 bg-white flex items-center justify-center mr-3 peer-checked:border-indigo-600 peer-checked:bg-indigo-600 transition duration-150">
-                                            <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
-                                        </div>
+                            <div class="p-6 space-y-8">
 
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-xs font-bold text-gray-700 group-hover:text-indigo-600 transition uppercase serial-text">{{ $asset->serial_number }}</p>
-                                            <p class="text-[10px] text-gray-400 font-semibold tracking-wide plate-text">{{ $asset->internal_code ?? 'S/P' }}</p>
+                                <div class="relative z-[60]">
+                                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">1. Equipo Intervenido <span class="text-rose-500">*</span></label>
+                                    <input type="hidden" name="asset_id" x-model="selectedId" required>
+
+                                    @if($assets->count() === 1)
+                                    <div class="inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-sm w-full">
+                                        <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
                                         </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-emerald-800">SN: {{ $assets->first()->serial_number }}</p>
+                                            <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">{{ $assets->first()->internal_code ? 'Placa: ' . $assets->first()->internal_code : 'Sin Placa Interna' }}</p>
+                                        </div>
+                                    </div>
+                                    @else
+                                    <div class="relative">
+                                        <input type="text" x-model="search" placeholder="Buscar equipo por serial o placa..."
+                                            class="w-full border-slate-300 rounded-lg py-3 pl-4 pr-12 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all">
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 max-h-[250px] overflow-y-auto border border-slate-200 rounded-xl bg-slate-50/50 p-2 space-y-1 divide-y divide-slate-100">
+                                        <template x-for="asset in filteredAssets" :key="asset.id">
+                                            <label class="flex items-center p-3 bg-white border border-transparent rounded-lg cursor-pointer hover:border-emerald-200 hover:bg-emerald-50 transition-all"
+                                                :class="{'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50': selectedId == asset.id}">
+                                                <input type="radio" name="asset_id_radio" :value="asset.id" @change="selectAsset(asset)" class="hidden">
+                                                <div class="flex-1">
+                                                    <p class="text-sm font-bold text-slate-800" x-text="'SN: ' + asset.serial"></p>
+                                                    <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider" x-text="asset.code ? 'Placa: ' + asset.code : 'Sin Placa'"></p>
+                                                </div>
+                                                <div x-show="selectedId == asset.id" class="text-emerald-500">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                            </label>
+                                        </template>
+                                        <div x-show="filteredAssets.length === 0" class="p-4 text-center text-sm font-bold text-slate-400">
+                                            No se encontraron equipos con esa búsqueda.
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">2. Fecha Realizada <span class="text-rose-500">*</span></label>
+                                        <input type="date" name="performed_at" required value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}"
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:ring-2 focus:ring-emerald-500 text-sm transition-all bg-slate-50 focus:bg-white text-slate-700 font-medium cursor-pointer py-2.5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">3. Tipo de Intervención <span class="text-rose-500">*</span></label>
+                                        <select name="type" required class="w-full rounded-lg border-slate-300 shadow-sm focus:ring-2 focus:ring-emerald-500 text-sm transition-all bg-slate-50 focus:bg-white text-slate-700 font-bold cursor-pointer py-2.5">
+                                            <option value="Preventivo">Mantenimiento Preventivo</option>
+                                            <option value="Correctivo">Mantenimiento Correctivo</option>
+                                            <option value="Mejora">Actualización / Mejora</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-100 space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide">4. Seguridad Física del Equipo</label>
+                                    </div>
+
+                                    <label class="inline-flex items-center gap-3 cursor-pointer group bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-3 rounded-xl transition-colors">
+                                        <input type="checkbox" x-model="cambioGuaya" class="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                        <span class="text-sm font-bold text-slate-700 group-hover:text-slate-900">Se instaló o reemplazó la guaya de seguridad durante la visita</span>
                                     </label>
-                                @endforeach
+
+                                    <div x-show="cambioGuaya" x-collapse>
+                                        <div class="bg-emerald-50/50 p-5 rounded-xl border border-emerald-100 grid grid-cols-1 md:grid-cols-2 gap-6 relative overflow-hidden mt-2">
+                                            <div class="absolute right-0 top-0 opacity-10 text-emerald-600">
+                                                <svg class="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+                                                </svg>
+                                            </div>
+
+                                            <div class="relative z-10">
+                                                <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">Guaya Registrada Actual:</p>
+                                                <div class="flex items-center gap-2">
+                                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                    </svg>
+                                                    <span x-text="currentGuaya" class="text-sm font-mono font-bold text-slate-700"></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="relative z-10">
+                                                <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest mb-1">Nuevo Serial de Guaya:</p>
+                                                <input type="text" name="security_guaya" placeholder="Ej: GUA-98765..."
+                                                    class="w-full border-emerald-200 rounded-lg py-2 px-3 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-emerald-500 transition-all uppercase"
+                                                    :required="cambioGuaya" x-model="newGuaya">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-100">
+                                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">5. Descripción Detallada del Servicio <span class="text-rose-500">*</span></label>
+                                    <textarea name="description" rows="5" required
+                                        placeholder="Describa los procedimientos realizados, piezas cambiadas o el estado final del equipo..."
+                                        class="w-full border-slate-300 rounded-xl p-4 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-sm transition-all resize-none"></textarea>
+                                </div>
+
                             </div>
                         </div>
 
-                        {{-- COLUMNA DERECHA (7 Espacios): DATOS DE INTERVENCIÓN --}}
-                        <div class="lg:col-span-7 space-y-5 border-t lg:border-t-0 lg:border-l border-gray-100 pt-5 lg:pt-0 lg:pl-6">
-                            
-                            {{-- Fila con Fecha y Checkbox alineados en grillas internas --}}
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">2. Fecha de Realización</label>
-                                    <input type="date" name="performed_at" value="{{ date('Y-m-d') }}" class="w-full border-gray-200 rounded-lg p-2 bg-white text-sm font-medium focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 shadow-sm" required>
-                                </div>
-
-                                <div class="flex flex-col justify-start pt-1">
-                                    <label class="flex items-center space-x-2.5 cursor-pointer select-none mb-1.5 mt-5">
-                                        <input type="checkbox" x-model="cambioGuaya" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 transition duration-150 cursor-pointer">
-                                        <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">¿Instaló / reemplazó guaya?</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {{-- Espacio dinámico para la guaya sin romper el flujo vertical --}}
-                            <div x-show="cambioGuaya" x-transition class="bg-gray-50/50 p-3 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                                <div class="text-[10px] font-bold text-indigo-700 tracking-wide">
-                                    ÚLTIMA GUAYA VINCULADA:<br>
-                                    <span x-text="currentGuaya" class="inline-block bg-indigo-600 text-white px-2 py-0.5 rounded font-mono uppercase tracking-normal mt-1"></span>
-                                </div>
-                                <input type="text" name="security_guaya" placeholder="Serial de la nueva guaya..." 
-                                       class="w-full border-gray-200 rounded-lg p-2 bg-white text-sm font-medium placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 shadow-sm"
-                                       :required="cambioGuaya">
-                            </div>
-
-                            {{-- Tipo de Intervención --}}
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">3. Tipo de Intervención</label>
-                                <select name="type" x-model="type" class="w-full max-w-md border-gray-200 rounded-lg p-2 bg-white text-sm font-medium focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 shadow-sm" required>
-                                    <option value="Preventivo">Mantenimiento Preventivo</option>
-                                    <option value="Correctivo">Mantenimiento Correctivo</option>
-                                    <option value="Mejora">Mejora de Hardware/Software</option>
-                                    <option value="Diagnóstico">Diagnóstico Técnico</option>
-                                    <option value="Otro">Otro (Especificar...)</option>
-                                </select>
-                                
-                                <div x-show="type === 'Otro'" x-transition class="mt-2 max-w-md">
-                                    <input type="text" name="custom_type" placeholder="Especifique el tipo..." 
-                                           class="w-full border-gray-200 rounded-lg p-2 bg-white text-sm font-medium placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800 shadow-sm"
-                                           :required="type === 'Otro'">
-                                </div>
-                            </div>
-
-                            {{-- Descripción del Trabajo --}}
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">4. Descripción del Trabajo</label>
-                                <textarea name="description" rows="5" placeholder="Detalle minuciosamente el estado físico, reparaciones efectuadas, software instalado o fallas reportadas..." 
-                                          class="w-full border-gray-200 rounded-lg p-3 bg-white text-sm text-gray-700 placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500 resize-none shadow-sm" required></textarea>
-                            </div>
-
-                            {{-- BOTONES DE CONTROL ACOPLADOS --}}
-                            <div class="pt-2 flex justify-end items-center gap-4">
-                                <a href="{{ route('maintenances.index') }}" class="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600 transition">
-                                    Cancelar
-                                </a>
-                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest py-2.5 px-6 rounded-lg shadow-sm transition ease-in-out duration-150">
-                                    Guardar en Hoja de Vida
-                                </button>
-                            </div>
-
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <a href="{{ route('schedules.index') }}" class="px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 rounded-lg shadow-sm transition-all text-center">
+                                Cancelar
+                            </a>
+                            <button type="submit" :disabled="selectedId === ''"
+                                class="px-8 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Guardar y Completar
+                            </button>
                         </div>
                     </div>
 
-                </form>
-            </div>
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sticky top-6 space-y-5">
+                            <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Registro Técnico
+                            </h3>
+                            <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                                <div class="bg-emerald-50/60 border border-emerald-200 p-3 rounded-lg">
+                                    <p class="text-emerald-800 font-medium">Al guardar este formulario, el equipo actualizará automáticamente su fecha del <strong>Último Mantenimiento</strong> en su Hoja de Vida.</p>
+                                </div>
+                                @if(request('schedule_id'))
+                                <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg flex gap-3">
+                                    <span class="text-blue-500 font-bold">✓</span>
+                                    <p><strong class="text-slate-700 block mb-0.5">Cierre de Agenda:</strong> Esta acción marcará la agenda programada como <strong>REALIZADA</strong> y la sacará de sus tareas pendientes.</p>
+                                </div>
+                                @endif
+                                <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg flex gap-3">
+                                    <span class="text-slate-400 font-bold">!</span>
+                                    <p><strong class="text-slate-700 block mb-0.5">Inventario Físico:</strong> Si instaló una guaya nueva, no olvide activar la casilla correspondiente para actualizar el registro patrimonial.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
         </div>
     </div>
 
-    <script>
-        document.getElementById('assetSearch').addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase();
-            const options = document.querySelectorAll('.asset-option');
-            options.forEach(opt => {
-                const serial = opt.querySelector('.serial-text').textContent.toLowerCase();
-                const plate = opt.querySelector('.plate-text').textContent.toLowerCase();
-                opt.style.display = (serial.includes(term) || plate.includes(term)) ? 'flex' : 'none';
-            });
+   <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('maintenanceEngine', () => ({
+                
+                search: '',
+                selectedId: '{{ $assets->count() === 1 ? $assets->first()->id : "" }}',
+                currentGuaya: '{{ $assets->count() === 1 ? ($assets->first()->security_guaya ?? "Sin Guaya Registrada") : "Seleccione un equipo..." }}',
+                cambioGuaya: false,
+                newGuaya: '',
+                
+                // Inicializamos vacío
+                assetsList: [],
+
+                // Init se ejecuta automáticamente al cargar el componente
+                init() {
+                    // Extraemos los datos del HTML de forma segura. ¡Adiós errores de VS Code!
+                    const rawData = document.getElementById('maintenanceForm').dataset.assets;
+                    if(rawData) {
+                        this.assetsList = JSON.parse(rawData);
+                    }
+                },
+
+                get filteredAssets() {
+                    if (this.search === '') return this.assetsList;
+                    const q = this.search.toLowerCase();
+                    return this.assetsList.filter(a => 
+                        (a.serial && a.serial.toLowerCase().includes(q)) || 
+                        (a.code && a.code.toLowerCase().includes(q))
+                    );
+                },
+
+                selectAsset(asset) {
+                    this.selectedId = asset.id;
+                    this.currentGuaya = asset.guaya || 'Sin Guaya Registrada';
+                    
+                    this.newGuaya = '';
+                    this.cambioGuaya = false;
+                }
+            }));
         });
     </script>
 </x-app-layout>

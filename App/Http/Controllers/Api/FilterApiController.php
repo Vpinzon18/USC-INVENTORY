@@ -264,5 +264,44 @@ class FilterApiController extends Controller
 
         return response()->json($technicians);
     }
+    
+    public function getGlobalAssets(Request $request)
+    {
+        $search = $request->query('search');
+
+        // 1. QUERY BUILDER PURO: Usamos DB::table en vez del Modelo.
+        // Esto evita la "hidratación" de Eloquent y hace la consulta hasta 10x más rápida.
+        $assets = \Illuminate\Support\Facades\DB::table('assets')
+            // 2. COLUMNAS ESTRICTAS: Solo pedimos lo que la vista realmente dibuja.
+            // Eliminamos las relaciones de salones/edificios porque el dropdown ya no las muestra.
+            ->select('id', 'serial_number', 'internal_code')
+            ->when($search, function($query) use ($search) {
+                $query->where(function($q) use ($search) {
+                    
+                    // 3. OPTIMIZACIÓN DE ÍNDICES (B-Tree)
+                    // Al quitar el '%' inicial del serial, la base de datos usa sus índices 
+                    // de forma nativa (ideal si usas pistola de código de barras).
+                    $q->where('serial_number', 'ilike', "{$search}%")
+                      // Mantenemos el comodín completo para la placa por si buscan fracciones
+                      ->orWhere('internal_code', 'ilike', "%{$search}%");
+                });
+            })
+            // 4. LÍMITE REDUCIDO: 15 resultados son suficientes para que el usuario elija
+            ->limit(15) 
+            ->get()
+            ->map(function($asset) {
+                // DB::table devuelve objetos crudos (stdClass), no modelos.
+                $code = $asset->internal_code ? " | Placa: {$asset->internal_code}" : "";
+                
+                return [
+                    'id' => $asset->id,
+                    'label' => "SN: {$asset->serial_number}{$code}",
+                    'serial_number' => $asset->serial_number,
+                    'internal_code' => $asset->internal_code
+                ];
+            });
+
+        return response()->json($assets);
+    }
 }
     

@@ -147,6 +147,7 @@ Route::prefix('api/sigma-filters')->group(function () {
     Route::get('/dependencies', [FilterApiController::class, 'getDependencies']);
     Route::get('/technicians', [FilterApiController::class, 'getTechnicians']);
     Route::get('/assets', [\App\Http\Controllers\Api\FilterApiController::class, 'getAssets']);
+Route::get('/assets-global', [\App\Http\Controllers\Api\FilterApiController::class, 'getGlobalAssets']);
 });
 
 });

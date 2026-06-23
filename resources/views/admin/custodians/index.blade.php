@@ -3,22 +3,32 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[calc(100vh-130px)] min-h-[500px]">
             
            <div class="p-4 border-b border-gray-100 bg-white shrink-0 space-y-4">
-                
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                        </div>
-                        <div>
+                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row justify-between items-center gap-6 relative overflow-hidden mb-8">
+                {{-- mb-8 crea el espacio necesario antes de los KPIs --}}
+
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
+
+                <div class="flex items-center gap-5 w-full sm:w-auto">
+                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+
+                        </svg>
+
+                    </div>
+                    <div>
                             <h2 class="font-bold text-xl text-gray-800 tracking-tight uppercase">Directorio de Responsables</h2>
                             <p class="text-xs text-gray-500">Gestión operativa del personal con activos asignados.</p>
                         </div>
-                    </div>
+                </div>
+
+                <div class="shrink-0 w-full sm:w-auto">
                     <a href="{{ route('custodians.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-2 px-4 rounded-xl text-xs transition-all shadow-md shrink-0 text-center uppercase tracking-wide flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                         Nuevo Responsable
                     </a>
                 </div>
+            </div>
 
                 <div class="pt-3 border-t border-gray-100 flex flex-col xl:flex-row justify-between gap-4">
                     

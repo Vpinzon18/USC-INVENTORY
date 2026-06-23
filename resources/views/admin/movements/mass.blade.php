@@ -1,312 +1,418 @@
 <x-app-layout>
-    <style>
-        /* Animación fluida para la búsqueda de activos */
-        .asset-hidden {
-            opacity: 0;
-            transform: scale(0.95);
-            max-height: 0 !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-            margin-bottom: 0 !important;
-            border-width: 0 !important;
-            overflow: hidden;
-        }
+    <div class="py-8 bg-slate-50 min-h-screen">
+        <div class="max-w-[1300px] w-[96%] mx-auto space-y-6">
+            
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-600"></div>
 
-        .asset-item {
-            max-height: 120px;
-            /* Suficiente para que quepa el contenido normal */
-        }
-    </style>
-    <div class="py-12">
-        <div class="max-w-[95%] mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-
-                @if(session('success'))
-                <div class="m-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-xl shadow-sm">{{ session('success') }}</div>
-                @endif
-                @if(session('error'))
-                <div class="m-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-xl shadow-sm">{{ session('error') }}</div>
-                @endif
-
-                <form action="{{ route('movements.mass.store') }}" method="POST" class="p-6" id="movementForm">
-                    @csrf
-
-                    {{-- ENCABEZADO MINIMALISTA --}}
-                    <div class="flex flex-col mb-6 border-b border-gray-100 pb-4">
-                        <h1 class="font-bold text-xl text-gray-800 tracking-tight">Modulo de Movimientos de Activos</h1>
-                        <p class="text-xs text-gray-500">Formato Institucional R-AF001 - Unidad de Activos Fijos.</p>
+                <div class="flex items-center gap-5 pl-2 w-full md:w-auto">
+                    <a href="{{ route('movements.index') }}" class="text-slate-400 hover:text-indigo-600 transition-colors bg-slate-50 p-2 rounded-lg border border-slate-100 hidden sm:block" title="Volver al Historial">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    </a>
+                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
                     </div>
-
-                    {{-- CAMPOS DE CONFIGURACIÓN UNIFICADOS --}}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50/70 p-4 rounded-xl border border-gray-200">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1.5 tracking-wider">Tipo de Movimiento</label>
-                            <select name="movement_type" class="w-full rounded-lg border-gray-200 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2.5 bg-white text-gray-800" required>
-                                <option value="" disabled selected>Seleccione...</option>
-                                <option value="TRASLADO ASIGNACION">Traslado en calidad de Asignación</option>
-                                <option value="ASIGNACION INICIAL">Asignación Inicial</option>
-                                <option value="PRESTAMO FUERA USC">Préstamo Fuera de la USC</option>
-                                <option value="PRESTAMO DENTRO USC">Préstamo Dentro de la USC</option>
-                                <option value="REPARACION DENTRO USC">Reparación Dentro de la USC</option>
-                                <option value="REPARACION FUERA USC">Reparación Fuera de la USC</option>
-                                <option value="OTRO">Otro</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1.5 tracking-wider">Sede</label>
-                            <select name="headquarters" class="w-full rounded-lg border-gray-200 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2.5 bg-white text-gray-800" required>
-                                <option value="PAMPALINDA">Pampalinda (Cali)</option>
-                                <option value="CENTRO">Centro (Cali)</option>
-                                <option value="PALMIRA">Palmira</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-center pt-5">
-                            <label class="flex items-center space-x-2.5 cursor-pointer select-none">
-                                <input type="checkbox" name="generate_pdf" value="1" checked class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 transition duration-150">
-                                <span class="text-sm font-medium text-gray-600">Generar Acta PDF Automática</span>
-                            </label>
-                        </div>
+                    <div>
+                        <h2 class="font-extrabold text-2xl text-slate-800 tracking-tight">Módulo de Movimientos de Activos</h2>
+                        <p class="text-sm text-slate-500 font-medium mt-0.5">Formato Institucional R-AF001 - Unidad de Activos Fijos.</p>
                     </div>
-
-                    {{-- CUERPO DE TRABAJO EN DOS COLUMNAS --}}
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                        {{-- COLUMNA IZQUIERDA: SELECCIÓN DE HARDWARE --}}
-                        <div class="lg:col-span-1">
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-2 tracking-wider">Seleccionar Equipos</label>
-                            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                        </svg>
-                                    </div>
-                                    <input type="text" id="assetSearch" placeholder="Buscar por serial o placa..." class="w-full bg-gray-50/50 pl-9 p-2.5 border-b border-gray-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 outline-none text-gray-700">
-                                </div>
-
-                                <div class="max-h-[340px] overflow-y-auto p-2 space-y-1 bg-white" id="assetList">
-                                    @foreach($assets as $asset)
-                                    <label class="flex items-center p-2.5 bg-white border border-gray-100 rounded-lg cursor-pointer hover:border-indigo-200 hover:bg-gray-50/50 asset-item transition duration-150 group"
-                                        data-custodian="{{ $asset->currentAssignment->custodian_id ?? 0 }}"
-                                        data-room="{{ $asset->currentAssignment->room_id ?? 0 }}">
-                                        <input type="checkbox" name="selected_assets[]" value="{{ $asset->id }}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 asset-checkbox">
-                                        <div class="ml-3 flex-1 min-w-0">
-                                            <span class="block text-xs font-bold text-gray-700 group-hover:text-indigo-600 transition">{{ $asset->serial_number }}</span>
-                                            <span class="block text-[10px] text-gray-400 font-semibold tracking-wide">{{ $asset->internal_code }}</span>
-                                            <span class="warning-text block text-[9px] text-amber-600 font-bold mt-0.5 hidden"> UBICADO EN EL DESTINO ACTUAL</span>
-                                        </div>
-                                    </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- COLUMNA DERECHA: ASIGNACIÓN Y NOTAS --}}
-                        <div class="lg:col-span-2 flex flex-col justify-between space-y-4">
-
-                            {{-- ÁREA DE DESTINO ESTILO HISTORIAL --}}
-                            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                <h3 class="text-gray-800 text-xs font-bold uppercase tracking-wider mb-3">Área de Destino (Quién Recibe)</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <select name="custodian_id" id="custodian_id" onchange="filterRooms(this.value)" class="w-full rounded-lg border-gray-200 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2.5 bg-white text-gray-800" required>
-                                            <option value="" disabled selected>Seleccione Responsable...</option>
-                                            @foreach($custodians as $custodian)
-                                            <option value="{{ $custodian->id }}" data-rooms='@json($custodian->rooms)'>{{ $custodian->full_name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <select name="room_id" id="room_id" class="w-full rounded-lg border-gray-200 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2.5 bg-white text-gray-800 disabled:bg-gray-50 disabled:text-gray-400" disabled required>
-                                            <option value="" disabled selected>Seleccione Ubicación...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- TEXTAREA DE OBSERVACIONES ESTILIZADO --}}
-                            <div class="flex-1">
-                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1.5 tracking-wider">Observaciones / Justificación</label>
-                                <textarea name="observation" id="observation" rows="4" class="w-full rounded-xl border-gray-200 text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-3 text-gray-700 placeholder-gray-400 resize-none" placeholder="Escriba aquí los detalles o motivos del traslado de hardware..."></textarea>
-                            </div>
-
-                            {{-- BOTÓN ACCIÓN INTEGRADO AL DISEÑO SIGMA --}}
-                            <div>
-                                <button type="button" id="submitBtn" onclick="validarYEnviar()"
-                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-widest py-3.5 rounded-lg shadow-sm transition ease-in-out duration-150">
-                                    Procesar Traslado Masivo
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+                </div>
             </div>
+
+            @if(session('success'))
+                <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl shadow-sm flex items-center gap-3 font-bold text-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> {{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+                <div class="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl shadow-sm flex items-center gap-3 font-bold text-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> {{ session('error') }}</div>
+            @endif
+
+            <form action="{{ route('movements.mass.store') }}" method="POST" id="movementForm" x-data="movementEngine()" class="space-y-6">
+                @csrf
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Tipo de Movimiento <span class="text-rose-500">*</span></label>
+                        <select name="movement_type" required class="w-full rounded-lg border-slate-300 bg-slate-50 focus:bg-white text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-indigo-500 py-2.5 transition-colors cursor-pointer">
+                            <option value="" disabled selected>Seleccione...</option>
+                            <option value="TRASLADO ASIGNACION">Traslado en calidad de Asignación</option>
+                            <option value="ASIGNACION INICIAL">Asignación Inicial</option>
+                            <option value="PRESTAMO FUERA USC">Préstamo Fuera de la USC</option>
+                            <option value="PRESTAMO DENTRO USC">Préstamo Dentro de la USC</option>
+                            <option value="REPARACION DENTRO USC">Reparación Dentro de la USC</option>
+                            <option value="REPARACION FUERA USC">Reparación Fuera de la USC</option>
+                            <option value="OTRO">Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Sede Origen/Destino <span class="text-rose-500">*</span></label>
+                        <select name="headquarters" required class="w-full rounded-lg border-slate-300 bg-slate-50 focus:bg-white text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-indigo-500 py-2.5 transition-colors cursor-pointer">
+                            <option value="PAMPALINDA">Pampalinda (Cali)</option>
+                            <option value="CENTRO">Centro (Cali)</option>
+                            <option value="PALMIRA">Palmira</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-start md:justify-center pb-2">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" name="generate_pdf" value="1" checked class="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition-colors">
+                            <span class="text-sm font-bold text-slate-600 group-hover:text-slate-800 transition-colors">Generar Acta PDF Automática</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[550px]">
+                        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">1. Selección de Activos</h3>
+                            </div>
+                            <span class="text-[10px] font-black text-indigo-700 bg-indigo-100 px-2 py-1 rounded-md uppercase tracking-widest"><span x-text="form.assets.length"></span> en bandeja</span>
+                        </div>
+
+                        <div class="p-4 flex-1 flex flex-col min-h-0">
+                            
+                            <div class="relative mb-3 z-50" @click.away="dropdowns.assets.open = false">
+                                <input type="text" x-model="dropdowns.assets.search" x-ref="assetSearch"
+                                       @focus="dropdowns.assets.open = true; if(dropdowns.assets.search.length > 1) fetch('assets')" 
+                                       @input.debounce.350ms="fetch('assets')"
+                                       placeholder="Buscar y añadir por serial o placa..." autocomplete="off"
+                                       class="w-full border-slate-300 rounded-lg py-2.5 pl-10 pr-10 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm">
+                                
+                                <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <svg x-show="dropdowns.assets.loading" class="w-4 h-4 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                </div>
+
+                                <div x-show="dropdowns.assets.open" x-transition.opacity.duration.150ms
+                                     class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-56 overflow-y-auto divide-y divide-slate-50">
+                                    
+                                    <div x-show="dropdowns.assets.results.length === 0 && !dropdowns.assets.loading" class="p-4 text-center text-xs font-bold text-slate-400 bg-slate-50 uppercase tracking-wider">Escriba un serial válido...</div>
+                                    
+                                    <template x-for="item in dropdowns.assets.results" :key="item.id">
+                                        <div @mousedown.prevent="select('assets', item)" 
+                                             class="group px-4 py-3 flex items-center justify-between cursor-pointer transition-colors"
+                                             :class="isAssetSelected(item.id) ? 'bg-slate-50/80 cursor-not-allowed opacity-60' : 'hover:bg-indigo-50/80'">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                                                     :class="isAssetSelected(item.id) ? 'bg-slate-200 text-slate-400' : 'bg-slate-100 group-hover:bg-indigo-100 text-slate-500 group-hover:text-indigo-600'">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-bold text-slate-800" x-text="item.label"></p>
+                                                </div>
+                                            </div>
+                                            <div x-show="isAssetSelected(item.id)" class="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-200 px-2 py-0.5 rounded">Añadido</div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 bg-slate-50/80 border border-slate-200 rounded-xl overflow-y-auto custom-scrollbar p-2 space-y-2">
+                                <template x-if="form.assets.length === 0">
+                                    <div class="flex flex-col items-center justify-center h-full text-center p-4">
+                                        <svg class="w-12 h-12 text-slate-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        <p class="text-sm font-bold text-slate-500">Bandeja Vacía</p>
+                                        <p class="text-[11px] text-slate-400 mt-1 uppercase tracking-wider">Busque y seleccione los equipos a mover.</p>
+                                    </div>
+                                </template>
+
+                                <template x-for="asset in form.assets" :key="asset.id">
+                                    <div class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-indigo-300 transition-all group">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold text-slate-700" x-text="asset.label"></p>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="removeAsset(asset.id)" class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Remover equipo">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                        <input type="hidden" name="selected_assets[]" :value="asset.id">
+                                    </div>
+                                </template>
+                            </div>
+                            @error('selected_assets') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-7 flex flex-col space-y-6">
+                        
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">2. Área de Destino</h3>
+                            </div>
+                            
+                            <div class="p-6 space-y-6">
+                                <div class="relative z-40" @click.away="dropdowns.custodians.open = false">
+                                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Responsable / Custodio (Quién Recibe) <span class="text-rose-500">*</span></label>
+                                    <input type="hidden" name="custodian_id" x-model="form.custodian_id" required>
+                                    
+                                    <div class="relative">
+                                        <input type="text" x-model="dropdowns.custodians.search"
+                                               @focus="dropdowns.custodians.open = true"
+                                               :readonly="form.custodian_id !== ''"
+                                               placeholder="Buscar nombre del responsable..." autocomplete="off"
+                                               class="w-full border-slate-300 rounded-lg py-3 pl-4 pr-10 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm cursor-text"
+                                               :class="{'border-emerald-400 bg-emerald-50 text-emerald-800 font-bold': form.custodian_id !== ''}">
+                                        
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                                            <svg x-show="form.custodian_id === ''" class="w-5 h-5 text-slate-400 pointer-events-none mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                            <button type="button" x-show="form.custodian_id !== ''" @click="clearCustodian()" class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors" title="Cambiar responsable">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div x-show="dropdowns.custodians.open && form.custodian_id === ''" x-transition.opacity
+                                         class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto divide-y divide-slate-50">
+                                        <template x-for="custodian in filteredCustodians" :key="custodian.id">
+                                            <div @mousedown.prevent="select('custodians', custodian)" class="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors group">
+                                                <div class="text-sm font-bold text-slate-700 group-hover:text-indigo-900 truncate" x-text="custodian.full_name"></div>
+                                            </div>
+                                        </template>
+                                        <div x-show="filteredCustodians.length === 0" class="p-4 text-center text-xs font-bold text-slate-400">Sin resultados</div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-2">Ubicación / Salón <span class="text-rose-500">*</span></label>
+                                    <select name="room_id" x-model="form.room_id" :disabled="form.custodian_id === ''" required 
+                                            class="w-full border-slate-300 rounded-lg py-3 px-4 text-sm font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-indigo-500 transition-all disabled:bg-slate-100 disabled:text-slate-400 cursor-pointer">
+                                        <option value="" disabled selected>Seleccione ubicación del custodio...</option>
+                                        <template x-for="room in availableRooms" :key="room.id">
+                                            <option :value="room.id" x-text="room.nomenclatura"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
+                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wide">3. Justificación y Notas</h3>
+                                <div x-show="form.assets.length > 5" x-transition class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Nota Legal Aplicada</div>
+                            </div>
+                            <div class="p-6 flex-1 flex flex-col">
+                                <textarea name="observation" x-model="form.observation" rows="4" required
+                                          class="w-full flex-1 rounded-xl border-slate-300 text-sm shadow-sm focus:ring-2 focus:ring-indigo-500 p-4 text-slate-700 bg-slate-50 focus:bg-white transition-colors resize-none" 
+                                          placeholder="Escriba aquí los detalles, justificación o motivos del traslado masivo..."></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="button" @click="validateAndSubmit()" :disabled="form.assets.length === 0 || form.custodian_id === '' || form.room_id === ''"
+                            class="w-full md:w-auto px-10 py-3.5 text-white font-extrabold text-sm uppercase tracking-widest rounded-xl shadow-md transition-all flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed"
+                            :class="form.assets.length === 0 ? 'bg-slate-400' : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-200'">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Procesar <span x-show="form.assets.length > 0" x-text="form.assets.length + ' Equipos'"></span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // FUNCIÓN PARA ENVIAR Y VALIDAR CONFLICTOS
-        async function validarYEnviar() {
-            const form = document.getElementById('movementForm');
-            const formData = new FormData(form);
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('movementEngine', () => ({
+                
+                form: {
+                    assets: [], 
+                    custodian_id: '',
+                    room_id: '',
+                    observation: ''
+                },
 
-            // 1. Llamada al servidor para validar conflictos
-            const response = await fetch("{{ route('movements.validate-conflict') }}", {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            });
+                dropdowns: {
+                    assets: { open: false, search: '', results: [], loading: false },
+                    custodians: { open: false, search: '', results: [], loading: false }
+                },
 
-            const data = await response.json();
+                // Controlador para cancelar peticiones AJAX solapadas y mejorar rendimiento
+                abortController: null,
 
-            if (data.has_conflict) {
-                const result = await Swal.fire({
-                    title: 'Equipos ya asignados',
-                    html: `Los siguientes activos ya están con el responsable destino:<br>
-                           <b style="color:red">${data.conflicts.join(', ')}</b><br><br>
-                           ¿Deseas continuar y <b>omitir automáticamente</b> estos equipos?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, continuar',
-                    cancelButtonText: 'Cancelar'
-                });
+                custodiansList: JSON.parse(`{!! addslashes(json_encode($custodians)) !!}`),
+                
+                get filteredCustodians() {
+                    if (this.dropdowns.custodians.search === '') return this.custodiansList;
+                    const q = this.dropdowns.custodians.search.toLowerCase();
+                    return this.custodiansList.filter(c => c.full_name && c.full_name.toLowerCase().includes(q));
+                },
 
-                if (result.isConfirmed) {
-                    form.submit(); 
-                }
-            } else {
-                form.submit(); 
-            }
-        }
+                get availableRooms() {
+                    if (this.form.custodian_id === '') return [];
+                    const custodian = this.custodiansList.find(c => c.id == this.form.custodian_id);
+                    return custodian ? custodian.rooms : [];
+                },
 
+                init() {
+                    // 1. Lógica de auto-observación
+                    const textoNorma = "Se adjunta relación detallada de equipos (Activo, Modelo, Serial) debido a movimiento masivo.";
+                    this.$watch('form.assets', (assets) => {
+                        let currentObs = this.form.observation.trim();
+                        if (assets.length > 5) {
+                            if (!currentObs.includes(textoNorma)) {
+                                this.form.observation = currentObs ? currentObs + "\n\n" + textoNorma : textoNorma;
+                            }
+                        } else {
+                            if (currentObs === textoNorma) {
+                                this.form.observation = "";
+                            }
+                        }
+                    });
 
-document.getElementById('assetSearch').addEventListener('input', function() {
-    let searchTerm = this.value.toLowerCase().trim();
-    let assetItems = document.querySelectorAll('.asset-item');
+                    // 2. Reactividad Pura: Vigila lo que escribes en el buscador de equipos
+                    this.$watch('dropdowns.assets.search', Alpine.debounce((value) => {
+                        if (value.length >= 2) {
+                            this.dropdowns.assets.open = true;
+                            this.fetch('assets');
+                        } else {
+                            this.dropdowns.assets.results = [];
+                            this.dropdowns.assets.open = false;
+                        }
+                    }, 300));
+                },
 
-    assetItems.forEach(function(item) {
+                async fetch(type) {
+                    const dd = this.dropdowns[type];
+                    
+                    if (type === 'assets' && dd.search.length < 2) return;
 
-        let serial = item.querySelector('span.font-black')?.textContent.toLowerCase() || "";
-        let internalCode = item.querySelector('span.text-blue-600')?.textContent.toLowerCase() || "";
-        
-        let textoCompleto = item.textContent.toLowerCase();
+                    dd.loading = true;
 
-        if (serial.includes(searchTerm) || internalCode.includes(searchTerm) || textoCompleto.includes(searchTerm)) {
-            item.classList.remove('asset-hidden');
-            item.style.display = '';
-        } else {
-      
-            item.classList.add('asset-hidden');
-            item.style.display = 'none';
-        }
-    });
-});
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const assetCheckboxes = document.querySelectorAll('.asset-checkbox');
-            const observationField = document.getElementById('observation');
-
-            const textoNormaSoporte = "Se adjunta relación detallada de equipos (Activo, Modelo, Serial) debido a movimiento masivo.";
-
-            function evaluarCantidadDeActivos() {
-                const seleccionados = document.querySelectorAll('.asset-checkbox:checked').length;
-
-                if (seleccionados > 5) {
-                   
-                    if (!observationField.value.includes(textoNormaSoporte)) {
-                        observationField.value = observationField.value ?
-                            observationField.value + "\n\n" + textoNormaSoporte :
-                            textoNormaSoporte;
+                    // Cancelar la búsqueda anterior si el usuario sigue escribiendo
+                    if (this.abortController) {
+                        this.abortController.abort();
                     }
-                } else {
-         
-                    if (observationField.value.trim() === textoNormaSoporte) {
-                        observationField.value = "";
+                    this.abortController = new AbortController();
+
+                    try {
+                        // RUTA GLOBAL: Llama a la función que omite los filtros restrictivos
+                        const url = `/api/filters/api/sigma-filters/assets-global?search=${encodeURIComponent(dd.search)}`;
+                        
+                        const res = await fetch(url, { signal: this.abortController.signal });
+                        const rawData = await res.json();
+                        
+                        const items = Array.isArray(rawData) ? rawData : (rawData.data || rawData.items || []);
+                        
+                        dd.results = items.map(item => {
+                            // MAPEO BLINDADO: Evita que salga vacío si la API cambia de nombre la variable
+                            const serial = item.serial_number || item.serial || item.name || '';
+                            const placa = item.internal_code || item.code || '';
+                            
+                            return { 
+                                id: item.id, 
+                                label: `SN: ${serial} ${placa ? '| Placa: ' + placa : ''}`,
+                                serial_number: serial,
+                                internal_code: placa
+                            };
+                        });
+                        
+                        dd.loading = false;
+                        
+                    } catch(e) {
+                        // Ignorar el error si fue causado por el AbortController (cancelación intencional)
+                        if (e.name !== 'AbortError') {
+                            dd.results = [];
+                            dd.loading = false;
+                        }
+                    }
+                },
+
+                isAssetSelected(id) {
+                    return this.form.assets.some(a => a.id == id);
+                },
+
+                select(type, item) {
+                    const dd = this.dropdowns[type];
+                    
+                    if (type === 'assets') {
+                        if (!this.isAssetSelected(item.id)) {
+                            this.form.assets.push(item);
+                        }
+                        // Limpiar para escanear con pistola el siguiente activo rápidamente
+                        dd.search = '';
+                        dd.results = [];
+                        dd.open = false;
+                        setTimeout(() => { this.$refs.assetSearch.focus(); }, 50);
+                    }
+                    
+                    if (type === 'custodians') {
+                        this.form.custodian_id = item.id;
+                        dd.search = item.full_name;
+                        dd.open = false;
+                        this.form.room_id = ''; 
+                    }
+                },
+
+                removeAsset(id) {
+                    this.form.assets = this.form.assets.filter(a => a.id != id);
+                },
+
+                clearCustodian() {
+                    this.form.custodian_id = '';
+                    this.form.room_id = '';
+                    this.dropdowns.custodians.search = '';
+                    setTimeout(() => { this.$el.querySelector('input[name=custodian_id]').previousElementSibling.focus(); }, 50);
+                },
+
+                async validateAndSubmit() {
+                    const nativeForm = document.getElementById('movementForm');
+                    if (!nativeForm.checkValidity()) {
+                        nativeForm.reportValidity();
+                        return;
+                    }
+
+                    const formData = new FormData(nativeForm);
+
+                    try {
+                        const response = await fetch("{{ route('movements.validate-conflict') }}", {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.has_conflict) {
+                            const result = await Swal.fire({
+                                title: 'Equipos ya asignados',
+                                html: `Los siguientes activos ya están con el responsable y salón destino:<br>
+                                       <b style="color:#e11d48">${data.conflicts.join(', ')}</b><br><br>
+                                       ¿Deseas continuar y <b>omitir automáticamente</b> estos equipos del movimiento?`,
+                                icon: 'warning',
+                                iconColor: '#e11d48',
+                                showCancelButton: true,
+                                confirmButtonColor: '#4f46e5',
+                                confirmButtonText: 'Sí, continuar omitiendo',
+                                cancelButtonText: 'Cancelar y revisar',
+                                customClass: { popup: 'rounded-2xl' }
+                            });
+
+                            if (result.isConfirmed) {
+                                nativeForm.submit(); 
+                            }
+                        } else {
+                            nativeForm.submit(); 
+                        }
+                    } catch (error) {
+                        nativeForm.submit();
                     }
                 }
-            }
-
-           
-            document.addEventListener('change', function(e) {
-                if (e.target.classList.contains('asset-checkbox')) {
-                    evaluarCantidadDeActivos();
-                }
-            });
-        });
-
-        // FILTRO DE HABITACIONES/SALONES
-        function filterRooms(custodianId) {
-            const roomSelect = document.getElementById('room_id');
-            const selectedOption = document.getElementById('custodian_id').options[document.getElementById('custodian_id').selectedIndex];
-            roomSelect.innerHTML = '<option value="">Cargando...</option>';
-            const rooms = JSON.parse(selectedOption.getAttribute('data-rooms'));
-            if (rooms) {
-                roomSelect.innerHTML = '<option value="" disabled selected>Seleccione oficina...</option>';
-                rooms.forEach(room => roomSelect.innerHTML += `<option value="${room.id}">${room.nomenclatura}</option>`);
-                roomSelect.disabled = false;
-            }
-        }
-
-        // ALERTA VISUAL DE DUPLICADOS EN TIEMPO REAL
-        $('#custodian_id, #room_id').on('change', function() {
-            const sc = $('#custodian_id').val();
-            const sr = $('#room_id').val();
-            $('.asset-item').each(function() {
-                const ac = $(this).data('custodian');
-                const ar = $(this).data('room');
-                const warning = $(this).find('.warning-text');
-                if (sc && sr && ac == sc && ar == sr) {
-                    $(this).addClass('bg-orange-50 border-orange-300');
-                    warning.removeClass('hidden');
-                } else {
-                    $(this).removeClass('bg-orange-50 border-orange-300');
-                    warning.addClass('hidden');
-                }
-            });
-        });
-
-        // LÓGICA DE VALIDACIÓN CON CERROJO
-        document.getElementById('movementForm').addEventListener('submit', async function(e) {
-            if (this.dataset.validated === 'true') return;
-
-            e.preventDefault();
-            const formData = new FormData(this);
-
-            const response = await fetch("{{ route('movements.validate-conflict') }}", {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.has_conflict) {
-                const result = await Swal.fire({
-                    title: 'Equipos ya asignados',
-                    html: `Los siguientes activos ya están con el responsable destino:<br>
-                           <b style="color:red">${data.conflicts.join(', ')}</b><br><br>
-                           ¿Deseas continuar y <b>omitir automáticamente</b> estos equipos del movimiento?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Continuar, omitiendo duplicados',
-                    cancelButtonText: 'Cancelar y revisar'
-                });
-
-                if (result.isConfirmed) {
-                    this.dataset.validated = 'true';
-                    this.submit();
-                }
-            } else {
-                this.dataset.validated = 'true';
-                this.submit();
-            }
+            }));
         });
     </script>
 </x-app-layout>
