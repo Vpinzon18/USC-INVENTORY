@@ -189,52 +189,62 @@ class FilterApiController extends Controller
         return response()->json($rooms);
     }
 
-    // 🚀 NUEVO: Buscar Equipos (Filtrable por Bloque, Salón y Dependencia)
-    public function getAssets(Request $request)
-    {
-        $search = $request->query('search');
-        $roomId = $request->query('room_id');
-        $buildingId = $request->query('building_id');
-        $dependencyId = $request->query('dependency_id');
+public function getAssets(Request $request)
+{
+    // 1. Aceptamos 'q' (nuestro nuevo AJAX) o 'search' (tus filtros antiguos)
+    $search = $request->query('q') ?? $request->query('search');
+    
+    $roomId = $request->query('room_id');
+    $buildingId = $request->query('building_id');
+    $dependencyId = $request->query('dependency_id');
 
-        $assets = \App\Models\Asset::select('id', 'serial_number', 'internal_code', 'room_id')
-            ->with(['room:id,nomenclatura,building_id', 'room.building:id,name'])
-            ->when($search, function($query) use ($search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('serial_number', 'ilike', "%{$search}%")
-                      ->orWhere('internal_code', 'ilike', "%{$search}%");
-                });
-            })
-            ->when($roomId, function($query) use ($roomId) {
-                $query->where('room_id', $roomId);
-            })
-            ->when($buildingId, function($query) use ($buildingId) {
-                $query->whereHas('room', function($q) use ($buildingId) {
-                    $q->where('building_id', $buildingId);
-                });
-            })
-            ->when($dependencyId, function($query) use ($dependencyId) {
-                $query->whereHas('custodian', function($q) use ($dependencyId) {
-                    $q->where('dependency_id', $dependencyId);
-                });
-            })
-            ->limit(20)
-            ->get()
-            ->map(function($asset) {
-                // Formateamos la respuesta para que la vista reciba un nombre ultra-detallado
-                $roomName = $asset->room ? $asset->room->nomenclatura : 'Sin Salón';
-                $bName = ($asset->room && $asset->room->building) ? $asset->room->building->name : '';
-                $location = $bName ? "$roomName, $bName" : $roomName;
-                
-                $code = $asset->internal_code ? " | Placa: {$asset->internal_code}" : "";
-                return [
-                    'id' => $asset->id,
-                    'name' => "SN: {$asset->serial_number}{$code} - Ubicación: {$location}"
-                ];
-            });
+    // 2. CORRECCIÓN SQL: Quitamos 'internal_code' y 'model' (que no existen) y usamos 'hostname'
+    $query = \App\Models\Asset::select('id', 'serial_number', 'hostname', 'room_id')
+        ->with(['room:id,nomenclatura,building_id', 'room.building:id,name']);
 
-        return response()->json($assets);
-    }
+    $query->when($search, function($query) use ($search) {
+        $query->where(function($q) use ($search) {
+            // 3. CORRECCIÓN DE BÚSQUEDA: Buscamos solo en columnas que SÍ existen
+            $q->where('serial_number', 'ilike', "%{$search}%")
+              ->orWhere('hostname', 'ilike', "%{$search}%");
+        });
+    })
+    ->when($roomId, function($query) use ($roomId) {
+        $query->where('room_id', $roomId);
+    })
+    ->when($buildingId, function($query) use ($buildingId) {
+        $query->whereHas('room', function($q) use ($buildingId) {
+            $q->where('building_id', $buildingId);
+        });
+    })
+    ->when($dependencyId, function($query) use ($dependencyId) {
+        $query->whereHas('custodian', function($q) use ($dependencyId) {
+            $q->where('dependency_id', $dependencyId);
+        });
+    });
+
+    $assets = $query->limit(20)->get()->map(function($asset) {
+        $roomName = $asset->room ? $asset->room->nomenclatura : 'Sin Salón';
+        $bName = ($asset->room && $asset->room->building) ? $asset->room->building->name : '';
+        $location = $bName ? "$roomName, $bName" : $roomName;
+        
+        // Adaptamos para usar hostname si tiene
+        $code = $asset->hostname ? " | Equipo: {$asset->hostname}" : "";
+        
+        return [
+            'id' => $asset->id,
+            'name' => "SN: {$asset->serial_number}{$code} - Ubicación: {$location}", 
+            
+            // 4. TRUCO DE COMPATIBILIDAD: Enviamos el hostname disfrazado de 'internal_code' 
+            // para que AlpineJS en la vista no se rompa y lo dibuje correctamente.
+            'internal_code' => $asset->hostname,
+            'serial_number' => $asset->serial_number,
+            'model' => 'N/A' // Ponemos N/A porque la columna model no existe en tu BD
+        ];
+    });
+
+    return response()->json($assets);
+}
 
     // Buscar Dependencias Organizacionales
     public function getDependencies(Request $request)
@@ -265,43 +275,113 @@ class FilterApiController extends Controller
         return response()->json($technicians);
     }
     
-    public function getGlobalAssets(Request $request)
+   public function getGlobalAssets(Request $request)
     {
         $search = $request->query('search');
 
-        // 1. QUERY BUILDER PURO: Usamos DB::table en vez del Modelo.
-        // Esto evita la "hidratación" de Eloquent y hace la consulta hasta 10x más rápida.
-        $assets = \Illuminate\Support\Facades\DB::table('assets')
-            // 2. COLUMNAS ESTRICTAS: Solo pedimos lo que la vista realmente dibuja.
-            // Eliminamos las relaciones de salones/edificios porque el dropdown ya no las muestra.
-            ->select('id', 'serial_number', 'internal_code')
+        $assets = \App\Models\Asset::select('id', 'serial_number', 'internal_code', 'room_id')
+            ->with(['room:id,nomenclatura,building_id', 'room.building:id,name'])
             ->when($search, function($query) use ($search) {
                 $query->where(function($q) use ($search) {
-                    
-                    // 3. OPTIMIZACIÓN DE ÍNDICES (B-Tree)
-                    // Al quitar el '%' inicial del serial, la base de datos usa sus índices 
-                    // de forma nativa (ideal si usas pistola de código de barras).
-                    $q->where('serial_number', 'ilike', "{$search}%")
-                      // Mantenemos el comodín completo para la placa por si buscan fracciones
-                      ->orWhere('internal_code', 'ilike', "%{$search}%");
+                    // 1. Busca por Serial o Placa
+                    $q->where('serial_number', 'ilike', "%{$search}%")
+                      ->orWhere('internal_code', 'ilike', "%{$search}%")
+                      // 2. O busca dentro del Salón (nomenclatura o nombre)
+                      ->orWhereHas('room', function($qRoom) use ($search) {
+                          $qRoom->where('nomenclatura', 'ilike', "%{$search}%")
+                                ->orWhere('name', 'ilike', "%{$search}%")
+                                // 3. O busca dentro del Bloque al que pertenece el salón
+                                ->orWhereHas('building', function($qBuilding) use ($search) {
+                                    $qBuilding->where('name', 'ilike', "%{$search}%");
+                                });
+                      });
                 });
             })
-            // 4. LÍMITE REDUCIDO: 15 resultados son suficientes para que el usuario elija
-            ->limit(15) 
+            ->limit(40) // Aumentamos el límite a 40 para que al buscar un bloque salgan más equipos de una vez
             ->get()
             ->map(function($asset) {
-                // DB::table devuelve objetos crudos (stdClass), no modelos.
+                $roomName = $asset->room ? $asset->room->nomenclatura : 'Sin Salón';
+                $bName = ($asset->room && $asset->room->building) ? $asset->room->building->name : '';
+                $location = $bName ? "$roomName, $bName" : $roomName;
                 $code = $asset->internal_code ? " | Placa: {$asset->internal_code}" : "";
                 
                 return [
                     'id' => $asset->id,
-                    'label' => "SN: {$asset->serial_number}{$code}",
+                    'label' => "SN: {$asset->serial_number}{$code} - Ubicación: {$location}",
                     'serial_number' => $asset->serial_number,
                     'internal_code' => $asset->internal_code
                 ];
-            });
+            })
+            ->filter(function($item) {
+                return !empty($item['serial_number']) || !empty($item['internal_code']);
+            })->values();
 
         return response()->json($assets);
+    }
+ public function searchOffices(Request $request) 
+    {
+        $search = $request->query('search'); 
+        $responsibleId = $request->query('responsible_id');
+
+        if (!$responsibleId) {
+            return response()->json([]);
+        }
+
+        try {
+            // 1. Cruzamos rooms con custodian_room y también con buildings
+            $offices = \Illuminate\Support\Facades\DB::table('rooms')
+                ->join('custodian_room', 'rooms.id', '=', 'custodian_room.room_id')
+                ->join('buildings', 'rooms.building_id', '=', 'buildings.id') // <-- NUEVO: Traemos el Edificio
+                ->where('custodian_room.custodian_id', $responsibleId)
+                ->when($search, function($query) use ($search) {
+                    $query->where(function($q) use ($search) {
+                        // 2. Ahora la búsqueda es súper inteligente (busca por nomenclatura, nombre del salón o edificio)
+                        $q->where('rooms.nomenclatura', 'ilike', "%{$search}%")
+                          ->orWhere('rooms.name', 'ilike', "%{$search}%")
+                          ->orWhere('buildings.name', 'ilike', "%{$search}%");
+                    });
+                })
+                // 3. Seleccionamos los datos de ambas tablas asegurando que no choquen los nombres
+                ->select(
+                    'rooms.id', 
+                    'rooms.nomenclatura', 
+                    'rooms.name as room_name', 
+                    'buildings.name as building_name'
+                )
+                ->limit(20)
+                ->get()
+                ->map(function($room) {
+                    // 4. Formateamos el texto para que el usuario lo vea perfectamente claro
+                    $nomenclatura = $room->nomenclatura ?? 'S/N';
+                    $roomName = $room->room_name ?? 'Oficina';
+                    $buildingName = $room->building_name ?? 'Edificio N/A';
+
+                    return [
+                        'id' => $room->id,
+                        // Resultado Ej: "4210A - Sala de Sistemas (Bloque 4)"
+                        'label' => "{$nomenclatura} - {$roomName} ({$buildingName})"
+                    ];
+                });
+
+            return response()->json($offices);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+    // Buscar Categorías de Equipos
+    public function getCategories(Request $request)
+    {
+        $search = $request->query('search');
+        
+        $categories = \App\Models\Category::select('id', 'name')
+            ->when($search, function($query) use ($search) {
+                $query->where('name', 'ilike', "%{$search}%");
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json($categories);
     }
 }
     

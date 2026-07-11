@@ -131,10 +131,10 @@ class CustodianController extends Controller
         'document_number.unique'    => 'Este número de documento ya está registrado en SOMA.',
         'dependency_id.required_if' => 'Debe seleccionar una dependencia si el responsable estará activo.',
         'dependency_id.exists'      => 'La dependencia seleccionada no es válida.',
-        'dependency_id.unique'      => '⚠️ Esta dependencia ya está asignada a un responsable activo.',
+        'dependency_id.unique'      => ' Esta dependencia ya está asignada a un responsable activo.',
         'job_title_id.required_if'  => 'Debe seleccionar un cargo si el responsable estará activo.',
         'job_title_id.exists'       => 'El cargo seleccionado no es válido.',
-        'job_title_id.unique'       => '⚠️ Este cargo ya está ocupado por un responsable activo.'
+        'job_title_id.unique'       => ' Este cargo ya está ocupado por un responsable activo.'
     ]);
 
     foreach ($validated as $key => $value) {

@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="py-4 px-2 sm:px-4 max-w-full mx-auto">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[calc(100vh-130px)] min-h-[500px]">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
             
            <div class="p-4 border-b border-gray-100 bg-white shrink-0 space-y-4">
                  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row justify-between items-center gap-6 relative overflow-hidden mb-8">

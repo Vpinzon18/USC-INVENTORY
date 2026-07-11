@@ -73,29 +73,27 @@ class MovementController extends Controller
     {
         $baseMovement = \App\Models\Assignment::findOrFail($id);
 
+        // 1. Validación estricta con nombres coherentes
         $validated = $request->validate([
             'movement_type' => 'required|string',
             'custodian_id'  => 'required|exists:custodians,id',
-            'observations'  => 'nullable|string',
+            'room_id'       => 'required|exists:rooms,id', // ¡IMPORTANTE! Agregamos room_id aquí
+            'observations'  => 'nullable|string',          // Asegúrate que tu textarea se llame 'observations'
             'asset_ids'     => 'required|array|min:1', 
             'asset_ids.*'   => 'exists:assets,id',
         ]);
 
-        // 2. ESCUDO MIXTO ANTI-XSS
-        // Textos cortos usan strip_tags
-        $validated['movement_type'] = strip_tags($validated['movement_type']);
-        
-        // Textos largos/enriquecidos usan Purifier
-        if (isset($validated['observations'])) {
-            $validated['observations'] = Purifier::clean($validated['observations']);
-        }
+        // 2. Limpieza de datos (Anti-XSS)
+        $cleanType = strip_tags($validated['movement_type']);
+        $cleanObs = isset($validated['observations']) ? Purifier::clean($validated['observations']) : null;
 
         $newAssetIds = array_map('intval', $request->asset_ids);
 
-        $currentAssetIds = \App\Models\Assignment::where('acta_number', $baseMovement->acta_number)
-            ->pluck('asset_id')
-            ->toArray();
+        // 3. Obtener registros actuales de esta acta
+        $currentAssignments = \App\Models\Assignment::where('acta_number', $baseMovement->acta_number)->get();
+        $currentAssetIds = $currentAssignments->pluck('asset_id')->toArray();
 
+        // 4. Eliminar los que ya no están
         $assetsToRemove = array_diff($currentAssetIds, $newAssetIds);
         if (!empty($assetsToRemove)) {
             \App\Models\Assignment::where('acta_number', $baseMovement->acta_number)
@@ -103,6 +101,7 @@ class MovementController extends Controller
                 ->delete();
         }
 
+        // 5. Actualizar o Crear los equipos
         foreach ($newAssetIds as $assetId) {
             \App\Models\Assignment::updateOrCreate(
                 [
@@ -110,19 +109,19 @@ class MovementController extends Controller
                     'asset_id'    => $assetId
                 ],
                 [
-                    'movement_type' => $validated['movement_type'], // Usamos el dato limpio
-                    'custodian_id'  => $request->custodian_id,
-                    'observations'  => $validated['observations'],  // Usamos el dato purificado
-                    'room_id'       => $baseMovement->room_id,
+                    'movement_type' => $cleanType,
+                    'custodian_id'  => $validated['custodian_id'], // Usamos el validado
+                    'observations'  => $cleanObs,
+                    'room_id'       => $validated['room_id'],      // Usamos el validado
                     'started_at'    => $baseMovement->started_at ?? now(),
                     'status'        => $baseMovement->status ?? 'active',
-                    'user_id'       => Auth::user()->id,
+                    'user_id'       => Auth::id(),                 // Más corto que Auth::user()->id
                 ]
             );
         }
 
         return redirect()->route('movements.index')
-                         ->with('success', 'El lote del acta ' . $baseMovement->acta_number . ' ha sido reestructurado y actualizado con seguridad.');
+                         ->with('success', 'Acta ' . $baseMovement->acta_number . ' actualizada exitosamente.');
     }
    public function storeMass(Request $request)
     {

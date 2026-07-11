@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\MaintenanceScheduleController;
 use App\Http\Controllers\DependencyController; 
 use App\Http\Controllers\JobTitleController;
 use App\Http\Controllers\Api\FilterApiController;
+use App\Http\Controllers\Admin\CategoryController;
 
 //  PÁGINA DE INICIO / LOGIN
 Route::get('/', function () {
@@ -140,15 +141,28 @@ Route::prefix('api/filters')->name('api.filters.')->group(function () {
 // Esta es la definición correcta
 Route::get('/api/rooms-status', [CustodianController::class, 'getRoomsData'])->name('api.rooms.status');
 
-Route::prefix('api/sigma-filters')->group(function () {
-    Route::get('/sedes', [FilterApiController::class, 'getSedes']);
-    Route::get('/buildings', [FilterApiController::class, 'getBuildings']);
-    Route::get('/rooms', [FilterApiController::class, 'getRooms']);
-    Route::get('/dependencies', [FilterApiController::class, 'getDependencies']);
-    Route::get('/technicians', [FilterApiController::class, 'getTechnicians']);
-    Route::get('/assets', [\App\Http\Controllers\Api\FilterApiController::class, 'getAssets']);
-Route::get('/assets-global', [\App\Http\Controllers\Api\FilterApiController::class, 'getGlobalAssets']);
-});
+    Route::prefix('api/sigma-filters')->group(function () {
+        Route::get('/sedes', [FilterApiController::class, 'getSedes']);
+        Route::get('/buildings', [FilterApiController::class, 'getBuildings']);
+        Route::get('/rooms', [FilterApiController::class, 'getRooms']);
+        Route::get('/dependencies', [FilterApiController::class, 'getDependencies']);
+        Route::get('/technicians', [FilterApiController::class, 'getTechnicians']);
+        Route::get('/assets', [\App\Http\Controllers\Api\FilterApiController::class, 'getAssets']);
+        Route::get('/assets-global', [\App\Http\Controllers\Api\FilterApiController::class, 'getGlobalAssets']);
+        Route::get('/offices', [\App\Http\Controllers\Api\FilterApiController::class, 'searchOffices']);
+        Route::get('/categories', [FilterApiController::class, 'getCategories']);
+    });
 
+
+});
+Route::get('maintenances/{maintenance}/export', [TechnicalServiceController::class, 'export'])->name('maintenances.export');
+
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    
+    // CRUD para el módulo de Categorías de Equipos
+    Route::resource('categories', CategoryController::class)->except(['show']);
+    
+    // ... tus otras rutas (maintenances, schedules, etc.) ...
 });
 require __DIR__.'/auth.php';

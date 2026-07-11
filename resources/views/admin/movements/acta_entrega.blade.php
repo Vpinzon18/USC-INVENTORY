@@ -523,12 +523,12 @@
         @if(count($assets) > 5)
           {{-- Si son más de 5, SIGMA escribe la alerta institucional y delega la visualización al anexo --}}
           <tr>
-            <td colspan="3" style="border: 1px solid #000; padding: 12px; text-align: center; font-weight: bold; color: #000; background-color: #f9fafb;">
-              ⚠️ MOVIMIENTO MASIVO DETECTADO ({{ count($assets) }} EQUIPOS)<br>
+            <!-- <td colspan="3" style="border: 1px solid #000; padding: 12px; text-align: center; font-weight: bold; color: #000; background-color: #f9fafb;">
+              MOVIMIENTO MASIVO DETECTADO ({{ count($assets) }} EQUIPOS)<br>
               <span style="font-size: 8.5px; font-weight: normal; margin-top: 4px; display: block; color: #444;">
                 Debido al volumen de hardware de esta transacción, SIGMA ha estructurado la relación pormenorizada de marcas, modelos, placas y seriales de forma automatizada en la hoja técnica adjunta como <strong>ANEXO TÉCNICO</strong> de este documento.
               </span>
-            </td>
+            </td> -->
           </tr>
           {{-- Relleno estético para cuadrar el alto del formato original --}}
           @for($i = 1; $i < 5; $i++)
@@ -573,7 +573,7 @@
     <div class="section-header">OBSERVACIONES ADICIONALES</div>
 
     <div class="obs-container" style="border: 1px solid #000; border-top: 0; padding: 7px; font-size: 9px; line-height: 20px; min-height: 70px; background-image: linear-gradient(#ccc 1px, transparent 1px); background-size: 100% 20px; font-weight: bold;">
-      {{ $assets->first()->assignments->where('acta_number', $actaNumber)->first()->observations ?? 'Movimiento masivo gestionado en SIGMA' }}
+      {{ strip_tags($assets->first()->assignments->where('acta_number', $actaNumber)->first()->observations ?? 'Movimiento masivo gestionado en SIGMA') }}
     </div>
 
     <table class="firmas-table" style="margin-top: 5px;">
