@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\InventoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Models\Asset;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\CustodianController;
 use App\Http\Controllers\Admin\AssetController; 
@@ -19,6 +18,7 @@ use App\Http\Controllers\DependencyController;
 use App\Http\Controllers\JobTitleController;
 use App\Http\Controllers\Api\FilterApiController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\RoomTypeController;
 
 //  PÁGINA DE INICIO / LOGIN
 Route::get('/', function () {
@@ -151,6 +151,7 @@ Route::get('/api/rooms-status', [CustodianController::class, 'getRoomsData'])->n
         Route::get('/assets-global', [\App\Http\Controllers\Api\FilterApiController::class, 'getGlobalAssets']);
         Route::get('/offices', [\App\Http\Controllers\Api\FilterApiController::class, 'searchOffices']);
         Route::get('/categories', [FilterApiController::class, 'getCategories']);
+        Route::get('/room-types', [FilterApiController::class, 'searchRoomTypes']);
     });
 
 
@@ -163,6 +164,11 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     // CRUD para el módulo de Categorías de Equipos
     Route::resource('categories', CategoryController::class)->except(['show']);
     
-    // ... tus otras rutas (maintenances, schedules, etc.) ...
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // ...
+    Route::resource('room_types', RoomTypeController::class);
+    // ...
 });
 require __DIR__.'/auth.php';

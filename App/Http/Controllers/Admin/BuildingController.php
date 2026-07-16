@@ -9,10 +9,30 @@ use Illuminate\Http\Request;
 
 class BuildingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
 {
-    $buildings = Building::with('campus')->get();
-    
+    // Iniciamos la consulta base
+    $query = \App\Models\Building::with('campus'); // O el namespace de tu modelo
+
+    // 1. Filtro de Búsqueda por Texto
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where('name', 'ilike', "%{$search}%"); 
+    }
+
+    // 2. 🌟 ESTE ES EL FILTRO DE SEDES QUE TE FALTA 🌟
+    if ($request->filled('campus_id')) {
+        $query->where('campus_id', $request->campus_id);
+    }
+
+    // 3. 🌟 ESTO RECIBE LA CANTIDAD DE LA PAGINACIÓN 🌟
+    $perPage = $request->input('per_page', 15);
+
+    // Ejecutamos la consulta y paginamos conservando los filtros (withQueryString)
+    $buildings = $query->orderBy('name', 'asc')
+                       ->paginate($perPage)
+                       ->withQueryString();
+
     return view('admin.buildings.index', compact('buildings'));
 }
     public function create()

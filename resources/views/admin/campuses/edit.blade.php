@@ -2,7 +2,7 @@
     <div class="py-4 bg-slate-50 min-h-[calc(100vh-4rem)] font-sans flex flex-col" x-data="campusEditor()" x-cloak>
         <div class="max-w-[1200px] w-[96%] mx-auto space-y-4 flex-1">
 
-            <!-- ENCABEZADO COMPACTO Y CONTROLES -->
+            <!-- ENCABEZADO COMPACTO -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
 
@@ -22,23 +22,6 @@
                             </span>
                         </div>
                     </div>
-                </div>
-
-                <!-- BOTONES DE ACCIÓN MOVIDOS AL ENCABEZADO PARA AHORRAR ESPACIO -->
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <a href="{{ route('campuses.index') }}" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm">
-                        Cancelar
-                    </a>
-                    <button type="submit" form="updateCampusForm" :disabled="isSubmitting" :class="{'opacity-75 cursor-not-allowed': isSubmitting}" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center gap-2">
-                        <span x-show="!isSubmitting" class="flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-                            Guardar
-                        </span>
-                        <span x-show="isSubmitting" class="flex items-center gap-2" x-cloak>
-                            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Procesando...
-                        </span>
-                    </button>
                 </div>
             </div>
 
@@ -117,6 +100,24 @@
                                     @error('status')
                                         <p class="text-[10px] text-rose-600 mt-1 font-bold">{{ $message }}</p>
                                     @enderror
+                                </div>
+
+                                <!-- BOTONES DE ACCIÓN (Ahora en la parte inferior) -->
+                                <div class="md:col-span-2 mt-2 pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end items-center gap-4">
+                                    <a href="{{ route('campuses.index') }}" class="w-full sm:w-auto px-6 py-3 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm flex justify-center items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        Cancelar
+                                    </a>
+                                    <button type="submit" :disabled="isSubmitting" :class="{'opacity-75 cursor-not-allowed': isSubmitting}" class="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-200 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 flex justify-center items-center gap-2">
+                                        <span x-show="!isSubmitting" class="flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                                            Guardar Cambios
+                                        </span>
+                                        <span x-show="isSubmitting" class="flex items-center gap-2" x-cloak>
+                                            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            Procesando...
+                                        </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -243,7 +243,7 @@
 
 
                 @endif
-                <div x-data="{ open: {{ request()->routeIs('dependencies.*') || request()->routeIs('jobtitles.*') ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ request()->routeIs('dependencies.*') || request()->routeIs('jobtitles.*') || request()->routeIs('categories.*') || request()->routeIs('admin.room_types.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 shrink-0 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,6 +279,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
                             Tipos de Intervención
+                        </a>
+
+                        <!-- NUEVO BOTÓN: TIPOS DE ESPACIO -->
+                        <a href="{{ route('admin.room_types.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('admin.room_types.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('admin.room_types.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                            </svg>
+                            Tipos de Espacio
                         </a>
 
                     </div>

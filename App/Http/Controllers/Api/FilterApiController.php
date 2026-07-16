@@ -383,5 +383,27 @@ public function getAssets(Request $request)
 
         return response()->json($categories);
     }
+
+      public function searchRoomTypes(Request $request)
+    {
+        $search = $request->query('search');
+
+        try {
+            // Consultamos solo las clasificaciones que estén habilitadas en el sistema
+            $types = \App\Models\RoomType::where('is_active', true)
+                ->when($search, function($query) use ($search) {
+                    // Usamos ilike para búsquedas insensibles a mayúsculas en PostgreSQL
+                    $query->where('name', 'ilike', "%{$search}%");
+                })
+                ->select('id', 'name')
+                ->orderBy('name', 'asc')
+                ->limit(20)
+                ->get();
+
+            return response()->json($types);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }
     
