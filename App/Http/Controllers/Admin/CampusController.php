@@ -27,7 +27,7 @@ class CampusController extends Controller
         // Ejecutamos la consulta
         $campuses = $query->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
 
-        // 🌟 CÁLCULO DE KPIs CORREGIDO 🌟
+        //  CÁLCULO DE KPIs CORREGIDO 
         // Ya NO buscamos 'status' en la tabla assets.
         $kpis = [
             // Cuenta absolutamente todos los equipos en la tabla

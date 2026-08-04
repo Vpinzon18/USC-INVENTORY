@@ -15,12 +15,15 @@ class CategoryController extends Controller
     {
         $search = $request->input('search');
         
+        // 🌟 CAPTURAMOS EL LÍMITE (Con 15 por defecto para coincidir con la vista)
+        $perPage = $request->input('per_page', 15);
+        
         $categories = Category::query()
             ->when($search, function($query, $search) {
                 $query->where('name', 'ilike', "%{$search}%");
             })
             ->orderBy('name', 'asc')
-            ->paginate(10)
+            ->paginate($perPage) // 🌟 REEMPLAZAMOS EL 10 POR LA VARIABLE DINÁMICA
             ->withQueryString();
 
         return view('admin.categories.index', compact('categories', 'search'));

@@ -58,6 +58,8 @@ Route::middleware(['auth' ,'role:1'])->prefix('admin')->group(function () {
     Route::resource('buildings', BuildingController::class);
     Route::resource('rooms', RoomController::class);
 });
+
+
 Route::get('/schedules/search-assets', [App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'searchAssets'])->name('schedules.search-assets');
 // RUTAS DE PERFIL
 Route::middleware('auth')->group(function () {
@@ -133,7 +135,7 @@ Route::prefix('api/filters')->name('api.filters.')->group(function () {
         ->name('locations');
     Route::get('/campuses', [FilterApiController::class, 'campuses'])->name('campuses');
     Route::get('/buildings', [FilterApiController::class, 'buildings'])->name('buildings');
-    Route::get('/rooms', [FilterApiController::class, 'rooms'])->name('rooms');
+
     Route::get('/dependencies', [FilterApiController::class, 'dependencies'])->name('api.dependencies');
     Route::get('/job-titles', [FilterApiController::class, 'jobTitles'])->name('api.job-titles');
 

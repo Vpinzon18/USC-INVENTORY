@@ -6,7 +6,7 @@
          x-data="roomsEngine()"
          data-url-campuses="{{ url('api/filters/api/sigma-filters/sedes') }}"
          data-url-buildings="{{ url('api/filters/api/sigma-filters/buildings') }}" 
-         data-url-types="{{ url('api/filters/api/sigma-filters/searchRoomTypes') }}"
+         data-url-types="{{ url('api/filters/api/sigma-filters/room-types') }}"
          x-cloak>
          
         <div class="max-w-[1400px] w-[96%] mx-auto space-y-6">

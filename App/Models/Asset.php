@@ -7,19 +7,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
-use Illuminate\Database\Eloquent\Relations\technicalServices;
 
 class Asset extends Model
 {
     protected $table = 'assets';
 
     protected $fillable = [
+
         // Identificación
         'hostname',
         'serial_number',
         'internal_code',
         'mac_address',
         'ip_address',
+
+        // Red
+        'ipv4',
+        'ipv6',
+        'gateway',
+        'dns_server',
+        'ethernet_mac',
+        'wifi_mac',
+        'domain_name',
         'model_version',
 
         // Relaciones
@@ -27,31 +36,85 @@ class Asset extends Model
         'room_id',
         'custodian_id',
 
-        //Datos de Componentes
+        // CPU
         'cpu_brand',
         'cpu_model',
+        'cpu_cores',
+        'cpu_threads',
+        'cpu_speed_mhz',
+        'cpu_architecture',
+
+        // Storage
         'storage_brand',
+        'storage_serial',
         'storage_model',
+        'storage_free_gb',
+        'storage_type',
+        'storage_health',
+        'storage_capacity_gb',
+
+        // GPU
         'gpu_brand',
         'gpu_model',
+
+        // WIFI
         'wifi_brand',
         'wifi_model',
+
+        // Board
         'board_brand',
         'board_model',
+        'board_serial',
+        'board_version',
+        'board_status',
 
-        // Otros
+        // RAM
         'ram',
         'ram_brand',
         'ram_model',
         'ram_capacity_gb',
+        'ram_speed',
+        'ram_type',
+        'ram_slots',
+        'ram_modules',
+
+        // Sistema
+        'windows_build',
+        'windows_edition',
+        'license_status',
+        'secure_boot',
+        'bitlocker_status',
+        'tpm_version',
+        'uptime_minutes',
+        'windows_version',
+        'antivirus',
+        'firewall_enabled',
         'os_version',
-        'domain_name',
+
+        //bios
+        'bios_version',
+        'bios_date',
+        'manufacturer',
+
+        // Otros
         'security_guaya',
         'monitor_asset',
         'monitor_serial',
         'keyboard_serial',
         'mouse_serial',
-        'last_seen_at'
+        'last_seen_at',
+
+        //Usuarios                               
+        'logged_user',
+        'last_login',
+    ];
+
+    protected $casts = [
+
+        'last_seen_at' => 'datetime',
+
+        // PostgreSQL jsonb
+        'ram_modules' => 'array',
     ];
 
     public function getCpuAttribute()
@@ -71,7 +134,6 @@ class Asset extends Model
             ->latestOfMany();
     }
 
-
     public function currentCustodian(): HasOneThrough
     {
         return $this->hasOneThrough(
@@ -86,33 +148,48 @@ class Asset extends Model
 
     public function assignments(): HasMany
     {
-        return $this->hasMany(Assignment::class)->orderBy('created_at', 'desc');
-    }
-    public function technicalServices(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(TechnicalService::class)->orderBy('created_at', 'desc');
+        return $this->hasMany(Assignment::class)
+            ->orderBy('created_at', 'desc');
     }
 
-    public function custodian()
+    public function technicalServices(): HasMany
     {
+        return $this->hasMany(TechnicalService::class)
+            ->orderBy('created_at', 'desc');
+    }
 
+    public function custodian(): BelongsTo
+    {
         return $this->belongsTo(Custodian::class);
     }
 
-
-    public function maintenances()
+    public function maintenances(): HasMany
     {
-
         return $this->hasMany(TechnicalService::class, 'asset_id');
     }
 
-    public function maintenanceSchedules()
+    public function maintenanceSchedules(): HasMany
     {
         return $this->hasMany(MaintenanceSchedule::class);
     }
 
-    public function software()
+    public function software(): HasMany
     {
-        return $this->hasMany(\App\Models\Software::class);
+        return $this->hasMany(Software::class);
     }
+    
+    public function battery()
+    {
+        return $this->hasOne(AssetBattery::class);
+    }
+
+    public function monitors()
+    {
+        return $this->hasMany(AssetMonitor::class);
+    }
+
+    public function storageDevices()
+{
+    return $this->hasMany(AssetStorage::class);
+}
 }
