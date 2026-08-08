@@ -60,16 +60,16 @@ class AssetApiController extends Controller
      * de versiones administrada desde SIGMA.
      */
     public function update()
-    {
-        return response()->json([
-            'available' => true,
-            'version' => '2.1',
-            'downloadUrl' => '',
-            'mandatory' => false,
-            'releaseNotes' =>
-                'Actualización de prueba del SIGMA Agent.'
-        ]);
-    }
+{
+    return response()->json([
+        'available' => true,
+        'version' => '2.1',
+        'downloadUrl' => asset('storage/updates/SigmaAgent-2.1.zip'),
+        'mandatory' => false,
+        'releaseNotes' =>
+            'Actualización de prueba del SIGMA Agent.'
+    ]);
+}
 
     /**
      * Procesa el inventario recibido desde SIGMA Agent.
