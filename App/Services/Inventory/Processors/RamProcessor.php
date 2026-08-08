@@ -4,37 +4,25 @@ namespace App\Services\Inventory\Processors;
 
 use App\Models\Asset;
 
-class RamProcessor extends BaseProcessor
+class RamProcessor
 {
-    public function process(Asset $asset, array $ram): Asset
-    {
-       $values = [
+public function process(Asset $asset, array $ramModules): Asset
+{
+    $asset->ramModules()->delete();
 
-    'ram'=>$ram['description'] ?? null ,
-
-    'ram_brand'=>$ram['brand'] ?? null ,
-
-    'ram_model'=>$ram['model'] ?? null ,
-
-    'ram_capacity_gb'=>$ram['capacityGB'] ?? null ,
-
-    'ram_speed'=>$ram['speedMHz'] ?? null ,
-
-    'ram_type'=>$ram['type'] ?? null ,
-
-    'ram_slots'=>$ram['slots'] ?? null ,
-
-    'ram_modules'=>$ram['modules'] ?? null ,
-
-];
-$values = array_filter(
-    $values, static fn ($value) => $value !== null);
-
-$this->updateWithHistory($asset, $values);
-
-        // Refresca el modelo desde la base de datos
-        $asset->refresh();
-
-        return $asset;
+    foreach ($ramModules as $module) {
+        $asset->ramModules()->create([
+            'manufacturer'  => $module['manufacturer'] ?? null,
+            'model'         => $module['model'] ?? null,
+            'serial_number' => $module['serial'] ?? null,
+            'bank'          => $module['bank'] ?? null,
+            'slot'          => $module['slot'] ?? null,
+            'memory_type'   => $module['memoryType'] ?? null,
+            'capacity_gb'   => $module['capacityGB'] ?? null,
+            'speed_mhz'     => $module['speedMHz'] ?? null,
+        ]);
     }
+
+    return $asset;
+}
 }

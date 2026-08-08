@@ -177,7 +177,7 @@ class Asset extends Model
     {
         return $this->hasMany(Software::class);
     }
-    
+
     public function battery()
     {
         return $this->hasOne(AssetBattery::class);
@@ -189,7 +189,19 @@ class Asset extends Model
     }
 
     public function storageDevices()
+    {
+        return $this->hasMany(AssetStorage::class);
+    }
+    public function ramModules(): HasMany
 {
-    return $this->hasMany(AssetStorage::class);
+    return $this->hasMany(AssetRamModule::class);
 }
+    public function processors(): HasMany
+    {
+        return $this->hasMany(AssetProcessor::class);
+    }
+    public function gpus(): HasMany
+    {
+        return $this->hasMany(AssetGpu::class);
+    }
 }

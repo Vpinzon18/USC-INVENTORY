@@ -9,48 +9,99 @@ use Illuminate\Support\Facades\Log;
 
 class AssetApiController extends Controller
 {
+    /**
+     * Procesa cambios diferenciales enviados por SIGMA Agent.
+     */
+    public function changes(Request $request)
+    {
+        try {
+            Log::info('Cambios recibidos desde SIGMA Agent', [
+                'data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cambios recibidos correctamente.'
+            ], 200);
+
+        } catch (\Throwable $e) {
+
+            Log::error(
+                'Error procesando cambios de SIGMA Agent.',
+                [
+                    'message' => $e->getMessage()
+                ]
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error procesando cambios.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Configuración remota del agente.
+     */
+    public function config(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Configuración obtenida correctamente.',
+        ]);
+    }
+
+    /**
+     * Consulta si existe una nueva versión de SIGMA Agent.
+     *
+     * Esta versión es únicamente para pruebas.
+     * Posteriormente la información saldrá de una tabla
+     * de versiones administrada desde SIGMA.
+     */
+    public function update()
+    {
+        return response()->json([
+            'available' => true,
+            'version' => '2.1',
+            'downloadUrl' => '',
+            'mandatory' => false,
+            'releaseNotes' =>
+                'Actualización de prueba del SIGMA Agent.'
+        ]);
+    }
+
+    /**
+     * Procesa el inventario recibido desde SIGMA Agent.
+     */
     public function report(Request $request)
     {
-        Log::info($request->all());
-
-return response()->json($request->all());
         try {
-            Log::info('JSON recibido desde SIGMA Agent');
-        Log::info($request->all());
 
-        return response()->json($request->all());
+            Log::info(
+                'JSON recibido desde SIGMA Agent',
+                [
+                    'data' => $request->all()
+                ]
+            );
 
             /*
             |--------------------------------------------------------------------------
-            | Obtener objetos enviados por SIGMA Agent
+            | Obtener información enviada por SIGMA Agent
             |--------------------------------------------------------------------------
             */
 
-            $device   = $request->input('device', []);
-            $bios     = $request->input('bios', []);
-            $cpu      = $request->input('cpu', []);
-            $ram      = $request->input('ram', []);
-            $storage  = $request->input('storage', []);
-            $network  = $request->input('network', []);
-            $windows  = $request->input('windows', []);
+            $device = $request->input('device', []);
+            $bios = $request->input('bios', []);
+            $cpu = $request->input('cpu', []);
+            $ram = $request->input('ram', []);
+            $storage = $request->input('storage', []);
+            $network = $request->input('network', []);
+            $windows = $request->input('windows', []);
             $security = $request->input('security', []);
-            $monitor  = $request->input('monitor', []);
-            $user     = $request->input('user', []);
+            $monitor = $request->input('monitor', []);
+            $user = $request->input('user', []);
             $software = $request->input('software', []);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Validar MAC
-            |--------------------------------------------------------------------------
-            */
-
-            $mac = $network['macAddress'] ?? null;
-
-            if (!$mac) {
-                return response()->json([
-                    'message' => 'La dirección MAC es obligatoria.'
-                ], 422);
-            }
 
             /*
             |--------------------------------------------------------------------------
@@ -58,20 +109,37 @@ return response()->json($request->all());
             |--------------------------------------------------------------------------
             */
 
-            $device   = $this->sanitizeArray($device);
-            $bios     = $this->sanitizeArray($bios);
-            $cpu      = $this->sanitizeArray($cpu);
-            $ram      = $this->sanitizeArray($ram);
-            $storage  = $this->sanitizeArray($storage);
-            $network  = $this->sanitizeArray($network);
-            $windows  = $this->sanitizeArray($windows);
+            $device = $this->sanitizeArray($device);
+            $bios = $this->sanitizeArray($bios);
+            $cpu = $this->sanitizeArray($cpu);
+            $ram = $this->sanitizeArray($ram);
+            $storage = $this->sanitizeArray($storage);
+            $network = $this->sanitizeArray($network);
+            $windows = $this->sanitizeArray($windows);
             $security = $this->sanitizeArray($security);
-            $monitor  = $this->sanitizeArray($monitor);
-            $user     = $this->sanitizeArray($user);
+            $monitor = $this->sanitizeArray($monitor);
+            $user = $this->sanitizeArray($user);
 
             /*
             |--------------------------------------------------------------------------
-            | Buscar activo
+            | Obtener MAC
+            |--------------------------------------------------------------------------
+            */
+
+            $mac = $network['macAddress'] ?? null;
+
+            if (!$mac) {
+
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'La dirección MAC es obligatoria.'
+                ], 422);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Buscar o crear activo
             |--------------------------------------------------------------------------
             */
 
@@ -81,177 +149,241 @@ return response()->json($request->all());
 
             /*
             |--------------------------------------------------------------------------
-            | Información general
+            | Información general del equipo
             |--------------------------------------------------------------------------
             */
 
-            $asset->mac_address = $mac;
+            $asset->mac_address =
+                $mac;
 
-            $asset->serial_number = $device['serialNumber'] ?? null;
+            $asset->serial_number =
+                $device['serialNumber'] ?? null;
 
-            $asset->hostname = $device['hostname'] ?? null;
+            $asset->hostname =
+                $device['hostname'] ?? null;
 
-            $asset->manufacturer = $device['manufacturer'] ?? null;
+            $asset->manufacturer =
+                $device['manufacturer'] ?? null;
 
-            $asset->model_version = $device['model'] ?? null;
+            $asset->model_version =
+                $device['model'] ?? null;
 
-            $asset->uuid = $device['uuid'] ?? null;
+            /*
+            |--------------------------------------------------------------------------
+            | UUID
+            |--------------------------------------------------------------------------
+            |
+            | Utilizamos hardware_uuid si este es el campo actual
+            | de la tabla assets.
+            |
+            */
+
+            $asset->hardware_uuid =
+                $device['uuid'] ?? null;
 
             /*
             |--------------------------------------------------------------------------
             | CPU
             |--------------------------------------------------------------------------
+            |
+            | Estos campos pertenecían anteriormente a assets.
+            | Si ya migraste CPU a su propia tabla, NO debemos
+            | guardar nuevamente esta información aquí.
+            |
             */
-
-            $asset->cpu_brand = $cpu['brand'] ?? null;
-
-            $asset->cpu_model = $cpu['model'] ?? null;
 
             /*
             |--------------------------------------------------------------------------
             | RAM
             |--------------------------------------------------------------------------
+            |
+            | La RAM ahora se procesa mediante RamProcessor.
+            | No se guarda nuevamente en assets.
+            |
             */
-
-            $asset->ram = isset($ram['capacityGB'])
-                ? $ram['capacityGB'] . ' GB'
-                : null;
 
             /*
             |--------------------------------------------------------------------------
-            | Disco
+            | STORAGE
             |--------------------------------------------------------------------------
+            |
+            | Si Storage también está separado mediante su processor,
+            | no debemos duplicarlo en assets.
+            |
             */
-
-            $asset->storage_model = $storage['model'] ?? null;
-
-            $asset->storage_serial = $storage['serial'] ?? null;
-
-            if (isset($storage['capacityGB'])) {
-                $asset->storage_capacity = $storage['capacityGB'];
-            }
 
             /*
             |--------------------------------------------------------------------------
-            | Red
+            | RED
             |--------------------------------------------------------------------------
             */
 
-            $asset->ip_address = $network['ipv4'] ?? null;
+            $asset->ip_address =
+                $network['ipv4'] ?? null;
 
-            $asset->domain_name = $network['domain'] ?? null;
+            $asset->domain_name =
+                $network['domain'] ?? null;
 
             /*
             |--------------------------------------------------------------------------
-            | Windows
+            | WINDOWS
             |--------------------------------------------------------------------------
             */
 
-            $asset->os_version = $windows['version'] ?? null;
+            $asset->os_version =
+                $windows['version'] ?? null;
 
             /*
             |--------------------------------------------------------------------------
-            | Usuario
+            | USUARIO
             |--------------------------------------------------------------------------
             */
 
-            $asset->logged_user = $user['username'] ?? null;
+            $asset->logged_user =
+                $user['username'] ?? null;
 
             /*
             |--------------------------------------------------------------------------
-            | Monitor
+            | HASHES Y VERSIONES
             |--------------------------------------------------------------------------
             */
 
-            $asset->monitor_serial = $monitor['serial'] ?? null;
+            $asset->hardware_hash =
+                $request->input('hardwareHash');
+
+            $asset->inventory_hash =
+                $request->input('inventoryHash');
+
+            $asset->agent_version =
+                $request->input('agentVersion');
+
+            $asset->inventory_version =
+                $request->input('inventoryVersion');
 
             /*
             |--------------------------------------------------------------------------
-            | Hashes
+            | ESTADO DEL AGENTE
             |--------------------------------------------------------------------------
             */
 
-            $asset->hardware_hash = $request->input('hardwareHash');
+            $asset->last_seen_at =
+                now();
 
-            $asset->inventory_hash = $request->input('inventoryHash');
+            $asset->is_agent_managed =
+                true;
 
-            $asset->agent_version = $request->input('agentVersion');
+            $asset->is_online =
+                true;
 
             /*
             |--------------------------------------------------------------------------
-            | Estado
+            | Guardar activo
             |--------------------------------------------------------------------------
             */
-
-            $asset->last_seen_at = now();
-
-            $asset->is_agent_managed = true;
 
             $asset->save();
 
             /*
             |--------------------------------------------------------------------------
-            | Software
+            | SOFTWARE
             |--------------------------------------------------------------------------
             */
 
-            if ($asset->id && is_array($software)) {
+            if (
+                $asset->id &&
+                is_array($software)
+            ) {
 
                 $asset->software()->delete();
 
                 foreach ($software as $program) {
 
-                    if (empty($program['name'])) {
+                    if (
+                        empty($program['name'])
+                    ) {
                         continue;
                     }
 
                     $asset->software()->create([
-                        'name' => strip_tags($program['name']),
-                        'version' => strip_tags($program['version'] ?? '')
+                        'name' =>
+                            strip_tags(
+                                $program['name']
+                            ),
+
+                        'version' =>
+                            strip_tags(
+                                $program['version'] ?? ''
+                            )
                     ]);
                 }
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Respuesta
+            |--------------------------------------------------------------------------
+            */
+
             return response()->json([
-                'message' => 'Inventario recibido correctamente.',
-                'id' => $asset->id
+                'success' => true,
+                'message' =>
+                    'Inventario recibido correctamente.',
+                'asset_id' =>
+                    $asset->id
             ], 200);
 
         } catch (\Throwable $e) {
 
-            Log::error($e);
+            Log::error(
+                'Error procesando inventario de SIGMA Agent.',
+                [
+                    'message' =>
+                        $e->getMessage(),
+
+                    'file' =>
+                        $e->getFile(),
+
+                    'line' =>
+                        $e->getLine()
+                ]
+            );
 
             return response()->json([
-                'message' => 'Error procesando inventario.',
-                'error' => $e->getMessage()
+                'success' => false,
+                'message' =>
+                    'Error procesando inventario.',
+                'error' =>
+                    $e->getMessage()
             ], 500);
-
         }
     }
 
     /**
      * Sanitiza cualquier arreglo recibido.
      */
-    private function sanitizeArray(array $data): array
-    {
+    private function sanitizeArray(
+        array $data
+    ): array {
+
         $clean = [];
 
         foreach ($data as $key => $value) {
 
             if (is_array($value)) {
 
-                $clean[$key] = $this->sanitizeArray($value);
+                $clean[$key] =
+                    $this->sanitizeArray($value);
 
             } elseif (is_string($value)) {
 
-                $clean[$key] = strip_tags($value);
+                $clean[$key] =
+                    strip_tags($value);
 
             } else {
 
-                $clean[$key] = $value;
-
+                $clean[$key] =
+                    $value;
             }
-
         }
 
         return $clean;

@@ -17,6 +17,7 @@ use App\Services\Inventory\Processors\SoftwareProcessor;
 use App\Services\Inventory\Processors\HistoryProcessor;
 use App\Services\Inventory\Processors\BatteryProcessor;
 use App\Services\Inventory\Processors\MotherboardProcessor;
+use App\Services\Inventory\Processors\GpuProcessor;
 
 class InventoryProcessor
 {
@@ -34,6 +35,7 @@ class InventoryProcessor
     protected HistoryProcessor $historyProcessor;
     protected BatteryProcessor $batteryProcessor;
     protected MotherboardProcessor $motherboardprocessor;
+    protected GpuProcessor $gpuProcessor;
 
     public function __construct(
         DeviceProcessor $deviceProcessor,
@@ -49,7 +51,8 @@ class InventoryProcessor
         SoftwareProcessor $softwareProcessor,
         HistoryProcessor $historyProcessor,
         BatteryProcessor $batteryProcessor,
-        MotherboardProcessor $motherboardprocessor
+        MotherboardProcessor $motherboardprocessor,
+        GpuProcessor $gpuProcessor,
     ) {
         $this->deviceProcessor = $deviceProcessor;
         $this->networkProcessor = $networkProcessor;
@@ -65,6 +68,7 @@ class InventoryProcessor
         $this->historyProcessor = $historyProcessor;
         $this->batteryProcessor = $batteryProcessor;
         $this->motherboardprocessor = $motherboardprocessor;
+        $this->gpuProcessor = $gpuProcessor;
     }
 
     public function process(Request $request)
@@ -72,67 +76,86 @@ class InventoryProcessor
         $inventory = $request->all();
 
         // Crear u obtener el activo
-        $asset = $this->deviceProcessor->process($inventory['device']);
+        $asset = $this->deviceProcessor->process(
+            $inventory['device']
+        );
 
-        // Procesar cada módulo reutilizando siempre el Asset actualizado
+        // Network
         $asset = $this->networkProcessor->process(
             $asset,
             $inventory['network']
         );
 
+        // CPU
         $asset = $this->cpuProcessor->process(
             $asset,
             $inventory['cpu']
         );
 
-        $asset = $this->ramProcessor->process(
+        // GPU
+        $asset = $this->gpuProcessor->process(
             $asset,
-            $inventory['ram']
+            $inventory['gpus'] ?? []
         );
 
-        $asset = $this->storageProcessor->process(
-    $asset,
-    $inventory['storageDevices'] ?? []
-);
+        $asset = $this->ramProcessor->process(
+            $asset,
+            $inventory['ram']['modules'] ?? []
+        );
 
+        // Storage
+        $asset = $this->storageProcessor->process(
+            $asset,
+            $inventory['storageDevices'] ?? []
+        );
+
+        // Windows
         $asset = $this->windowsProcessor->process(
             $asset,
             $inventory['windows']
         );
 
+        // BIOS
         $asset = $this->biosProcessor->process(
             $asset,
             $inventory['bios']
         );
 
+        // Security
         $asset = $this->securityProcessor->process(
             $asset,
             $inventory['security']
         );
 
+        // User
         $asset = $this->userProcessor->process(
             $asset,
             $inventory['user']
         );
 
+        // Monitors
         $asset = $this->monitorProcessor->process(
-    $asset,
-    $inventory['monitors'] ?? []
-);
+            $asset,
+            $inventory['monitors'] ?? []
+        );
 
+        // Software
         $asset = $this->softwareProcessor->process(
             $asset,
             $inventory
         );
+
+        // Battery
         $asset = $this->batteryProcessor->process(
             $asset,
             $inventory['battery'] ?? []
         );
-        $asset = $this->motherboardprocessor->process(
-    $asset,
-    $inventory['motherboard'] ?? []
-);
 
+        // Motherboard
+        $asset = $this->motherboardprocessor->process(
+            $asset,
+            $inventory['motherboard'] ?? []
+        );
 
         return response()->json([
             'success'  => true,

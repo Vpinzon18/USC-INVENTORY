@@ -8,25 +8,43 @@ class StorageProcessor
 {
     public function process(Asset $asset, array $storageDevices): Asset
     {
+        // Elimina los registros anteriores
         $asset->storageDevices()->delete();
 
-        foreach ($storageDevices as $disk)
-        {
+        foreach ($storageDevices as $disk) {
+
             $asset->storageDevices()->create([
 
                 'brand' => $disk['brand'] ?? null,
 
                 'model' => $disk['model'] ?? null,
 
-                'serial_number' => $disk['serial'] ?? null,
+                'serial_number' =>
+                    $disk['serialNumber']
+                    ?? $disk['serial']
+                    ?? null,
 
-                'capacity_gb' => $disk['capacityGB'] ?? null,
+                'firmware' =>
+                    $disk['firmware']
+                    ?? null,
 
-                'free_gb' => $disk['freeGB'] ?? null,
+                'capacity_gb' =>
+                    $disk['capacityGb']
+                    ?? $disk['capacityGB']
+                    ?? null,
 
-                'type' => $disk['type'] ?? null,
+                'free_gb' =>
+                    $disk['freeGb']
+                    ?? $disk['freeGB']
+                    ?? null,
 
-                'health' => $disk['health'] ?? null,
+                'type' =>
+                    $disk['type']
+                    ?? null,
+
+                'health' =>
+                    $disk['health']
+                    ?? null,
 
             ]);
         }
