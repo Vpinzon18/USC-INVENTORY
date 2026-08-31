@@ -63,11 +63,11 @@ class AssetApiController extends Controller
 {
     return response()->json([
         'available' => true,
-        'version' => '2.1',
-        'downloadUrl' => asset('storage/updates/SigmaAgent-2.1.zip'),
+        'version' => '2.3',
+        'downloadUrl' => asset('storage/updates/SigmaAgent-2.3.zip'),
         'mandatory' => false,
         'releaseNotes' =>
-            'Actualización de prueba del SIGMA Agent.'
+            'Prueba de actualización automática 2.2 a 2.3.'
     ]);
 }
 

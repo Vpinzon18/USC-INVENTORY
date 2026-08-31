@@ -39,6 +39,11 @@ Route::prefix('v1/agent')->group(function () {
         [InventoryController::class, 'heartbeat']
     );
 
+    Route::get(
+            'update',
+            [AssetApiController::class, 'update']
+        );
+
 
     /*
     |--------------------------------------------------------------------------
@@ -86,10 +91,7 @@ Route::prefix('v1/agent')->group(function () {
         // =========================================================
 
         // El agente consulta si existe una nueva versión
-        Route::get(
-            'update',
-            [AssetApiController::class, 'update']
-        );
+        
 
     });
 

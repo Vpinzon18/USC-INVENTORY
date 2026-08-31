@@ -14,14 +14,20 @@ class Asset extends Model
 
     protected $fillable = [
 
-        // Identificación
+        // =========================================================
+        // IDENTIFICACIÓN
+        // =========================================================
+
         'hostname',
         'serial_number',
         'internal_code',
         'mac_address',
         'ip_address',
 
-        // Red
+        // =========================================================
+        // RED
+        // =========================================================
+
         'ipv4',
         'ipv6',
         'gateway',
@@ -31,12 +37,18 @@ class Asset extends Model
         'domain_name',
         'model_version',
 
-        // Relaciones
+        // =========================================================
+        // RELACIONES
+        // =========================================================
+
         'sede_id',
         'room_id',
         'custodian_id',
 
+        // =========================================================
         // CPU
+        // =========================================================
+
         'cpu_brand',
         'cpu_model',
         'cpu_cores',
@@ -44,7 +56,10 @@ class Asset extends Model
         'cpu_speed_mhz',
         'cpu_architecture',
 
-        // Storage
+        // =========================================================
+        // STORAGE
+        // =========================================================
+
         'storage_brand',
         'storage_serial',
         'storage_model',
@@ -53,22 +68,34 @@ class Asset extends Model
         'storage_health',
         'storage_capacity_gb',
 
+        // =========================================================
         // GPU
+        // =========================================================
+
         'gpu_brand',
         'gpu_model',
 
+        // =========================================================
         // WIFI
+        // =========================================================
+
         'wifi_brand',
         'wifi_model',
 
-        // Board
+        // =========================================================
+        // BOARD / MOTHERBOARD
+        // =========================================================
+
         'board_brand',
         'board_model',
         'board_serial',
         'board_version',
         'board_status',
 
+        // =========================================================
         // RAM
+        // =========================================================
+
         'ram',
         'ram_brand',
         'ram_model',
@@ -78,7 +105,10 @@ class Asset extends Model
         'ram_slots',
         'ram_modules',
 
-        // Sistema
+        // =========================================================
+        // SISTEMA OPERATIVO
+        // =========================================================
+
         'windows_build',
         'windows_edition',
         'license_status',
@@ -91,12 +121,18 @@ class Asset extends Model
         'firewall_enabled',
         'os_version',
 
-        //bios
+        // =========================================================
+        // BIOS
+        // =========================================================
+
         'bios_version',
         'bios_date',
         'manufacturer',
 
-        // Otros
+        // =========================================================
+        // PERIFÉRICOS / SEGURIDAD
+        // =========================================================
+
         'security_guaya',
         'monitor_asset',
         'monitor_serial',
@@ -104,23 +140,60 @@ class Asset extends Model
         'mouse_serial',
         'last_seen_at',
 
-        //Usuarios                               
+        // =========================================================
+        // USUARIO
+        // =========================================================
+
         'logged_user',
         'last_login',
+
+        // =========================================================
+        // SIGMA AGENT
+        // =========================================================
+
+        'is_agent_managed',
+        'agent_last_seen',
+        'is_online',
+        'agent_version',
+        'last_inventory_at',
     ];
 
     protected $casts = [
 
-        'last_seen_at' => 'datetime',
+        // =========================================================
+        // FECHAS
+        // =========================================================
 
-        // PostgreSQL jsonb
+        'last_seen_at' => 'datetime',
+        'agent_last_seen' => 'datetime',
+        'last_inventory_at' => 'datetime',
+
+        // =========================================================
+        // BOOLEANOS
+        // =========================================================
+
+        'is_agent_managed' => 'boolean',
+        'is_online' => 'boolean',
+
+        // =========================================================
+        // JSONB
+        // =========================================================
+
         'ram_modules' => 'array',
     ];
+
+    // =============================================================
+    // ATRIBUTOS
+    // =============================================================
 
     public function getCpuAttribute()
     {
         return "{$this->cpu_brand} {$this->cpu_model}";
     }
+
+    // =============================================================
+    // RELACIONES
+    // =============================================================
 
     public function room(): BelongsTo
     {
@@ -178,28 +251,31 @@ class Asset extends Model
         return $this->hasMany(Software::class);
     }
 
-    public function battery()
+    public function battery(): HasOne
     {
         return $this->hasOne(AssetBattery::class);
     }
 
-    public function monitors()
+    public function monitors(): HasMany
     {
         return $this->hasMany(AssetMonitor::class);
     }
 
-    public function storageDevices()
+    public function storageDevices(): HasMany
     {
         return $this->hasMany(AssetStorage::class);
     }
+
     public function ramModules(): HasMany
-{
-    return $this->hasMany(AssetRamModule::class);
-}
+    {
+        return $this->hasMany(AssetRamModule::class);
+    }
+
     public function processors(): HasMany
     {
         return $this->hasMany(AssetProcessor::class);
     }
+
     public function gpus(): HasMany
     {
         return $this->hasMany(AssetGpu::class);

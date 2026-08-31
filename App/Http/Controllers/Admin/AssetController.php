@@ -19,7 +19,7 @@ class AssetController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $perPage = $request->input('per_page', 15); 
+        $perPage = $request->input('per_page', 15);
 
         // 1. NOMBRES PARA COMPONENTES AJAX (Evita cargar miles de registros, solo busca el seleccionado)
         $selectedCustodianName = $request->filled('custodian_id') ? \App\Models\Custodian::find($request->custodian_id)?->full_name : '';
@@ -35,10 +35,10 @@ class AssetController extends Controller
 
         // Búsqueda de texto libre (Serial, Hostname, Placa)
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('serial_number', 'LIKE', "%{$search}%")
-                  ->orWhere('hostname', 'LIKE', "%{$search}%")
-                  ->orWhere('internal_code', 'LIKE', "%{$search}%");
+                    ->orWhere('hostname', 'LIKE', "%{$search}%")
+                    ->orWhere('internal_code', 'LIKE', "%{$search}%");
             });
         }
 
@@ -94,33 +94,45 @@ class AssetController extends Controller
             if ($request->connectivity == 'online') {
                 $query->where('last_seen_at', '>=', now()->subMinutes(10));
             } else {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->where('last_seen_at', '<', now()->subMinutes(10))->orWhereNull('last_seen_at');
                 });
             }
         }
 
         // Ejecutar consulta paginada
-        $assets = $query->latest()->paginate($perPage)->withQueryString(); 
+        $assets = $query->latest()->paginate($perPage)->withQueryString();
 
         // 4. CÁLCULO DE KPIs
         $total = \App\Models\Asset::count();
         $online = \App\Models\Asset::where('last_seen_at', '>=', now()->subMinutes(10))->count();
         $offline = $total - $online;
         $agentManaged = \App\Models\Asset::where('is_agent_managed', true)->count();
-        $unassigned = \App\Models\Asset::whereDoesntHave('assignments', function($q) {
+        $unassigned = \App\Models\Asset::whereDoesntHave('assignments', function ($q) {
             $q->where('status', 'active');
         })->count();
-        $incomplete = \App\Models\Asset::whereNull('monitor_serial')
-            ->orWhereNull('keyboard_serial')
-            ->orWhereNull('security_guaya')
-            ->count();
+        $incomplete = \App\Models\Asset::where(function ($query) {
+            $query->whereNull('keyboard_serial')
+                ->orWhereNull('security_guaya')
+                ->orWhereDoesntHave('monitors');
+        })->count();
 
         // ENVIAR TODO A LA VISTA
         return view('admin.assets.index', compact(
-            'assets', 'search', 'perPage', 'total', 'online', 'offline', 
-            'agentManaged', 'unassigned', 'incomplete', 'osVersions',
-            'selectedCustodianName', 'selectedCampusName', 'selectedBuildingName', 'selectedRoomName' // Variables limpias para AJAX
+            'assets',
+            'search',
+            'perPage',
+            'total',
+            'online',
+            'offline',
+            'agentManaged',
+            'unassigned',
+            'incomplete',
+            'osVersions',
+            'selectedCustodianName',
+            'selectedCampusName',
+            'selectedBuildingName',
+            'selectedRoomName' // Variables limpias para AJAX
         ));
     }
 
@@ -129,7 +141,7 @@ class AssetController extends Controller
         $rooms = Room::all();
         $custodians = Custodian::all();
         $campuses = Campus::all();
-        return view('admin.assets.create', compact('rooms', 'custodians','campuses'));
+        return view('admin.assets.create', compact('rooms', 'custodians', 'campuses'));
     }
 
     public function store(Request $request)
@@ -158,96 +170,98 @@ class AssetController extends Controller
         return redirect()->route('assets.index')->with('success', 'Equipo registrado con éxito.');
     }
     public function edit(Asset $asset)
-{
-    
-    $rooms = Room::all();
-    $custodians = Custodian::all(); 
-    $campuses = \App\Models\Campus::all();
+    {
 
-    
-    return view('admin.assets.edit', compact('asset', 'rooms', 'custodians','campuses'));
-}
+        $rooms = Room::all();
+        $custodians = Custodian::all();
+        $campuses = \App\Models\Campus::all();
 
-public function update(Request $request, Asset $asset)
-{
 
-    $validated = $request->validate([
-        'room_id'         => 'required|exists:rooms,id',
-        'serial_number'   => 'required|unique:assets,serial_number,' . $asset->id,
-        'internal_code'   => 'nullable|unique:assets,internal_code,' . $asset->id,
-        'custodian_id'    => 'nullable|exists:custodians,id',
-        'hostname'        => 'nullable|string',
-        'model_version'   => 'nullable|string',
-        'ip_address'      => 'nullable|ip',
-        'cpu'             => 'nullable|string',
-        'ram'             => 'nullable|string',
-        'storage'         => 'nullable|string',
-        'monitor_asset'   => 'nullable|string',
-        'monitor_serial'  => 'nullable|string',
-        'keyboard_serial' => 'nullable|string',
-        'mouse_serial'    => 'nullable|string',
-        'security_guaya'  => 'nullable|string',
-        'mac_address'     => 'nullable|string',
-        'wifi_card'       => 'nullable|string',
-        'graphics_card'   => 'nullable|string',
-        'os_version'      => 'nullable|string',
-        'domain_name'     => 'nullable|string',
-    ]);
+        return view('admin.assets.edit', compact('asset', 'rooms', 'custodians', 'campuses'));
+    }
 
-    $asset->update($validated);
+    public function update(Request $request, Asset $asset)
+    {
 
-    return redirect()->route('assets.index')->with('success', 'Hoja de Vida actualizada correctamente.');
-}
-/**
- * Muestra la Hoja de Vida detallada de un equipo específico.
-*/
-public function previewPdf(Asset $asset)
-{
-    
-    $asset->load(['currentCustodian', 'room.building', 'assignments', 'technicalServices']);
-    
-    
-    return view('admin.assets.pdf_preview', compact('asset'));
-    
-    
-}
+        $validated = $request->validate([
+            'room_id'         => 'required|exists:rooms,id',
+            'serial_number'   => 'required|unique:assets,serial_number,' . $asset->id,
+            'internal_code'   => 'nullable|unique:assets,internal_code,' . $asset->id,
+            'custodian_id'    => 'nullable|exists:custodians,id',
+            'hostname'        => 'nullable|string',
+            'model_version'   => 'nullable|string',
+            'ip_address'      => 'nullable|ip',
+            'cpu'             => 'nullable|string',
+            'ram'             => 'nullable|string',
+            'storage'         => 'nullable|string',
+            'monitor_asset'   => 'nullable|string',
+            'monitor_serial'  => 'nullable|string',
+            'keyboard_serial' => 'nullable|string',
+            'mouse_serial'    => 'nullable|string',
+            'security_guaya'  => 'nullable|string',
+            'mac_address'     => 'nullable|string',
+            'wifi_card'       => 'nullable|string',
+            'graphics_card'   => 'nullable|string',
+            'os_version'      => 'nullable|string',
+            'domain_name'     => 'nullable|string',
+        ]);
 
-public function downloadPdf(int $id)
-{
-    $asset = Asset::with(['currentCustodian', 'room.building', 'currentCustodian.jobTitle',   // <-- AGREGADO
-        'currentCustodian.dependency','technicalServices.user'])->findOrFail($id);
+        $asset->update($validated);
 
-    
-    $html = view('admin.assets.pdf_export', compact('asset'))->render();
+        return redirect()->route('assets.index')->with('success', 'Hoja de Vida actualizada correctamente.');
+    }
+    /**
+     * Muestra la Hoja de Vida detallada de un equipo específico.
+     */
+    public function previewPdf(Asset $asset)
+    {
 
-    $pdf = Browsershot::html($html)
-        ->setNodeBinary('C:\Program Files\nodejs\node.exe')
-        ->setChromePath('C:\Program Files\Google\Chrome\Application\chrome.exe')
-        ->addChromiumArguments([
-            'no-sandbox',
-            'disable-setuid-sandbox',
-            'disable-dev-shm-usage',
-            'disable-gpu',
-            'no-zygote'
-        ])
-        ->showBackground()
-        ->format('Letter')
-        ->setMargins(10, 10, 10, 10)
-        ->pdf();
+        $asset->load(['currentCustodian', 'room.building', 'assignments', 'technicalServices']);
 
-    return response($pdf)
-        ->header('Content-Type', 'application/pdf')
-        ->header('Content-Disposition', 'attachment; filename="Hoja_Vida_USC_'.$asset->internal_code.'.pdf"');
-}
-public function destroy(Asset $asset)
+
+        return view('admin.assets.pdf_preview', compact('asset'));
+    }
+
+    public function downloadPdf(int $id)
+    {
+        $asset = Asset::with([
+            'currentCustodian',
+            'room.building',
+            'currentCustodian.jobTitle',   // <-- AGREGADO
+            'currentCustodian.dependency',
+            'technicalServices.user'
+        ])->findOrFail($id);
+
+
+        $html = view('admin.assets.pdf_export', compact('asset'))->render();
+
+        $pdf = Browsershot::html($html)
+            ->setNodeBinary('C:\Program Files\nodejs\node.exe')
+            ->setChromePath('C:\Program Files\Google\Chrome\Application\chrome.exe')
+            ->addChromiumArguments([
+                'no-sandbox',
+                'disable-setuid-sandbox',
+                'disable-dev-shm-usage',
+                'disable-gpu',
+                'no-zygote'
+            ])
+            ->showBackground()
+            ->format('Letter')
+            ->setMargins(10, 10, 10, 10)
+            ->pdf();
+
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="Hoja_Vida_USC_' . $asset->internal_code . '.pdf"');
+    }
+    public function destroy(Asset $asset)
     {
         try {
-  
+
             $asset->delete();
 
             return redirect()->route('assets.index')
                 ->with('success', 'El activo ha sido dado de baja y eliminado del CMDB exitosamente.');
-                
         } catch (\Illuminate\Database\QueryException $e) {
             // Si la base de datos bloquea el borrado por llaves foráneas (Integridad referencial)
             return redirect()->route('assets.index')
@@ -258,5 +272,4 @@ public function destroy(Asset $asset)
                 ->with('error', 'Ocurrió un error al intentar eliminar el activo.');
         }
     }
-
 }
