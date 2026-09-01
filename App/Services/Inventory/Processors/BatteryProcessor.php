@@ -27,14 +27,10 @@ class BatteryProcessor extends BaseProcessor
                 'remaining_capacity' => $battery['remaining_capacity'] ?? null,
 
                 'charge_percent' => $battery['charge_percent'] ?? null,
-
                 'is_charging' => $battery['is_charging'] ?? null,
-
                 'estimated_runtime_minutes' => $battery['estimated_runtime_minutes'] ?? null,
             ]
         );
-
-        $asset->refresh();
 
         return $asset;
     }

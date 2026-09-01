@@ -24,6 +24,12 @@ class AssetProcessor extends Model
         'generation',
     ];
 
+    protected $casts = [
+        'cores' => 'integer',
+        'threads' => 'integer',
+        'speed_mhz' => 'integer',
+    ];
+
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);

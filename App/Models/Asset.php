@@ -21,19 +21,11 @@ class Asset extends Model
         'hostname',
         'serial_number',
         'internal_code',
-        'mac_address',
-        'ip_address',
 
         // =========================================================
         // RED
         // =========================================================
 
-        'ipv4',
-        'ipv6',
-        'gateway',
-        'dns_server',
-        'ethernet_mac',
-        'wifi_mac',
         'domain_name',
         'model_version',
 
@@ -279,5 +271,13 @@ class Asset extends Model
     public function gpus(): HasMany
     {
         return $this->hasMany(AssetGpu::class);
+    }
+    public function history(): HasMany
+    {
+        return $this->hasMany(AssetHistory::class);
+    }
+    public function network(): HasOne
+    {
+        return $this->hasOne(AssetNetwork::class);
     }
 }

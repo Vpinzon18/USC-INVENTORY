@@ -3,6 +3,7 @@
 namespace App\Services\Inventory;
 
 use Illuminate\Http\Request;
+
 use App\Services\Inventory\Processors\DeviceProcessor;
 use App\Services\Inventory\Processors\NetworkProcessor;
 use App\Services\Inventory\Processors\CpuProcessor;
@@ -14,7 +15,6 @@ use App\Services\Inventory\Processors\SecurityProcessor;
 use App\Services\Inventory\Processors\UserProcessor;
 use App\Services\Inventory\Processors\MonitorProcessor;
 use App\Services\Inventory\Processors\SoftwareProcessor;
-use App\Services\Inventory\Processors\HistoryProcessor;
 use App\Services\Inventory\Processors\BatteryProcessor;
 use App\Services\Inventory\Processors\MotherboardProcessor;
 use App\Services\Inventory\Processors\GpuProcessor;
@@ -32,9 +32,8 @@ class InventoryProcessor
     protected UserProcessor $userProcessor;
     protected MonitorProcessor $monitorProcessor;
     protected SoftwareProcessor $softwareProcessor;
-    protected HistoryProcessor $historyProcessor;
     protected BatteryProcessor $batteryProcessor;
-    protected MotherboardProcessor $motherboardprocessor;
+    protected MotherboardProcessor $motherboardProcessor;
     protected GpuProcessor $gpuProcessor;
 
     public function __construct(
@@ -49,9 +48,8 @@ class InventoryProcessor
         UserProcessor $userProcessor,
         MonitorProcessor $monitorProcessor,
         SoftwareProcessor $softwareProcessor,
-        HistoryProcessor $historyProcessor,
         BatteryProcessor $batteryProcessor,
-        MotherboardProcessor $motherboardprocessor,
+        MotherboardProcessor $motherboardProcessor,
         GpuProcessor $gpuProcessor,
     ) {
         $this->deviceProcessor = $deviceProcessor;
@@ -65,9 +63,8 @@ class InventoryProcessor
         $this->userProcessor = $userProcessor;
         $this->monitorProcessor = $monitorProcessor;
         $this->softwareProcessor = $softwareProcessor;
-        $this->historyProcessor = $historyProcessor;
         $this->batteryProcessor = $batteryProcessor;
-        $this->motherboardprocessor = $motherboardprocessor;
+        $this->motherboardProcessor = $motherboardProcessor;
         $this->gpuProcessor = $gpuProcessor;
     }
 
@@ -75,134 +72,197 @@ class InventoryProcessor
     {
         $inventory = $request->all();
 
-        // =========================================================
-        // DEVICE
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | DEVICE
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->deviceProcessor->process(
-            $inventory['device']
+            $inventory['device'] ?? []
         );
 
-        // =========================================================
-        // NETWORK
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | NETWORK
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->networkProcessor->process(
             $asset,
-            $inventory['network']
+            $inventory['network'] ?? []
         );
 
-        // =========================================================
-        // CPU
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | CPU
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->cpuProcessor->process(
             $asset,
-            $inventory['cpu']
+            $inventory['cpu'] ?? []
         );
 
-        // =========================================================
-        // GPU
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | GPU
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->gpuProcessor->process(
             $asset,
             $inventory['gpus'] ?? []
         );
 
-        // =========================================================
-        // RAM
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | RAM
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->ramProcessor->process(
             $asset,
             $inventory['ram']['modules'] ?? []
         );
 
-        // =========================================================
-        // STORAGE
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | STORAGE
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->storageProcessor->process(
             $asset,
             $inventory['storageDevices'] ?? []
         );
 
-        // =========================================================
-        // WINDOWS
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | WINDOWS
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->windowsProcessor->process(
             $asset,
-            $inventory['windows']
+            $inventory['windows'] ?? []
         );
 
-        // =========================================================
-        // BIOS
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | BIOS
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->biosProcessor->process(
             $asset,
-            $inventory['bios']
+            $inventory['bios'] ?? []
         );
 
-        // =========================================================
-        // SECURITY
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->securityProcessor->process(
             $asset,
-            $inventory['security']
+            $inventory['security'] ?? []
         );
 
-        // =========================================================
-        // USER
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | USER
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->userProcessor->process(
             $asset,
-            $inventory['user']
+            $inventory['user'] ?? []
         );
 
-        // =========================================================
-        // MONITORS
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | MONITORS
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->monitorProcessor->process(
             $asset,
             $inventory['monitors'] ?? []
         );
 
-        // =========================================================
-        // SOFTWARE
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | SOFTWARE
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->softwareProcessor->process(
             $asset,
             $inventory
         );
 
-        // =========================================================
-        // BATTERY
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | BATTERY
+        |--------------------------------------------------------------------------
+        */
 
         $asset = $this->batteryProcessor->process(
             $asset,
             $inventory['battery'] ?? []
         );
 
-        // =========================================================
-        // MOTHERBOARD
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | MOTHERBOARD
+        |--------------------------------------------------------------------------
+        */
 
-        $asset = $this->motherboardprocessor->process(
+        $asset = $this->motherboardProcessor->process(
             $asset,
             $inventory['motherboard'] ?? []
         );
 
-        // =========================================================
-        // ESTADO DEL SIGMA AGENT
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | METADATOS DEL INVENTARIO
+        |--------------------------------------------------------------------------
+        |
+        | Estos datos pertenecen al inventario enviado por el Agent,
+        | pero no corresponden a ningún componente específico.
+        |
+        */
+
+        $metadata = [
+            'hardware_hash' =>
+                $inventory['hardwareHash'] ?? null,
+
+            'inventory_hash' =>
+                $inventory['inventoryHash'] ?? null,
+
+            'agent_version' =>
+                $inventory['agentVersion'] ?? null,
+
+            'inventory_version' =>
+                $inventory['inventoryVersion'] ?? null,
+        ];
+
+        $metadata = array_filter(
+            $metadata,
+            static fn ($value) => $value !== null
+        );
+
+        if (!empty($metadata)) {
+            $asset->update($metadata);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ESTADO DEL SIGMA AGENT
+        |--------------------------------------------------------------------------
+        */
 
         $asset->update([
             'is_agent_managed' => true,
@@ -211,12 +271,14 @@ class InventoryProcessor
             'is_online' => true,
         ]);
 
-        // =========================================================
-        // RESPUESTA
-        // =========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | RESPUESTA
+        |--------------------------------------------------------------------------
+        */
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'asset_id' => $asset->id,
         ]);
     }

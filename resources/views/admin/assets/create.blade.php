@@ -193,23 +193,174 @@
                         </div>
 
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all">
-                            <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
-                                <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                                </svg>
-                                <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">5. Almacenamiento</h3>
-                            </div>
-                            <div class="grid grid-cols-1 gap-4">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">Marca Disco</label>
-                                    <input type="text" name="storage_brand" value="{{ old('storage_brand') }}" class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 px-3 py-2 shadow-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">Modelo / Capacidad</label>
-                                    <input type="text" name="storage_model" value="{{ old('storage_model') }}" placeholder="Ej: 512GB NVMe M.2" class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-500 px-3 py-2 shadow-sm">
-                                </div>
-                            </div>
-                        </div>
+    <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4-8-4s-8 1.79-8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+        </svg>
+
+        <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+            5. Almacenamiento
+        </h3>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+
+        {{-- MARCA --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Marca
+            </label>
+
+            <input
+                type="text"
+                name="storage_brand"
+                value="{{ old('storage_brand') }}"
+                placeholder="Ej: KIOXIA"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm">
+        </div>
+
+        {{-- MODELO --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Modelo
+            </label>
+
+            <input
+                type="text"
+                name="storage_model"
+                value="{{ old('storage_model') }}"
+                placeholder="Ej: KBG50ZNS256G"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm">
+        </div>
+
+        {{-- SERIAL --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Serial
+            </label>
+
+            <input
+                type="text"
+                name="storage_serial_number"
+                value="{{ old('storage_serial_number') }}"
+                placeholder="Serial del disco"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm font-mono">
+        </div>
+
+        {{-- FIRMWARE --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Firmware
+            </label>
+
+            <input
+                type="text"
+                name="storage_firmware"
+                value="{{ old('storage_firmware') }}"
+                placeholder="Versión firmware"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm">
+        </div>
+
+        {{-- CAPACIDAD --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Capacidad (GB)
+            </label>
+
+            <input
+                type="number"
+                name="storage_capacity_gb"
+                value="{{ old('storage_capacity_gb') }}"
+                min="0"
+                step="1"
+                placeholder="Ej: 512"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm">
+        </div>
+
+        {{-- ESPACIO LIBRE --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Espacio libre (GB)
+            </label>
+
+            <input
+                type="number"
+                name="storage_free_gb"
+                value="{{ old('storage_free_gb') }}"
+                min="0"
+                step="1"
+                placeholder="Ej: 240"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm">
+        </div>
+
+        {{-- TIPO --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Tipo
+            </label>
+
+            <select
+                name="storage_type"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm">
+
+                <option value="">Seleccione</option>
+
+                <option value="HDD" {{ old('storage_type') === 'HDD' ? 'selected' : '' }}>
+                    HDD
+                </option>
+
+                <option value="SSD" {{ old('storage_type') === 'SSD' ? 'selected' : '' }}>
+                    SSD
+                </option>
+
+                <option value="NVMe SSD" {{ old('storage_type') === 'NVMe SSD' ? 'selected' : '' }}>
+                    NVMe SSD
+                </option>
+
+                <option value="eMMC" {{ old('storage_type') === 'eMMC' ? 'selected' : '' }}>
+                    eMMC
+                </option>
+
+                <option value="Otro" {{ old('storage_type') === 'Otro' ? 'selected' : '' }}>
+                    Otro
+                </option>
+
+            </select>
+        </div>
+
+        {{-- SALUD --}}
+        <div>
+            <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
+                Salud
+            </label>
+
+            <input
+                type="text"
+                name="storage_health"
+                value="{{ old('storage_health') }}"
+                placeholder="Ej: OK"
+                class="w-full bg-white border-slate-300 text-slate-900 text-xs rounded-lg
+                       focus:ring-2 focus:ring-blue-100 focus:border-blue-500
+                       px-3 py-2 shadow-sm">
+        </div>
+
+    </div>
+</div>
 
                         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all">
                             <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">

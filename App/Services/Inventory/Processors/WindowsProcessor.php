@@ -4,9 +4,9 @@ namespace App\Services\Inventory\Processors;
 
 use App\Models\Asset;
 
-class WindowsProcessor  extends BaseProcessor
+class WindowsProcessor extends BaseProcessor
 {
-    public function process(Asset $asset, array $windows): asset
+    public function process(Asset $asset, array $windows): Asset
     {
         $values = [
 
@@ -28,16 +28,12 @@ class WindowsProcessor  extends BaseProcessor
 
             'uptime_minutes' => $windows['uptimeMinutes'] ?? null,
         ];
+
         $values = array_filter(
             $values,
-            static fn($value) => $value !== null
+            static fn ($value) => $value !== null
         );
 
-        $this->updateWithHistory($asset, $values);
-
-        // Refresca el modelo desde la base de datos
-        $asset->refresh();
-
-        return $asset;
+        return $this->updateWithHistory($asset, $values);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AssetRamModule extends Model
 {
@@ -18,7 +19,12 @@ class AssetRamModule extends Model
         'speed_mhz',
     ];
 
-    public function asset()
+    protected $casts = [
+        'capacity_gb' => 'integer',
+        'speed_mhz' => 'integer',
+    ];
+
+    public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
     }

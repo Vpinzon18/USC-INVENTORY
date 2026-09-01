@@ -14,7 +14,7 @@ class AssetBattery extends Model
         'model',
         'serial_number',
 
-        'health_percent',
+        'health',
         'cycle_count',
 
         'design_capacity',
@@ -34,8 +34,8 @@ class AssetBattery extends Model
         'full_charge_capacity' => 'integer',
         'remaining_capacity' => 'integer',
         'charge_percent' => 'integer',
-        'estimated_runtime_minutes' => 'integer',
         'is_charging' => 'boolean',
+        'estimated_runtime_minutes' => 'integer',
     ];
 
     public function asset(): BelongsTo

@@ -9,30 +9,19 @@ use App\Services\Inventory\InventoryProcessor;
 
 class InventoryController extends Controller
 {
-    public function report(Request $request, InventoryProcessor $processor)
-{
-    // Procesar el inventario completo
-    $response = $processor->process($request);
-
-    // Obtener el serial enviado por el agente
-    $serialNumber = data_get(
-        $request->all(),
-        'device.serialNumber'
-    );
-
-    // Actualizar la fecha del último inventario recibido
-    if ($serialNumber) {
-        \App\Models\Asset::where(
-            'serial_number',
-            $serialNumber
-        )->update([
-            'last_inventory_at' => now(),
-        ]);
+    /**
+     * Recibe el inventario completo enviado por SIGMA Agent.
+     */
+    public function report(
+        Request $request,
+        InventoryProcessor $processor
+    ) {
+        return $processor->process($request);
     }
 
-    return $response;
-}
-
+    /**
+     * Recibe el heartbeat del SIGMA Agent.
+     */
     public function heartbeat(Request $request)
     {
         $request->validate([
@@ -62,10 +51,17 @@ class InventoryController extends Controller
             'success' => true,
             'message' => 'Heartbeat recibido correctamente.',
             'data' => [
-                'serial_number' => $asset->serial_number,
-                'agent_last_seen' => $asset->agent_last_seen,
-                'is_online' => $asset->is_online,
-                'agent_version' => $asset->agent_version,
+                'serial_number' =>
+                    $asset->serial_number,
+
+                'agent_last_seen' =>
+                    $asset->agent_last_seen,
+
+                'is_online' =>
+                    $asset->is_online,
+
+                'agent_version' =>
+                    $asset->agent_version,
             ],
         ]);
     }

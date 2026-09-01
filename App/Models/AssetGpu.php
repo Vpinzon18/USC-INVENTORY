@@ -20,6 +20,11 @@ class AssetGpu extends Model
         'refresh_rate',
     ];
 
+    protected $casts = [
+        'memory_mb' => 'integer',
+        'refresh_rate' => 'integer',
+    ];
+
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
