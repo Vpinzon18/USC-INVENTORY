@@ -65,6 +65,8 @@ class NetworkProcessor extends BaseProcessor
 
         $assetNetwork->adapters()->update([
             'is_active' => false,
+            'connected' => false,
+            'is_primary' => false,
         ]);
 
         /*

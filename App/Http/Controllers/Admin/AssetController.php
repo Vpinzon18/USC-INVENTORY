@@ -337,111 +337,124 @@ class AssetController extends Controller
      * CREAR ACTIVO
      * =========================================================
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
+public function store(Request $request)
+{
+    $validated = $request->validate([
 
-            /*
-            |--------------------------------------------------------------------------
-            | ASSET PRINCIPAL
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | ASSET PRINCIPAL
+        |--------------------------------------------------------------------------
+        */
 
-            'room_id' => 'required|exists:rooms,id',
+        'room_id' => 'nullable|exists:rooms,id',
 
-            'serial_number' => 'required|unique:assets,serial_number',
+        'serial_number' => 'required|unique:assets,serial_number',
 
-            'internal_code' => 'nullable|unique:assets,internal_code',
+        'internal_code' => 'nullable|unique:assets,internal_code',
 
-            'hostname' => 'nullable|string|max:255',
+        'hostname' => 'nullable|string|max:255',
 
-            'model_version' => 'nullable|string|max:255',
+        'model_version' => 'nullable|string|max:255',
 
-            'os_version' => 'nullable|string|max:255',
+        'os_version' => 'nullable|string|max:255',
 
-            'domain_name' => 'nullable|string|max:255',
+        'domain_name' => 'nullable|string|max:255',
 
-            /*
-            |--------------------------------------------------------------------------
-            | ELEMENTOS ADMINISTRATIVOS
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |--------------------------------------------------------------------------
+        | ELEMENTOS ADMINISTRATIVOS
+        |--------------------------------------------------------------------------
+        */
 
-            'custodian_id' => 'required|exists:custodians,id',
+        'custodian_id' => 'required|exists:custodians,id',
 
-            'keyboard_serial' => 'nullable|string|max:255',
+        'keyboard_serial' => 'nullable|string|max:255',
 
-            'mouse_serial' => 'nullable|string|max:255',
+        'mouse_serial' => 'nullable|string|max:255',
 
-            'security_guaya' => 'nullable|string|max:255',
+        'security_guaya' => 'nullable|string|max:255',
+    ]);
+
+    DB::transaction(function () use ($validated, $request) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREAR ASSET
+        |--------------------------------------------------------------------------
+        */
+
+        $assetData = [
+            'room_id' => $validated['room_id'] ?? null,
+
+            'serial_number' => $validated['serial_number'],
+
+            'internal_code' =>
+                $validated['internal_code'] ?? null,
+
+            'hostname' =>
+                $validated['hostname'] ?? null,
+
+            'model_version' =>
+                $validated['model_version'] ?? null,
+
+            'os_version' =>
+                $validated['os_version'] ?? null,
+
+            'domain_name' =>
+                $validated['domain_name'] ?? null,
+
+            'keyboard_serial' =>
+                $validated['keyboard_serial'] ?? null,
+
+            'mouse_serial' =>
+                $validated['mouse_serial'] ?? null,
+
+            'security_guaya' =>
+                $validated['security_guaya'] ?? null,
+        ];
+
+        $asset = Asset::create($assetData);
+
+        /*
+        |--------------------------------------------------------------------------
+        | ASIGNACIÓN
+        |--------------------------------------------------------------------------
+        */
+
+        Assignment::create([
+            'asset_id' => $asset->id,
+
+            'custodian_id' =>
+                $validated['custodian_id'],
+
+            'room_id' =>
+                $validated['room_id'] ?? null,
+
+            'status' => 'active',
+
+            'started_at' => now(),
         ]);
 
-        DB::transaction(function () use ($validated, $request) {
+        /*
+        |--------------------------------------------------------------------------
+        | COMPONENTES MANUALES
+        |--------------------------------------------------------------------------
+        */
 
-            /*
-            |--------------------------------------------------------------------------
-            | CREAR ASSET
-            |--------------------------------------------------------------------------
-            */
+        $this->syncManualComponents(
+            $asset,
+            $request
+        );
+    });
 
-            $assetData = [
-                'room_id' => $validated['room_id'],
-                'serial_number' => $validated['serial_number'],
-                'internal_code' => $validated['internal_code'] ?? null,
-                'hostname' => $validated['hostname'] ?? null,
-                'model_version' => $validated['model_version'] ?? null,
-                'os_version' => $validated['os_version'] ?? null,
-                'domain_name' => $validated['domain_name'] ?? null,
-
-                'keyboard_serial' =>
-                    $validated['keyboard_serial'] ?? null,
-
-                'mouse_serial' =>
-                    $validated['mouse_serial'] ?? null,
-
-                'security_guaya' =>
-                    $validated['security_guaya'] ?? null,
-            ];
-
-            $asset = Asset::create($assetData);
-
-            /*
-            |--------------------------------------------------------------------------
-            | ASIGNACIÓN
-            |--------------------------------------------------------------------------
-            */
-
-            Assignment::create([
-                'asset_id' => $asset->id,
-                'custodian_id' => $validated['custodian_id'],
-                'room_id' => $validated['room_id'],
-                'status' => 'active',
-                'started_at' => now(),
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | COMPONENTES MANUALES
-            |--------------------------------------------------------------------------
-            |
-            | Estos se sincronizarán posteriormente con las relaciones nuevas.
-            | Aquí dejamos la creación preparada para el formulario nuevo.
-            |
-            */
-
-            $this->syncManualComponents(
-                $asset,
-                $request
-            );
-        });
-
-        return redirect()
-            ->route('assets.index')
-            ->with(
-                'success',
-                'Equipo registrado con éxito.'
-            );
-    }
+    return redirect()
+        ->route('assets.index')
+        ->with(
+            'success',
+            'Equipo registrado con éxito.'
+        );
+}
 
 
     /**
@@ -549,10 +562,10 @@ class AssetController extends Controller
             $asset->update([
 
                 'room_id' =>
-                    $validated['room_id'],
+                    $validated['room_id'] ?? null,
 
                 'serial_number' =>
-                    $validated['serial_number'],
+                    $validated['serial_number'] ?? null,
 
                 'internal_code' =>
                     $validated['internal_code'] ?? null,

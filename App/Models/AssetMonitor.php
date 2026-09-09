@@ -17,6 +17,7 @@ class AssetMonitor extends Model
         'size',
         'resolution',
         'refresh_rate',
+         'fixed_asset_code',
     ];
 
     protected $casts = [

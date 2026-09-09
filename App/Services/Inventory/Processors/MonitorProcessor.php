@@ -8,30 +8,64 @@ class MonitorProcessor
 {
     public function process(Asset $asset, array $monitors): Asset
     {
-        // Elimina los monitores existentes
-        $asset->monitors()->delete();
-
         foreach ($monitors as $monitor) {
 
-            $asset->monitors()->create([
+            /*
+            |--------------------------------------------------------------------------
+            | IDENTIFICADOR DEL MONITOR
+            |--------------------------------------------------------------------------
+            */
 
-                'brand' => $monitor['brand'] ?? null,
+            $serialNumber = $monitor['serial'] ?? null;
 
-                'model' => $monitor['model'] ?? null,
+            /*
+            |--------------------------------------------------------------------------
+            | VALIDAR SERIAL
+            |--------------------------------------------------------------------------
+            |
+            | IMPORTANTE:
+            | "0" es un valor que PHP considera empty(),
+            | pero en nuestro caso el collector lo está enviando
+            | como serial del monitor AUO.
+            |--------------------------------------------------------------------------
+            */
 
-                'serial_number' => $monitor['serial'] ?? null,
+            if (
+                $serialNumber === null ||
+                trim((string) $serialNumber) === ''
+            ) {
+                continue;
+            }
 
-                'manufacturer_code' => $monitor['manufacturerCode'] ?? null,
+            /*
+            |--------------------------------------------------------------------------
+            | ACTUALIZAR O CREAR MONITOR
+            |--------------------------------------------------------------------------
+            */
 
-                'year' => $monitor['year'] ?? null,
+            $asset->monitors()->updateOrCreate(
+                [
+                    'serial_number' => $serialNumber,
+                ],
+                [
+                    'brand' => $monitor['brand'] ?? null,
 
-                'size' => $monitor['size'] ?? null,
+                    'model' => $monitor['model'] ?? null,
 
-                'resolution' => $monitor['resolution'] ?? null,
+                    'manufacturer_code' =>
+                        $monitor['manufacturerCode'] ?? null,
 
-                'refresh_rate' => $monitor['refreshRate'] ?? null,
+                    'year' => $monitor['year'] ?? null,
 
-            ]);
+                    'size' => $monitor['size'] ?? null,
+
+                    'resolution' =>
+                        $monitor['resolution'] ?? null,
+
+                    'refresh_rate' =>
+                        $monitor['refreshRate'] ?? null,
+                ]
+            );
         }
 
         return $asset;

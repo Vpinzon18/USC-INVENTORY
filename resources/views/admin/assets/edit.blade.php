@@ -84,7 +84,7 @@
 
 
             {{-- =====================================================
-                 VARIABLES DE ESTILO
+                 VARIABLES
             ====================================================== --}}
 
             @php
@@ -97,37 +97,42 @@
                 $editableClass =
                     'bg-white border-slate-300 text-slate-900 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 shadow-sm';
 
+
                 /*
                 |--------------------------------------------------------------------------
-                | Primer procesador
+                | Procesador
                 |--------------------------------------------------------------------------
                 */
 
                 $processor = $asset->processors->first();
 
+
                 /*
                 |--------------------------------------------------------------------------
-                | Primera GPU
+                | GPU
                 |--------------------------------------------------------------------------
                 */
 
                 $gpu = $asset->gpus->first();
 
+
                 /*
                 |--------------------------------------------------------------------------
-                | Primer módulo RAM
+                | RAM
                 |--------------------------------------------------------------------------
                 */
 
                 $ramModule = $asset->ramModules->first();
 
+
                 /*
                 |--------------------------------------------------------------------------
-                | Primer almacenamiento
+                | Storage
                 |--------------------------------------------------------------------------
                 */
 
                 $storage = $asset->storageDevices->first();
+
 
                 /*
                 |--------------------------------------------------------------------------
@@ -136,6 +141,24 @@
                 */
 
                 $battery = $asset->battery;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RED
+                |--------------------------------------------------------------------------
+                */
+
+                $network = $asset->network;
+
+                $networkAdapters =
+                    $network?->adapters ?? collect();
+
+                $primaryAdapter =
+                    $networkAdapters->firstWhere(
+                        'is_primary',
+                        true
+                    );
 
             @endphp
 
@@ -334,19 +357,16 @@
 
                         <div>
 
-                            <label class="block text-[10px] font-bold uppercase mb-1
-                                {{ $agentManaged ? 'text-slate-400' : 'text-slate-800' }}">
+                            <label class="block text-[10px] font-bold uppercase mb-1 text-slate-400">
 
-                                Dirección IP
+                                Dirección IP principal
 
                             </label>
 
                             <input type="text"
-                                name="ip_address"
-                                value="{{ old('ip_address', $asset->ip_address) }}"
-                                class="w-full font-mono text-xs rounded-lg px-3 py-2
-                                {{ $agentManaged ? $readonlyClass : $editableClass }}"
-                                {{ $agentManaged ? 'readonly' : '' }}>
+                                value="{{ $primaryAdapter?->ipv4 ?? 'No registrada' }}"
+                                class="w-full font-mono {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                readonly>
 
                         </div>
 
@@ -355,19 +375,16 @@
 
                         <div>
 
-                            <label class="block text-[10px] font-bold uppercase mb-1
-                                {{ $agentManaged ? 'text-slate-400' : 'text-slate-800' }}">
+                            <label class="block text-[10px] font-bold uppercase mb-1 text-slate-400">
 
-                                MAC Address
+                                MAC principal
 
                             </label>
 
                             <input type="text"
-                                name="mac_address"
-                                value="{{ old('mac_address', $asset->mac_address) }}"
-                                class="w-full font-mono text-xs rounded-lg px-3 py-2
-                                {{ $agentManaged ? $readonlyClass : $editableClass }}"
-                                {{ $agentManaged ? 'readonly' : '' }}>
+                                value="{{ $primaryAdapter?->mac_address ?? 'No registrada' }}"
+                                class="w-full font-mono {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                readonly>
 
                         </div>
 
@@ -376,19 +393,16 @@
 
                         <div>
 
-                            <label class="block text-[10px] font-bold uppercase mb-1
-                                {{ $agentManaged ? 'text-slate-400' : 'text-slate-800' }}">
+                            <label class="block text-[10px] font-bold uppercase mb-1 text-slate-400">
 
                                 Dominio
 
                             </label>
 
                             <input type="text"
-                                name="domain_name"
-                                value="{{ old('domain_name', $asset->domain_name) }}"
-                                class="w-full text-xs rounded-lg px-3 py-2
-                                {{ $agentManaged ? $readonlyClass : $editableClass }}"
-                                {{ $agentManaged ? 'readonly' : '' }}>
+                                value="{{ $asset->domain_name ?? 'No registrado' }}"
+                                class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                readonly>
 
                         </div>
 
@@ -580,7 +594,7 @@
                     <svg class="w-5 h-5 text-slate-400 shrink-0 mt-0.5"
                         fill="none"
                         stroke="currentColor"
-                        viewBox="0 0 24 24">
+                        viewBox="0 0 24 0 24">
 
                         <path stroke-linecap="round"
                             stroke-linejoin="round"
@@ -642,14 +656,10 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
 
 
-                        {{-- BOARD MARCA --}}
-
                         <div>
 
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-
                                 Board Marca
-
                             </label>
 
                             <input type="text"
@@ -660,14 +670,10 @@
                         </div>
 
 
-                        {{-- BOARD MODELO --}}
-
                         <div>
 
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-
                                 Board Modelo
-
                             </label>
 
                             <input type="text"
@@ -678,14 +684,10 @@
                         </div>
 
 
-                        {{-- BOARD SERIAL --}}
-
                         <div>
 
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-
                                 Board Serial
-
                             </label>
 
                             <input type="text"
@@ -696,14 +698,10 @@
                         </div>
 
 
-                        {{-- BOARD VERSION --}}
-
                         <div>
 
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-
                                 Board Versión
-
                             </label>
 
                             <input type="text"
@@ -714,14 +712,10 @@
                         </div>
 
 
-                        {{-- BOARD STATUS --}}
-
                         <div>
 
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-
                                 Estado
-
                             </label>
 
                             <input type="text"
@@ -759,9 +753,7 @@
                             </svg>
 
                             <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-
                                 4. Procesadores
-
                             </h3>
 
                         </div>
@@ -895,9 +887,7 @@
                             </svg>
 
                             <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-
                                 5. Memoria RAM
-
                             </h3>
 
                         </div>
@@ -1026,9 +1016,7 @@
                             </svg>
 
                             <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-
                                 6. Almacenamiento
-
                             </h3>
 
                         </div>
@@ -1165,9 +1153,7 @@
                             </svg>
 
                             <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-
                                 7. Procesadores Gráficos
-
                             </h3>
 
                         </div>
@@ -1282,64 +1268,427 @@
 
 
                 {{-- =================================================
-                     8. CONECTIVIDAD WIFI
+                     8. CONECTIVIDAD Y RED
                 ================================================== --}}
 
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
 
-                    <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+                    {{-- ENCABEZADO --}}
 
-                        <svg class="w-5 h-5 text-cyan-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
 
-                            <path stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                        <div class="flex items-center gap-2">
 
-                        </svg>
+                            <svg class="w-5 h-5 text-cyan-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24">
 
-                        <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                                <path stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
 
-                            8. Conectividad WiFi
+                            </svg>
 
-                        </h3>
+                            <div>
 
-                    </div>
+                                <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                                    8. Conectividad y Red
+                                </h3>
 
+                                <p class="text-[10px] text-slate-400">
+                                    Información detectada por SIGMA Agent.
+                                </p>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <div>
-
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-
-                                Marca Tarjeta WiFi
-
-                            </label>
-
-                            <input type="text"
-                                value="{{ $asset->wifi_brand ?? 'N/A' }}"
-                                class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
-                                readonly>
+                            </div>
 
                         </div>
 
 
-                        <div>
+                        <span class="text-[9px] font-bold uppercase bg-cyan-50 text-cyan-600 px-2 py-1 rounded-md">
 
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                            {{ $networkAdapters->count() }} adaptador(es)
 
-                                Modelo Tarjeta WiFi
+                        </span>
 
-                            </label>
+                    </div>
 
-                            <input type="text"
-                                value="{{ $asset->wifi_model ?? 'N/A' }}"
-                                class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
-                                readonly>
+
+                    {{-- =================================================
+                         CONFIGURACIÓN GENERAL
+                    ================================================== --}}
+
+                    @if($network)
+
+                        <div class="mb-5">
+
+                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">
+                                Configuración general
+                            </h4>
+
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+
+                                {{-- ESTADO --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        Conectividad
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $network->connected ? 'Conectado' : 'Desconectado' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- GATEWAY --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        Gateway
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $network->gateway ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2 font-mono"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- DNS --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        Servidor DNS
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $network->dns_server ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2 font-mono"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- DHCP --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        DHCP
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $network->dhcp_enabled ? 'Habilitado' : 'Deshabilitado' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                        readonly>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    @else
+
+                        <div class="py-6 text-center text-xs text-slate-400 italic">
+
+                            No hay configuración general de red registrada.
+
+                        </div>
+
+                    @endif
+
+
+                    {{-- =================================================
+                         ADAPTADOR PRINCIPAL
+                    ================================================== --}}
+
+                    @if($primaryAdapter)
+
+                        <div class="mb-5">
+
+                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">
+                                Adaptador principal
+                            </h4>
+
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+
+
+                                {{-- NOMBRE --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        Adaptador
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $primaryAdapter->name ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- DESCRIPCIÓN --}}
+
+                                <div class="md:col-span-2">
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        Descripción
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $primaryAdapter->description ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- TIPO --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        Tipo
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $primaryAdapter->type ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- MAC --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        MAC
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $primaryAdapter->mac_address ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2 font-mono"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- IPV4 --}}
+
+                                <div>
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        IPv4
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $primaryAdapter->ipv4 ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2 font-mono"
+                                        readonly>
+
+                                </div>
+
+
+                                {{-- IPV6 --}}
+
+                                <div class="md:col-span-2">
+
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                        IPv6
+                                    </label>
+
+                                    <input type="text"
+                                        value="{{ $primaryAdapter->ipv6 ?? 'N/A' }}"
+                                        class="w-full {{ $readonlyClass }} text-xs rounded-lg px-3 py-2 font-mono"
+                                        readonly>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    @endif
+
+
+                    {{-- =================================================
+                         TODOS LOS ADAPTADORES
+                    ================================================== --}}
+
+                    <div>
+
+                        <div class="flex items-center justify-between mb-3">
+
+                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                Adaptadores detectados
+                            </h4>
+
+                            <span class="text-[9px] text-slate-400">
+                                {{ $networkAdapters->count() }} registrado(s)
+                            </span>
+
+                        </div>
+
+
+                        <div class="overflow-x-auto">
+
+                            <table class="w-full text-left text-xs">
+
+                                <thead class="bg-slate-50 text-slate-500 uppercase">
+
+                                    <tr>
+
+                                        <th class="px-3 py-2">
+                                            Adaptador
+                                        </th>
+
+                                        <th class="px-3 py-2">
+                                            Tipo
+                                        </th>
+
+                                        <th class="px-3 py-2">
+                                            MAC
+                                        </th>
+
+                                        <th class="px-3 py-2">
+                                            IPv4
+                                        </th>
+
+                                        <th class="px-3 py-2">
+                                            IPv6
+                                        </th>
+
+                                        <th class="px-3 py-2">
+                                            Estado
+                                        </th>
+
+                                        <th class="px-3 py-2">
+                                            Principal
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody class="divide-y divide-slate-100">
+
+                                    @forelse($networkAdapters as $adapter)
+
+                                        <tr>
+
+                                            <td class="px-3 py-2">
+
+                                                <div class="font-medium text-slate-700">
+                                                    {{ $adapter->name ?? 'N/A' }}
+                                                </div>
+
+                                                @if($adapter->description)
+
+                                                    <div class="text-[9px] text-slate-400 truncate max-w-[220px]">
+
+                                                        {{ $adapter->description }}
+
+                                                    </div>
+
+                                                @endif
+
+                                            </td>
+
+
+                                            <td class="px-3 py-2">
+                                                {{ $adapter->type ?? 'N/A' }}
+                                            </td>
+
+
+                                            <td class="px-3 py-2 font-mono text-[10px]">
+                                                {{ $adapter->mac_address ?? 'N/A' }}
+                                            </td>
+
+
+                                            <td class="px-3 py-2 font-mono text-[10px]">
+                                                {{ $adapter->ipv4 ?? 'N/A' }}
+                                            </td>
+
+
+                                            <td class="px-3 py-2 font-mono text-[10px]">
+                                                {{ $adapter->ipv6 ?? 'N/A' }}
+                                            </td>
+
+
+                                            <td class="px-3 py-2">
+
+                                                @if($adapter->connected)
+
+                                                    <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-emerald-50 text-emerald-600 px-2 py-1 rounded-md">
+                                                        Conectado
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-slate-100 text-slate-500 px-2 py-1 rounded-md">
+                                                        Desconectado
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+
+                                            <td class="px-3 py-2">
+
+                                                @if($adapter->is_primary)
+
+                                                    <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-blue-50 text-blue-600 px-2 py-1 rounded-md">
+                                                        Sí
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-slate-400">
+                                                        No
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="7"
+                                                class="px-3 py-6 text-center text-slate-400 italic">
+
+                                                No hay adaptadores de red registrados por SIGMA Agent.
+
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
 
                         </div>
 
@@ -1371,17 +1720,13 @@
                             </svg>
 
                             <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-
                                 9. Batería
-
                             </h3>
 
                         </div>
 
                         <span class="text-[9px] font-bold uppercase bg-amber-50 text-amber-600 px-2 py-1 rounded-md">
-
                             SIGMA Agent
-
                         </span>
 
                     </div>
@@ -1404,6 +1749,7 @@
 
                             </div>
 
+
                             <div>
 
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
@@ -1416,6 +1762,7 @@
                                     readonly>
 
                             </div>
+
 
                             <div>
 
@@ -1430,6 +1777,7 @@
 
                             </div>
 
+
                             <div>
 
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
@@ -1443,6 +1791,7 @@
 
                             </div>
 
+
                             <div>
 
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">
@@ -1455,6 +1804,7 @@
                                     readonly>
 
                             </div>
+
 
                             <div>
 
@@ -1484,228 +1834,164 @@
                 </div>
 
 
-                {{-- =================================================
-                     10. MONITORES Y PERIFÉRICOS
-                ================================================== --}}
+{{-- MONITORES --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+<div class="mb-5">
 
-                    <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+    <div class="flex items-center justify-between mb-3">
 
-                        <svg class="w-5 h-5 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24">
+        <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            Monitores detectados por SIGMA
+        </h4>
 
-                            <path stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <span class="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md font-bold">
+            {{ $asset->monitors->count() }} monitor(es)
+        </span>
 
-                        </svg>
+    </div>
 
-                        <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
 
-                            10. Periféricos y Seguridad
+    <div class="overflow-x-auto">
 
-                        </h3>
+        <table class="w-full text-left text-xs">
 
-                    </div>
+            <thead class="bg-slate-50 text-slate-500 uppercase">
 
+                <tr>
 
-                    {{-- MONITORES DETECTADOS --}}
+                    <th class="px-3 py-2">
+                        Marca
+                    </th>
 
-                    <div class="mb-5">
+                    <th class="px-3 py-2">
+                        Modelo
+                    </th>
 
-                        <div class="flex items-center justify-between mb-3">
+                    <th class="px-3 py-2">
+                        Serial
+                    </th>
 
-                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="px-3 py-2">
+                        Código
+                    </th>
 
-                                Monitores detectados por SIGMA
+                    <th class="px-3 py-2">
+                        Tamaño
+                    </th>
 
-                            </h4>
+                    <th class="px-3 py-2">
+                        Resolución
+                    </th>
 
-                            <span class="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-md font-bold">
+                    <th class="px-3 py-2">
+                        Hz
+                    </th>
 
-                                {{ $asset->monitors->count() }} monitor(es)
+                    <th class="px-3 py-2">
+                        Activo fijo
+                    </th>
 
-                            </span>
+                </tr>
 
-                        </div>
+            </thead>
 
 
-                        <div class="overflow-x-auto">
+            <tbody class="divide-y divide-slate-100">
 
-                            <table class="w-full text-left text-xs">
+                @forelse($asset->monitors as $monitor)
 
-                                <thead class="bg-slate-50 text-slate-500 uppercase">
+                    <tr>
 
-                                    <tr>
+                        {{-- MARCA --}}
 
-                                        <th class="px-3 py-2">
-                                            Marca
-                                        </th>
+                        <td class="px-3 py-2">
+                            {{ $monitor->brand ?? 'N/A' }}
+                        </td>
 
-                                        <th class="px-3 py-2">
-                                            Modelo
-                                        </th>
 
-                                        <th class="px-3 py-2">
-                                            Serial
-                                        </th>
+                        {{-- MODELO --}}
 
-                                        <th class="px-3 py-2">
-                                            Código
-                                        </th>
+                        <td class="px-3 py-2">
+                            {{ $monitor->model ?? 'N/A' }}
+                        </td>
 
-                                        <th class="px-3 py-2">
-                                            Tamaño
-                                        </th>
 
-                                        <th class="px-3 py-2">
-                                            Resolución
-                                        </th>
+                        {{-- SERIAL --}}
 
-                                        <th class="px-3 py-2">
-                                            Hz
-                                        </th>
+                        <td class="px-3 py-2 font-mono text-[10px]">
+                            {{ $monitor->serial_number ?? 'N/A' }}
+                        </td>
 
-                                    </tr>
 
-                                </thead>
+                        {{-- CÓDIGO FABRICANTE --}}
 
-                                <tbody class="divide-y divide-slate-100">
+                        <td class="px-3 py-2">
+                            {{ $monitor->manufacturer_code ?? 'N/A' }}
+                        </td>
 
-                                    @forelse($asset->monitors as $monitor)
 
-                                        <tr>
+                        {{-- TAMAÑO --}}
 
-                                            <td class="px-3 py-2">
-                                                {{ $monitor->brand ?? 'N/A' }}
-                                            </td>
+                        <td class="px-3 py-2">
+                            {{ $monitor->size ?? 'N/A' }}
+                        </td>
 
-                                            <td class="px-3 py-2">
-                                                {{ $monitor->model ?? 'N/A' }}
-                                            </td>
 
-                                            <td class="px-3 py-2 font-mono text-[10px]">
-                                                {{ $monitor->serial_number ?? 'N/A' }}
-                                            </td>
+                        {{-- RESOLUCIÓN --}}
 
-                                            <td class="px-3 py-2">
-                                                {{ $monitor->manufacturer_code ?? 'N/A' }}
-                                            </td>
+                        <td class="px-3 py-2">
+                            {{ $monitor->resolution ?? 'N/A' }}
+                        </td>
 
-                                            <td class="px-3 py-2">
-                                                {{ $monitor->size ?? 'N/A' }}
-                                            </td>
 
-                                            <td class="px-3 py-2">
-                                                {{ $monitor->resolution ?? 'N/A' }}
-                                            </td>
+                        {{-- HZ --}}
 
-                                            <td class="px-3 py-2">
-                                                {{ $monitor->refresh_rate ?? 'N/A' }}
-                                            </td>
+                        <td class="px-3 py-2">
+                            {{ $monitor->refresh_rate ?? 'N/A' }}
+                        </td>
 
-                                        </tr>
 
-                                    @empty
+                        {{-- ACTIVO FIJO --}}
 
-                                        <tr>
+                        <td class="px-3 py-2 min-w-[180px]">
 
-                                            <td colspan="7"
-                                                class="px-3 py-5 text-center text-slate-400 italic">
+                            <input
+                                type="text"
+                                name="monitors[{{ $monitor->id }}][fixed_asset_code]"
+                                value="{{ old(
+                                    'monitors.' . $monitor->id . '.fixed_asset_code',
+                                    $monitor->fixed_asset_code
+                                ) }}"
+                                placeholder="Activo fijo"
+                                class="w-full {{ $editableClass }} text-xs rounded-lg px-3 py-2"
+                            >
 
-                                                No hay monitores registrados.
+                        </td>
 
-                                            </td>
+                    </tr>
 
-                                        </tr>
+                @empty
 
-                                    @endforelse
+                    <tr>
 
-                                </tbody>
+                        <td colspan="8"
+                            class="px-3 py-5 text-center text-slate-400 italic">
 
-                            </table>
+                            No hay monitores registrados.
 
-                        </div>
+                        </td>
 
-                    </div>
+                    </tr>
 
+                @endforelse
 
-                    {{-- PERIFÉRICOS MANUALES --}}
+            </tbody>
 
-                    <div class="border-t border-slate-100 pt-5">
+        </table>
 
-                        <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">
+    </div>
 
-                            Elementos administrativos
-
-                        </h4>
-
-
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-
-
-                            {{-- TECLADO --}}
-
-                            <div>
-
-                                <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
-
-                                    Serial Teclado
-
-                                </label>
-
-                                <input type="text"
-                                    name="keyboard_serial"
-                                    value="{{ old('keyboard_serial', $asset->keyboard_serial) }}"
-                                    class="w-full {{ $editableClass }} text-xs rounded-lg px-3 py-2">
-
-                            </div>
-
-
-                            {{-- MOUSE --}}
-
-                            <div>
-
-                                <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
-
-                                    Serial Mouse
-
-                                </label>
-
-                                <input type="text"
-                                    name="mouse_serial"
-                                    value="{{ old('mouse_serial', $asset->mouse_serial) }}"
-                                    class="w-full {{ $editableClass }} text-xs rounded-lg px-3 py-2">
-
-                            </div>
-
-
-                            {{-- GUAYA --}}
-
-                            <div>
-
-                                <label class="block text-[10px] font-bold text-slate-800 uppercase mb-1">
-
-                                    Guaya Seguridad
-
-                                </label>
-
-                                <input type="text"
-                                    name="security_guaya"
-                                    value="{{ old('security_guaya', $asset->security_guaya) }}"
-                                    class="w-full {{ $editableClass }} text-xs rounded-lg px-3 py-2">
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
+</div>
 
 
                 {{-- =================================================
@@ -1713,7 +1999,6 @@
                 ================================================== --}}
 
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6">
-
 
                     <div class="p-4 bg-gray-50/75 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
 
@@ -1734,15 +2019,11 @@
                             <div>
 
                                 <h3 class="font-bold text-gray-800 uppercase tracking-wider text-xs">
-
                                     11. Software Instalado
-
                                 </h3>
 
                                 <p class="text-[10px] text-gray-400 font-medium">
-
                                     Aplicaciones detectadas por SIGMA Agent.
-
                                 </p>
 
                             </div>
@@ -1799,21 +2080,15 @@
                                 <tr>
 
                                     <th class="px-4 py-3 font-bold text-gray-700">
-
                                         Nombre de la Aplicación
-
                                     </th>
 
                                     <th class="px-4 py-3 font-bold text-gray-700 text-center w-40">
-
                                         Versión
-
                                     </th>
 
                                     <th class="px-4 py-3 font-bold text-gray-700 text-center w-48">
-
                                         Fecha de Registro
-
                                     </th>
 
                                 </tr>
@@ -1829,21 +2104,15 @@
                                     <tr class="software-row hover:bg-gray-50/70 transition-colors">
 
                                         <td class="px-4 py-2 font-medium text-gray-800 software-name">
-
                                             {{ $app->name }}
-
                                         </td>
 
                                         <td class="px-4 py-2 text-center font-mono text-[11px] text-gray-500">
-
                                             {{ $app->version ?? 'N/A' }}
-
                                         </td>
 
                                         <td class="px-4 py-2 text-center text-gray-400">
-
                                             {{ $app->created_at?->format('d/m/Y H:i') ?? 'N/A' }}
-
                                         </td>
 
                                     </tr>
@@ -1942,69 +2211,82 @@
         |--------------------------------------------------------------------------
         */
 
-        const softwareSearch = document.getElementById('softwareSearch');
+        const softwareSearch =
+            document.getElementById('softwareSearch');
 
         if (softwareSearch) {
 
-            softwareSearch.addEventListener('input', function (e) {
+            softwareSearch.addEventListener(
+                'input',
+                function (e) {
 
-                const term = e.target.value
-                    .toLowerCase()
-                    .trim();
+                    const term =
+                        e.target.value
+                            .toLowerCase()
+                            .trim();
 
-                const rows = document.querySelectorAll('.software-row');
+                    const rows =
+                        document.querySelectorAll(
+                            '.software-row'
+                        );
 
-                let visibles = 0;
+                    let visibles = 0;
 
-                rows.forEach(row => {
+                    rows.forEach(row => {
 
-                    const nameElement =
-                        row.querySelector('.software-name');
+                        const nameElement =
+                            row.querySelector(
+                                '.software-name'
+                            );
 
-                    const name =
-                        nameElement?.textContent
-                            .toLowerCase() ?? '';
+                        const name =
+                            nameElement?.textContent
+                                .toLowerCase() ?? '';
 
-                    const version =
-                        row.children[1]?.textContent
-                            .toLowerCase() ?? '';
+                        const version =
+                            row.children[1]
+                                ?.textContent
+                                .toLowerCase() ?? '';
+
+                        if (
+                            name.includes(term) ||
+                            version.includes(term)
+                        ) {
+
+                            row.classList.remove('hidden');
+
+                            visibles++;
+
+                        } else {
+
+                            row.classList.add('hidden');
+
+                        }
+
+                    });
+
+
+                    const noResultsRow =
+                        document.getElementById(
+                            'noSoftwareResults'
+                        );
 
                     if (
-                        name.includes(term) ||
-                        version.includes(term)
+                        noResultsRow &&
+                        visibles === 0 &&
+                        term.length > 0
                     ) {
 
-                        row.classList.remove('hidden');
+                        noResultsRow.classList.remove('hidden');
 
-                        visibles++;
+                    } else if (noResultsRow) {
 
-                    } else {
-
-                        row.classList.add('hidden');
+                        noResultsRow.classList.add('hidden');
 
                     }
 
-                });
-
-
-                const noResultsRow =
-                    document.getElementById('noSoftwareResults');
-
-                if (
-                    noResultsRow &&
-                    visibles === 0 &&
-                    term.length > 0
-                ) {
-
-                    noResultsRow.classList.remove('hidden');
-
-                } else if (noResultsRow) {
-
-                    noResultsRow.classList.add('hidden');
-
                 }
-
-            });
+            );
 
         }
 
@@ -2076,7 +2358,6 @@
                 }
 
             });
-
         }
 
     </script>
