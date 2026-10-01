@@ -10,23 +10,36 @@ class WindowsProcessor extends BaseProcessor
     {
         $values = [
 
-            'windows_version' => $windows['version'] ?? null,
+            'windows_version' =>
+                $windows['version'] ?? null,
 
-            'windows_build' => $windows['build'] ?? null,
+            'windows_build' =>
+                $windows['build'] ?? null,
 
-            'windows_edition' => $windows['edition'] ?? null,
+            'windows_edition' =>
+                $windows['edition'] ?? null,
 
-            'os_version' => $windows['name'] ?? null,
+            'os_version' =>
+                $windows['name'] ?? null,
 
-            'license_status' => $windows['licenseStatus'] ?? null,
+            'license_status' =>
+                $windows['licenseStatus'] ?? null,
 
-            'secure_boot' => $windows['secureBoot'] ?? false,
+            'secure_boot' =>
+                $windows['secureBoot'] ?? false,
 
-            'bitlocker_status' => $windows['bitlockerStatus'] ?? null,
+            'bitlocker_status' =>
+                $windows['bitlockerStatus'] ?? null,
 
-            'tpm_version' => $windows['tpmVersion'] ?? null,
+            'tpm_version' =>
+                $windows['tpmVersion'] ?? null,
 
-            'uptime_minutes' => $windows['uptimeMinutes'] ?? null,
+            'uptime_minutes' =>
+                $windows['uptimeMinutes'] ?? null,
+
+            // NUEVO
+            'domain_name' =>
+                $windows['domainName'] ?? null,
         ];
 
         $values = array_filter(
@@ -34,6 +47,9 @@ class WindowsProcessor extends BaseProcessor
             static fn ($value) => $value !== null
         );
 
-        return $this->updateWithHistory($asset, $values);
+        return $this->updateWithHistory(
+            $asset,
+            $values
+        );
     }
 }

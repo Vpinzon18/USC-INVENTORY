@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\BuildingController;
 use App\Http\Controllers\Admin\CampusController;
 use App\Http\Controllers\Admin\RoomController;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -40,9 +40,8 @@ Route::get('/seleccion', function () {
 })->middleware(['auth'])->name('selector');
 
 // EL DASHBOARD DE INVENTARIO
-Route::get('/dashboard', [InventoryController::class, 'index'])
-    ->middleware(['auth'])
-    ->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index']);
+
 
 // RUTAS PROTEGIDAS PARA ADMINISTRADORES (ROL 1)
 Route::middleware(['auth', 'role:1'])->group(function () {
@@ -107,8 +106,12 @@ Route::get('/schedules/calendar', function () {
 
 // RUTAS PROTEGIDAS PARA LA ADMINISTRACION DEL SUB MODULO DE INVENTARIO HV
 Route::resource('assets', AssetController::class);
-Route::get('assets/{asset}/preview', [AssetController::class, 'previewPdf'])->name('assets.preview');
-Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'downloadPdf'])->name('assets.download.pdf');
+Route::get('assets/{asset}/preview', [AssetController::class, 'previewPdf'])
+    ->name('assets.preview');
+Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'downloadPdf'])
+    ->name('assets.download.pdf');
+    Route::get('assets/{asset}', [AssetController::class, 'show'])
+    ->name('assets.show');
 
 // RUTAS DE VALIDACION PARA EVITAR CONFLICTOS CON LOS MOVIMIENTOS DE ACTIVOS.
 Route::post('/movements/validate-conflict', [App\Http\Controllers\MovementController::class, 'validateConflict'])->name('movements.validate-conflict');

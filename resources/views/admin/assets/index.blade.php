@@ -97,7 +97,7 @@
 
                             <x-enterprise-select name="campus_id" placeholder="Sede" endpoint="/api/filters/campuses" initial-value="{{ request('campus_id') }}" initial-text="{{ $selectedCampusName ?? '' }}" />
                             <x-enterprise-select name="building_id" placeholder="Bloque / Edificio" endpoint="/api/filters/buildings" initial-value="{{ request('building_id') }}" initial-text="{{ $selectedBuildingName ?? '' }}" />
-                            <x-enterprise-select name="room_id" placeholder="Oficina / Salón" endpoint="/api/filters/rooms" initial-value="{{ request('room_id') }}" initial-text="{{ $selectedRoomName ?? '' }}" />
+                            <x-enterprise-select name="room_id" placeholder="Oficina / Salón" endpoint="/api/filters/api/sigma-filters/rooms" initial-value="{{ request('room_id') }}" initial-text="{{ $selectedRoomName ?? '' }}" />
                             <x-enterprise-select name="custodian_id" placeholder="Responsable" endpoint="/api/filters/custodians" initial-value="{{ request('custodian_id') }}" initial-text="{{ $selectedCustodianName ?? '' }}" />
 
                             <div class="flex flex-col gap-1">
@@ -114,8 +114,8 @@
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Conectividad</label>
                                 <select name="connectivity" class="w-full text-sm border border-slate-300 rounded-lg shadow-sm h-[42px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
                                     <option value="">Todos los estados</option>
-                                    <option value="online" {{ request('connectivity') == 'online' ? 'selected' : '' }}>🟢 En Línea</option>
-                                    <option value="offline" {{ request('connectivity') == 'offline' ? 'selected' : '' }}>🔴 Desconectados</option>
+                                    <option value="online" {{ request('connectivity') == 'online' ? 'selected' : '' }}> En Línea</option>
+                                    <option value="offline" {{ request('connectivity') == 'offline' ? 'selected' : '' }}> Desconectados</option>
                                 </select>
                             </div>
 
@@ -199,14 +199,37 @@
                         </div>
 
                         <div class="flex flex-col gap-1.5">
-                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Red & S.O.</div>
-                            <div class="text-sm font-medium text-slate-800 flex items-center gap-1.5">
-                                <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                <span class="truncate font-mono">{{ $asset->ip_address ?? '0.0.0.0' }}</span>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Red & S.O.
                             </div>
-                            <div class="text-xs text-slate-500 truncate" title="{{ $asset->os_version }}">
+
+                            @php
+                            $primaryAdapter = $asset->network?->adapters
+                            ?->firstWhere('is_primary', true);
+
+                            $networkAdapter = $primaryAdapter
+                            ?? $asset->network?->adapters
+                            ?->firstWhere('connected', true);
+                            @endphp
+
+                            <div class="text-sm font-medium text-slate-800 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-slate-400 shrink-0"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="1.5"
+                                        d="M8 12h8m-8 4h5m-9-8h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2 2 0 002 2z" />
+                                </svg>
+
+                                <span class="truncate font-mono">
+                                    {{ $networkAdapter?->ipv4 ?? 'Sin IP' }}
+                                </span>
+                            </div>
+
+                            <div class="text-xs text-slate-500 truncate"
+                                title="{{ $asset->os_version }}">
                                 {{ $asset->os_version ?? 'SO no reportado' }}
                             </div>
                         </div>
@@ -237,13 +260,18 @@
                     <div class="p-4 bg-slate-50 lg:bg-transparent border-t lg:border-t-0 lg:border-l border-slate-100 flex flex-row flex-wrap items-center justify-end gap-2 shrink-0 lg:w-auto"
                         :class="{'flex-row bg-slate-50 border-t': viewMode === 'grid'}">
 
-                        <a href="{{ route('assets.preview', $asset->id) }}" target="_blank"
+                      <a href="{{ route('assets.show', $asset) }}"
+                            target="_blank"
                             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-100 hover:border-blue-600 rounded-lg text-sm font-semibold transition-all shadow-sm"
                             title="Ver Hoja de Vida Completa">
+
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
+
                             <span>Ver</span>
                         </a>
 
@@ -256,7 +284,7 @@
                             <span>Editar</span>
                         </a>
 
-                        <a href="{{ route('assets.download.pdf', $asset->id) }}"
+                        <a href="{{ route('assets.preview', $asset->id) }}"target="_blank"
                             class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200 rounded-lg text-sm font-medium transition-all shadow-sm"
                             title="Descargar Acta PDF">
                             <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,5 +360,48 @@
                 });
             });
         });
+    </script>
+
+    <div
+        id="save-messages"
+        data-success="{{ session('success') }}"
+        data-error="{{ session('error') }}"></div>
+    <script>
+        const saveMessages = document.getElementById('save-messages');
+
+        const saveSuccess = saveMessages?.dataset.success || '';
+        const saveError = saveMessages?.dataset.error || '';
+
+        if (saveSuccess) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Guardado correctamente!',
+                text: saveSuccess,
+                confirmButtonText: 'Aceptar',
+                timer: 2500,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'rounded-2xl',
+                    title: 'text-lg font-bold text-slate-800',
+                    htmlContainer: 'text-sm text-slate-500',
+                    confirmButton: 'rounded-lg px-6 py-2.5 text-xs font-bold uppercase'
+                }
+            });
+        }
+
+        if (saveError) {
+            Swal.fire({
+                icon: 'error',
+                title: 'No se pudo guardar',
+                text: saveError,
+                confirmButtonText: 'Aceptar',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    title: 'text-lg font-bold text-slate-800',
+                    htmlContainer: 'text-sm text-slate-500',
+                    confirmButton: 'rounded-lg px-6 py-2.5 text-xs font-bold uppercase'
+                }
+            });
+        }
     </script>
 </x-app-layout>

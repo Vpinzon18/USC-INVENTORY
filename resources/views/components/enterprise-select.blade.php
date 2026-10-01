@@ -92,17 +92,47 @@ document.addEventListener('alpine:init', () => {
             this.closeMenu();
         },
         async fetchData() {
-            this.loading = true;
-            try {
-                // Petición AJAX con la búsqueda
-                let response = await fetch(`${this.endpoint}?q=${encodeURIComponent(this.search)}`);
-                this.options = await response.json();
-            } catch (e) {
-                console.error("Error cargando filtros:", e);
-                this.options = [];
-            }
-            this.loading = false;
+    this.loading = true;
+
+    try {
+        const search = encodeURIComponent(this.search);
+
+        // Enviamos ambos parámetros para mantener compatibilidad
+        // con los endpoints existentes.
+        const response = await fetch(
+            `${this.endpoint}?q=${search}&search=${search}`
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
+
+        const data = await response.json();
+
+        this.options = Array.isArray(data)
+            ? data.map(item => ({
+                id: item.id,
+                primary:
+                    item.primary ??
+                    item.name ??
+                    item.nomenclatura ??
+                    item.text ??
+                    item.label ??
+                    `ID: ${item.id}`,
+
+                secondary:
+                    item.secondary ??
+                    ''
+            }))
+            : [];
+
+    } catch (e) {
+        console.error("Error cargando filtros:", e);
+        this.options = [];
+    }
+
+    this.loading = false;
+}
     }))
 })
 </script>

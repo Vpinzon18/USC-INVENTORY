@@ -116,10 +116,10 @@ class Asset extends Model
         // =========================================================
         // BIOS
         // =========================================================
-
-        'bios_version',
-        'bios_date',
-        'manufacturer',
+'bios_version',
+'bios_manufacturer',
+'bios_serial',
+'bios_release_date',
 
         // =========================================================
         // PERIFÉRICOS / SEGURIDAD

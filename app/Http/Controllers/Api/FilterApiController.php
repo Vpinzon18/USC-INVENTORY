@@ -170,24 +170,35 @@ class FilterApiController extends Controller
         return response()->json($buildings);
     }
 
-    // Buscar Salones / Espacios (Ahora filtrable por Bloque)
-    public function getRooms(Request $request)
-    {
-        $search = $request->query('search');
-        $buildingId = $request->query('building_id'); // Parámetro en cascada
+public function getRooms(Request $request)
+{
+    $search = $request->query('search');
+    $buildingId = $request->query('building_id');
 
-        $rooms = Room::select('id', 'nomenclatura')
-            ->when($search, function($query) use ($search) {
-                $query->where('nomenclatura', 'ilike', "%{$search}%");
-            })
-            ->when($buildingId, function($query) use ($buildingId) {
-                $query->where('building_id', $buildingId);
-            })
-            ->limit(20)
-            ->get();
+    $rooms = Room::select('id', 'nomenclatura', 'name')
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nomenclatura', 'ilike', "%{$search}%")
+                  ->orWhere('name', 'ilike', "%{$search}%");
+            });
+        })
+        ->when($buildingId, fn($query) =>
+            $query->where('building_id', $buildingId)
+        )
+        ->orderBy('nomenclatura')
+        ->limit(20)
+        ->get();
 
-        return response()->json($rooms);
-    }
+    return response()->json(
+        $rooms->map(function ($room) {
+            return [
+                'id' => $room->id,
+                'primary' => $room->nomenclatura,
+                'secondary' => $room->name ?? 'Sin nombre',
+            ];
+        })->values()
+    );
+}
 
 public function getAssets(Request $request)
 {
