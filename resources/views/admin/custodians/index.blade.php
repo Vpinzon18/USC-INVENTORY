@@ -30,20 +30,20 @@
                 </div>
             </div>
 
-                <div class="pt-3 border-t border-gray-100 flex flex-col xl:flex-row justify-between gap-4">
+                <div class="sigma-filter-toolbar sigma-filter-row mt-4 rounded-xl flex flex-col xl:flex-row justify-between gap-4">
                     
-                    <form id="search-form" method="GET" action="{{ route('custodians.index') }}" class="w-full xl:w-1/2">
-                        @if(request('per_page'))
-                            <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+                    <form id="search-form" method="GET" action="{{ route('custodians.index') }}" class="sigma-filter-search w-full xl:w-1/2">
+                        @if(data_get($filters, 'per_page', ''))
+                            <input type="hidden" name="per_page" value="{{ data_get($filters, 'per_page', '') }}">
                         @endif
-                        @if(request('quick'))
-                            <input type="hidden" name="quick" value="{{ request('quick') }}">
+                        @if(data_get($filters, 'quick', ''))
+                            <input type="hidden" name="quick" value="{{ data_get($filters, 'quick', '') }}">
                         @endif
 
                         <div class="w-full">
                             <label class="block text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Buscador Inteligente</label>
                             <div class="relative group">
-                                <input type="text" name="search" value="{{ request('search') }}" 
+                                <input type="text" name="search" value="{{ data_get($filters, 'search', '') }}"
                                        placeholder="Escribe nombre, documento o área..." 
                                        class="w-full border-gray-200 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all shadow-sm text-gray-700 placeholder-gray-400 outline-none">
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -55,10 +55,10 @@
                         </div>
                     </form>
 
-                    <div class="flex items-end gap-2 overflow-x-auto pb-1 xl:pb-0 hide-scrollbar w-full xl:w-auto">
-                        <a href="{{ route('custodians.index') }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ !request('quick') ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Todos</a>
-                        <a href="{{ route('custodians.index', ['quick' => 'with_assets']) }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ request('quick') === 'with_assets' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Tienen Equipos</a>
-                        <a href="{{ route('custodians.index', ['quick' => 'no_assets']) }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ request('quick') === 'no_assets' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Sin Equipos</a>
+                    <div class="sigma-filter-actions flex items-end gap-2 overflow-x-auto pb-1 xl:pb-0 hide-scrollbar w-full xl:w-auto">
+                        <a href="{{ route('custodians.index') }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ !data_get($filters, 'quick', '') ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Todos</a>
+                        <a href="{{ route('custodians.index', ['quick' => 'with_assets']) }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ data_get($filters, 'quick', '') === 'with_assets' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Tienen Equipos</a>
+                        <a href="{{ route('custodians.index', ['quick' => 'no_assets']) }}" class="px-5 py-3 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm {{ data_get($filters, 'quick', '') === 'no_assets' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200' }}">Sin Equipos</a>
                     </div>
 
                 </div>
@@ -157,33 +157,7 @@
                 </table>
             </div>
 
-            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 z-30">
-                <div class="flex items-center gap-2">
-                    <form action="{{ route('custodians.index') }}" method="GET" class="flex items-center gap-2">
-                        
-                        @if(request('search'))
-                            <input type="hidden" name="search" value="{{ request('search') }}">
-                        @endif
-                        @if(request('quick'))
-                            <input type="hidden" name="quick" value="{{ request('quick') }}">
-                        @endif
-                        
-                        <label for="per_page_bottom" class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mostrar:</label>
-                        <select name="per_page" id="per_page_bottom" onchange="this.form.submit()" 
-                                class="border-gray-200 rounded-xl py-1.5 pl-3 pr-8 text-xs font-bold text-gray-700 bg-white shadow-sm focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all cursor-pointer">
-                            <option value="5" {{ $perPage == 5 ? 'selected' : '' }}>5 filas</option>
-                            <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 filas</option>
-                            <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 filas</option>
-                            <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 filas</option>
-                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 filas</option>
-                            <option value="1000" {{ $perPage == 1000 ? 'selected' : '' }}>Todo</option>
-                        </select>
-                    </form>
-                </div>
-                <div class="w-full sm:w-auto font-medium text-xs text-gray-600">
-                    {{ $custodians->links() }}
-                </div>
-            </div>
+            <x-pagination-footer :paginator="$custodians" label="responsables" />
 
         </div>
     </div>

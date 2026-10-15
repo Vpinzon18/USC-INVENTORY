@@ -18,16 +18,18 @@
                 </div>
 
                 <div class="shrink-0">
+                @if(in_array((int) Auth::user()->role, [1, 2], true))
                     <a href="{{ route('schedules.create') }}" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 w-full sm:w-auto">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                         Programar Equipo
                     </a>
                 </div>
+                @endif
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px]">
+            <div class="sigma-filter-panel overflow-hidden flex flex-col min-h-[500px]">
                 
-                <div class="p-5 border-b border-slate-100 bg-slate-50/50"
+                <div class="sigma-filter-section p-5"
                      x-data="{ 
                         rules: {{ json_encode($currentRules ?? [['field' => 'asset', 'operator' => 'contains', 'value' => '', 'text' => '']]) }},
                         addRule() {
@@ -249,22 +251,7 @@
                     </table>
                 </div>
 
-                <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 z-30">
-                    <div class="flex items-center gap-3">
-                        <label for="per_page_select" class="text-xs font-bold text-slate-500 uppercase tracking-wide">Mostrar:</label>
-                        <select id="per_page_select" onchange="document.querySelector('input[name=per_page]').value = this.value; document.getElementById('filterForm').submit();" 
-                                class="border-slate-300 rounded-lg py-1.5 pl-3 pr-8 text-sm font-medium text-slate-700 bg-white shadow-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all cursor-pointer">
-                            <option value="5" {{ $perPage == 5 ? 'selected' : '' }}>5 filas</option>
-                            <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10 filas</option>
-                            <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 filas</option>
-                            <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 filas</option>
-                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 filas</option>
-                        </select>
-                    </div>
-                    <div class="w-full sm:w-auto font-medium text-sm text-slate-600">
-                        {{ $schedules->links() }}
-                    </div>
-                </div>
+                <x-pagination-footer :paginator="$schedules" label="programaciones" />
 
             </div>
         </div>

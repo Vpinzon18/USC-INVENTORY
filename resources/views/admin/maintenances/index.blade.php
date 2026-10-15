@@ -29,7 +29,7 @@
             </div>
 
             <!-- MOTOR DE FILTROS COLAPSABLE -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-5 relative z-20">
+            <div class="sigma-filter-panel p-4 mb-5 relative z-20">
                 <!-- CABECERA DEL FILTRO (SIEMPRE VISIBLE) -->
                 <div class="flex items-center justify-between cursor-pointer" @click="showFilters = !showFilters">
                     <div class="flex items-center gap-2">
@@ -272,9 +272,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-                    {{ $services->links() }}
-                </div>
+                <x-pagination-footer :paginator="$services" label="servicios" />
             </div>
         </div>
     </div>

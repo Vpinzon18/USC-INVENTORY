@@ -7,6 +7,11 @@
          data-url-campuses="{{ url('api/filters/api/sigma-filters/sedes') }}"
          data-url-buildings="{{ url('api/filters/api/sigma-filters/buildings') }}" 
          data-url-types="{{ url('api/filters/api/sigma-filters/room-types') }}"
+         data-initial-search="{{ data_get($filters, 'search', '') }}"
+         data-initial-per-page="{{ data_get($filters, 'per_page', '15') }}"
+         data-initial-campus="{{ data_get($filters, 'campus_id', '') }}"
+         data-initial-building="{{ data_get($filters, 'building_id', '') }}"
+         data-initial-type="{{ data_get($filters, 'room_type_id', '') }}"
          x-cloak>
          
         <div class="max-w-[1400px] w-[96%] mx-auto space-y-6">
@@ -41,26 +46,26 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col relative z-30 transition-all">
+            <div class="sigma-filter-panel sigma-infrastructure-filters flex flex-col relative z-30 transition-all">
                 
-                <div class="p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-100">
-                    <div class="relative w-full md:w-1/2 lg:w-2/5">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                            <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <div class="sigma-filter-row flex items-center gap-3">
+                    <div class="sigma-filter-search relative w-full flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
                         <input type="text" x-model="search" @input.debounce.500ms="applyFilters()" placeholder="Buscar oficina, nomenclatura o piso..."
-                            class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all shadow-inner outline-none">
+                            class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all shadow-sm">
                     </div>
 
-                    <div class="flex items-center gap-3 w-full md:w-auto">
-                        <button @click="showFilters = !showFilters" class="w-full md:w-auto px-5 py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-extrabold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 focus:ring-4 focus:ring-slate-100 outline-none">
+                    <div class="sigma-filter-actions flex items-center justify-end">
+                        <button @click="showFilters = !showFilters" class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs font-extrabold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 focus:ring-4 focus:ring-slate-100 outline-none">
                             <svg class="w-4 h-4 transition-transform duration-300" :class="showFilters ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
                             <span x-text="showFilters ? 'Ocultar Filtros AJAX' : 'Filtros Avanzados'"></span>
                         </button>
                     </div>
                 </div>
 
-                <div x-show="showFilters" x-collapse x-cloak class="bg-slate-50/50 p-6 border-b border-slate-200">
+                <div x-show="showFilters" x-collapse x-cloak class="sigma-infrastructure-advanced bg-slate-50/50 p-6 border-b border-slate-200">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         
                         <div class="relative" @click.away="campusOpen = false">
@@ -246,27 +251,7 @@
                         </table>
                     </div>
                     
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500 mt-auto">
-                        <div class="w-full sm:w-auto">
-                            @if(isset($rooms) && method_exists($rooms, 'hasPages') && $rooms->hasPages())
-                                {{ $rooms->appends(request()->query())->links() }}
-                            @else
-                                <span class="uppercase tracking-wider">Mostrando {{ isset($rooms) ? $rooms->count() : 0 }} registros encontrados</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="uppercase tracking-widest text-[10px] font-black">Mostrar</span>
-                            <select x-model="perPage" @change="submitForm()" class="border-slate-300 rounded-lg py-1.5 px-3 text-xs font-bold cursor-pointer shadow-sm bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all">
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                                <option value="30">30</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                            <span class="uppercase tracking-widest text-[10px] font-black">por página</span>
-                        </div>
-                    </div>
+                    <x-pagination-footer :paginator="$rooms" label="espacios" />
                 </div>
             </div>
 
@@ -284,13 +269,13 @@
                 urlTypes: '',
 
                 // Parámetros de URL iniciales
-                search: new URLSearchParams(window.location.search).get('search') || '',
-                perPage: new URLSearchParams(window.location.search).get('per_page') || '15',
+                search: '',
+                perPage: '15',
 
                 // Sede (Campus)
                 campusOpen: false,
                 campusSearch: '',
-                selectedCampusId: new URLSearchParams(window.location.search).get('campus_id') || '',
+                selectedCampusId: '',
                 selectedCampusName: '',
                 campuses: [],
                 isFetchingCampuses: false,
@@ -298,7 +283,7 @@
                 // Bloque (Building)
                 buildingOpen: false,
                 buildingSearch: '',
-                selectedBuildingId: new URLSearchParams(window.location.search).get('building_id') || '',
+                selectedBuildingId: '',
                 selectedBuildingName: '',
                 buildings: [],
                 isFetchingBuildings: false,
@@ -306,7 +291,7 @@
                 // Tipo de Espacio (RoomType)
                 typeOpen: false,
                 typeSearch: '',
-                selectedTypeId: new URLSearchParams(window.location.search).get('room_type_id') || '',
+                selectedTypeId: '',
                 selectedTypeName: '',
                 types: [],
                 isFetchingTypes: false,
@@ -318,6 +303,11 @@
                         this.urlCampuses = container.dataset.urlCampuses;
                         this.urlBuildings = container.dataset.urlBuildings;
                         this.urlTypes = container.dataset.urlTypes;
+                        this.search = container.dataset.initialSearch || '';
+                        this.perPage = container.dataset.initialPerPage || '15';
+                        this.selectedCampusId = container.dataset.initialCampus || '';
+                        this.selectedBuildingId = container.dataset.initialBuilding || '';
+                        this.selectedTypeId = container.dataset.initialType || '';
                     }
 
                     // Cargar opciones en segundo plano

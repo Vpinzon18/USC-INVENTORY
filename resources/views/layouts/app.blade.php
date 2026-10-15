@@ -122,7 +122,7 @@
                             Agendamiento
                         </a>
                         <a href="{{ route('schedules.calendar') }}"
-                            class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('admin.schedules.calendar') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('schedules.calendar') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
                             <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-9 2h10m-9 2h10m-9 2h10" />
                             </svg>
@@ -172,8 +172,8 @@
 
                     </div>
                 </div>
-
-                @if(in_array(Auth::user()->role, [1, 2]))
+@if(Auth::check() && in_array((int) Auth::user()->role, [1, 2, 3], true))
+                
 
                 <div x-data="{ open: {{ request()->routeIs('maintenances.*') || request()->routeIs('schedules.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
@@ -195,17 +195,20 @@
                             </svg>
                             Bitácora Global
                         </a>
-                        <a href="{{ route('maintenances.create') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('maintenances.create') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                        @if(in_array((int) Auth::user()->role, [1, 2], true))
+                                                <a href="{{ route('maintenances.create') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('maintenances.create') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
                             <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('maintenances.create') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Nuevo Registro
                         </a>
+                        @endif
                     </div>
                 </div>
 
 
-                <div x-data="{ open: {{ request()->is('admin/*') ? 'true' : 'false' }} }">
+                @if((int) Auth::user()->role === 1)
+                                <div x-data="{ open: {{ request()->is('admin/*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 shrink-0 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,6 +246,8 @@
 
 
                 @endif
+                @endif
+                @if((int) Auth::user()->role === 1)
                 <div x-data="{ open: {{ request()->routeIs('dependencies.*') || request()->routeIs('jobtitles.*') || request()->routeIs('categories.*') || request()->routeIs('admin.room_types.*') ? 'true' : 'false' }} }">
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
@@ -291,8 +296,10 @@
 
                     </div>
                 </div>
+                @endif
 
-                @if(Auth::user()->role == 1)
+                        @if(Auth::check() && (int) Auth::user()->role === 1)
+
                 <a href="{{ route('users.index') }}" class="flex items-center px-3 py-2.5 rounded-xl font-semibold transition-all duration-200 group {{ request()->routeIs('users.*') ? 'bg-[#2b2b40] text-blue-400' : 'text-gray-400 hover:bg-[#2b2b40] hover:text-white' }}">
                     <svg class="w-5 h-5 shrink-0 transition-colors {{ request()->routeIs('users.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -336,7 +343,17 @@
                             {{ Auth::user()->name }}
                         </span>
                         <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest mt-1 leading-none">
-                            @if(Auth::user()->role == 1) Administrador @elseif(Auth::user()->role == 2) Técnico @else Usuario @endif
+                           @if(Auth::check())
+    @if(Auth::user()->role == 1)
+        Administrador
+    @elseif(Auth::user()->role == 2)
+        Técnico
+    @else
+        Usuario
+    @endif
+@else
+    Invitado
+@endif
                         </span>
                     </div>
                 </a>

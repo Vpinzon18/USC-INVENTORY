@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\TechnicalService;
 use App\Models\Asset;
+use App\Models\MaintenanceSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Mews\Purifier\Facades\Purifier;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -13,6 +15,7 @@ class TechnicalServiceController extends Controller
 {
    public function index(Request $request)
 {
+        $filters = $request->query();
     // 1. Consulta base con relaciones
     $query = \App\Models\TechnicalService::with(['asset.room.building', 'technician']);
 
@@ -58,28 +61,53 @@ class TechnicalServiceController extends Controller
 
     // Filtro por Fechas
     if ($request->filled('date_start')) {
-        $query->whereDate('performed_at', '>=', $request->date_start);
-    }
-    if ($request->filled('date_end')) {
-        $query->whereDate('performed_at', '<=', $request->date_end);
-    }
+    $query->where(
+        'performed_at',
+        '>=',
+        $request->date_start
+    );
+}
+
+if ($request->filled('date_end')) {
+    $query->where(
+        'performed_at',
+        '<',
+        \Carbon\Carbon::parse($request->date_end)
+            ->addDay()
+            ->startOfDay()
+    );
+}
 
     // --- CÁLCULO DE KPIs REALES (Clonamos para no dañar la consulta original) ---
-    $kpis = [
-        'total'       => (clone $query)->count(),
-        'preventivos' => (clone $query)->where('type', 'PREVENTIVO')->count(),
-        'correctivos' => (clone $query)->where('type', 'CORRECTIVO')->count(),
-        'este_mes'    => (clone $query)->whereMonth('performed_at', now()->month)
-                                       ->whereYear('performed_at', now()->year)->count(),
-    ];
+    $kpis = (clone $query)
+    ->selectRaw("
+        COUNT(*) AS total,
+        COUNT(*) FILTER (
+            WHERE type = ?
+        ) AS preventivos,
+        COUNT(*) FILTER (
+            WHERE type = ?
+        ) AS correctivos,
+        COUNT(*) FILTER (
+            WHERE performed_at >= ?
+              AND performed_at < ?
+        ) AS este_mes
+    ", [
+        'PREVENTIVO',
+        'CORRECTIVO',
+        now()->startOfMonth(),
+        now()->addMonth()->startOfMonth(),
+    ])
+    ->first()
+    ->toArray();
 
     // --- PAGINACIÓN ---
-    $perPage = $request->input('per_page', 10);
+    $perPage = \App\Support\PaginationOptions::fromRequest($request);
     $services = $query->orderBy('performed_at', 'desc')
                       ->paginate($perPage)
                       ->withQueryString();
 
-    return view('admin.maintenances.index', compact('services', 'perPage', 'kpis'));
+    return view('admin.maintenances.index', compact('services', 'perPage', 'kpis', 'filters'));
 }
 
    public function create(Request $request)
@@ -201,5 +229,22 @@ class TechnicalServiceController extends Controller
             ->format('Letter') // Formato carta. Puedes usar 'a4' si lo prefieres
             ->margins(10, 10, 10, 10) // Márgenes en milímetros (opcional, ajústalo a tu formato)
             ->name($fileName);
+    }
+    public function destroy(TechnicalService $maintenance)
+    {
+        $scheduleId = $maintenance->maintenance_schedule_id;
+
+        DB::transaction(function () use ($maintenance, $scheduleId): void {
+            $maintenance->delete();
+
+            if ($scheduleId && !TechnicalService::where('maintenance_schedule_id', $scheduleId)->exists()) {
+                MaintenanceSchedule::whereKey($scheduleId)
+                    ->where('status', 'REALIZADO')
+                    ->update(['status' => 'PENDIENTE']);
+            }
+        });
+
+        return redirect()->route('maintenances.index')
+            ->with('success', 'Bitácora eliminada correctamente.');
     }
 }

@@ -93,7 +93,7 @@
                                                 @error('cost_center') <p class="text-rose-500 text-xs mt-1 font-medium">{{ $message }}</p> @enderror
                                             </div>
 
-                                            <div>
+                                            <div class="custodian-status-field">
                                                 <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Estado del Responsable <span class="text-rose-500">*</span></label>
                                                 <select name="status" required class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm transition-all bg-slate-50 focus:bg-white font-medium text-slate-700">
                                                     <option value="active" {{ old('status', $custodian->status ?? 'active') == 'active' ? 'selected' : '' }}> Activo (En cargo)</option>
@@ -350,17 +350,40 @@
             // ---------------------------------------------------------
             const statusSelect = document.querySelector('select[name="status"]');
             const orgSection = document.getElementById('org-section');
+            const statusField = orgSection?.querySelector('.custodian-status-field');
 
             function toggleOrgFields() {
-                if (statusSelect && orgSection) {
-                    if (statusSelect.value === 'inactive') {
-                        orgSection.style.opacity = '0.4';
-                        orgSection.style.pointerEvents = 'none';
-                    } else {
-                        orgSection.style.opacity = '1';
-                        orgSection.style.pointerEvents = 'auto';
+                if (!statusSelect || !orgSection) return;
+
+                const inactive = statusSelect.value === 'inactive';
+                orgSection.style.opacity = '1';
+                orgSection.style.pointerEvents = 'auto';
+
+                // Bloquear visualmente el resto del formulario y conservar el
+                // selector de estado accesible para poder reactivar al responsable.
+                const organizationalSection = orgSection.children[0];
+                if (organizationalSection) {
+                    const heading = organizationalSection.children[0];
+                    const fieldGrid = organizationalSection.children[1];
+                    if (heading) {
+                        heading.style.opacity = inactive ? '0.4' : '1';
+                        heading.inert = inactive;
+                    }
+                    if (fieldGrid) {
+                        Array.from(fieldGrid.children).forEach(field => {
+                            const isStatusField = field === statusField;
+                            field.style.opacity = inactive && !isStatusField ? '0.4' : '1';
+                            field.style.pointerEvents = inactive && !isStatusField ? 'none' : 'auto';
+                            field.inert = inactive && !isStatusField;
+                        });
                     }
                 }
+
+                Array.from(orgSection.children).slice(1).forEach(section => {
+                    section.style.opacity = inactive ? '0.4' : '1';
+                    section.style.pointerEvents = inactive ? 'none' : 'auto';
+                    section.inert = inactive;
+                });
             }
             if (statusSelect) {
                 toggleOrgFields();

@@ -12,6 +12,7 @@ use App\Models\Assignment;
 use App\Models\AssetMonitor;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -27,12 +28,10 @@ class AssetController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->query();
         $search = $request->input('search');
 
-        $perPage = $request->input(
-            'per_page',
-            15
-        );
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
 
         /*
         |--------------------------------------------------------------------------
@@ -420,6 +419,7 @@ class AssetController extends Controller
             compact(
                 'assets',
                 'search',
+                'filters',
                 'perPage',
                 'total',
                 'online',
@@ -448,7 +448,7 @@ class AssetController extends Controller
             Room::all();
 
         $custodians =
-            Custodian::all();
+            Custodian::query()->where('status', 'active')->with('rooms')->get();
 
         $campuses =
             Campus::all();
@@ -479,8 +479,13 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            'room_id' =>
-            'required|exists:rooms,id',
+            'room_id' => [
+                'required',
+                'integer',
+                'exists:rooms,id',
+                Rule::exists('custodian_room', 'room_id')
+                    ->where(fn ($query) => $query->where('custodian_id', $request->input('custodian_id'))),
+            ],
 
             'serial_number' =>
             'required|string|max:255|unique:assets,serial_number',
@@ -650,8 +655,11 @@ class AssetController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            'custodian_id' =>
-            'required|exists:custodians,id',
+            'custodian_id' => [
+                'required',
+                'integer',
+                Rule::exists('custodians', 'id')->where('status', 'active'),
+            ],
 
             'keyboard_serial' =>
             'nullable|string|max:255',
@@ -904,7 +912,7 @@ class AssetController extends Controller
 
             'software.*.version' =>
             'nullable|string|max:255',
-            [
+        ], [
                 'network.gateway.ip' =>
                 'La puerta de enlace debe ser una dirección IP válida.',
 
@@ -931,8 +939,12 @@ class AssetController extends Controller
 
                 'network.adapters.*.is_active.boolean' =>
                 'El estado activo no es válido.',
+                'custodian_id.required' => 'Selecciona un custodiante activo.',
+                'custodian_id.exists' => 'El custodiante seleccionado no existe o está inactivo.',
+                'room_id.required' => 'Selecciona una ubicación para el activo.',
+                'room_id.exists' => 'La ubicación debe estar asignada al custodiante seleccionado.',
             ]
-        ]);
+        );
 
 
         DB::transaction(
@@ -2843,8 +2855,7 @@ public function downloadPdf(int $id)
     )->render();
 
     $pdf = Browsershot::html($html)
-        ->setNodeBinary('C:\Program Files\nodejs\node.exe')
-        ->setChromePath('C:\Program Files\Google\Chrome\Application\chrome.exe')
+        ->setNodeBinary('/usr/local/bin/node')
         ->addChromiumArguments([
             'no-sandbox',
             'disable-setuid-sandbox',

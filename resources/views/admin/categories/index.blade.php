@@ -56,10 +56,10 @@
                 </div>
             @endif
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative z-30">
-                <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="sigma-filter-panel p-4 relative z-30">
+                <div class="sigma-filter-row flex flex-col lg:flex-row justify-between items-center gap-4">
                     
-                    <div class="relative w-full lg:w-[28rem] flex-1">
+                    <div class="sigma-filter-search relative w-full lg:w-[28rem] flex-1">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
                             <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
@@ -67,7 +67,7 @@
                             class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 placeholder-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all shadow-sm outline-none">
                     </div>
 
-                    <div class="flex gap-3 w-full lg:w-auto">
+                    <div class="sigma-filter-actions flex gap-3 w-full lg:w-auto">
                         <button type="button" @click="applyFilters()" class="flex-1 lg:flex-none px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold uppercase tracking-widest shadow-md transition-all active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-200">
                             Buscar
                         </button>
@@ -150,27 +150,7 @@
                         </table>
                     </div>
                     
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500 mt-auto">
-                        <div class="w-full sm:w-auto">
-                            @if(isset($categories) && method_exists($categories, 'hasPages') && $categories->hasPages())
-                                {{ $categories->appends(request()->query())->links() }}
-                            @else
-                                <span class="uppercase tracking-wider">Mostrando {{ isset($categories) ? $categories->count() : 0 }} registros</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="uppercase tracking-widest text-[10px] font-black">Mostrar</span>
-                            <select x-model="perPage" @change="submitForm()" class="border-slate-300 rounded-lg py-1.5 px-3 text-xs font-bold cursor-pointer shadow-sm bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all">
-                                <option value="5">5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                            <span class="uppercase tracking-widest text-[10px] font-black">por página</span>
-                        </div>
-                    </div>
+                    <x-pagination-footer :paginator="$categories" label="categorías" />
                 </div>
             </div>
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MaintenanceSchedule;
 use App\Models\Asset;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\User;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -13,11 +14,9 @@ class MaintenanceScheduleController extends Controller
 {
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10);
+        $filters = $request->query();
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
 
-        if (!in_array($perPage, [5, 10, 15, 25, 50])) {
-            $perPage = 10;
-        }
 
         $query = MaintenanceSchedule::with(['asset.room.building.campus', 'technician']);
 
@@ -115,20 +114,49 @@ class MaintenanceScheduleController extends Controller
         // Aseguramos que la estructura inicial tenga la variable 'text' para el buscador AJAX
         $currentRules = $request->input('rules', [['field' => 'asset', 'operator' => 'contains', 'value' => '', 'text' => '']]);
 
-        return view('admin.schedules.index', compact('schedules', 'technicians', 'sedes', 'buildings', 'perPage', 'currentRules'));
+        return view('admin.schedules.index', compact('schedules', 'technicians', 'sedes', 'buildings', 'perPage', 'currentRules', 'filters'));
     }
 
     public function create()
     {
-        $technicians = \App\Models\User::orderBy('name', 'asc')->get();
+        $technicians = \App\Models\User::where('role', 2)->orderBy('name', 'asc')->get();
 
         return view('admin.schedules.create', compact('technicians'));
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'asset_ids' => ['required', 'array', 'min:1'],
+            'asset_ids.*' => ['required', 'integer', 'distinct', 'exists:assets,id'],
+            'technician_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 2)],
+            'scheduled_date' => ['required', 'date', 'after_or_equal:today'],
+            'status' => ['sometimes', 'in:PENDIENTE,REALIZADO,VENCIDO'],
+        ]);
+
+        $status = $validated['status'] ?? 'PENDIENTE';
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $status): void {
+            foreach ($validated['asset_ids'] as $assetId) {
+                MaintenanceSchedule::create([
+                    'asset_id' => $assetId,
+                    'technician_id' => $validated['technician_id'],
+                    'scheduled_date' => $validated['scheduled_date'],
+                    'status' => $status,
+                ]);
+            }
+        });
+
+        return redirect()->route('schedules.index')
+            ->with('success', 'Cronograma creado correctamente.');
+    }
     public function searchAssets(Request $request)
     {
-        $search = $request->input('q');
-        if (empty($search) || strlen($search) < 2) {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+        $search = trim($validated['q'] ?? '');
+        if ($search === '' || mb_strlen($search) < 2) {
             return response()->json([]);
         }
 
@@ -144,7 +172,7 @@ class MaintenanceScheduleController extends Controller
 {
     // Cargamos todos los activos y usuarios para permitir la reasignación
     $assets = Asset::with('room')->orderBy('serial_number', 'asc')->get();
-    $technicians = User::orderBy('name', 'asc')->get();
+    $technicians = User::where('role', 2)->orderBy('name', 'asc')->get();
 
     return view('admin.schedules.edit', compact('schedule', 'assets', 'technicians'));
 }
@@ -155,7 +183,7 @@ class MaintenanceScheduleController extends Controller
     $request->validate([
         'asset_ids'      => 'required|array|min:1',
         'asset_ids.*'    => 'exists:assets,id',
-        'technician_id'  => 'required|exists:users,id',
+        'technician_id'  => ['required', Rule::exists('users', 'id')->where('role', 2)],
         'scheduled_date' => 'required|date',
         'status'         => 'required|in:PENDIENTE,REALIZADO,VENCIDO',
     ]);

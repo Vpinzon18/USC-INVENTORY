@@ -37,10 +37,10 @@
             </div>
 
             <!-- BARRA DE BÚSQUEDA Y FILTROS -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative z-30">
-                <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="sigma-filter-panel p-4 relative z-30">
+                <div class="sigma-filter-row flex flex-col lg:flex-row justify-between items-center gap-4">
                     <!-- Buscador Inteligente -->
-                    <div class="relative w-full lg:w-96 flex-1">
+                    <div class="sigma-filter-search relative w-full lg:w-96 flex-1">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
                             <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
@@ -152,26 +152,7 @@
                     </div>
                     
                     <!-- FOOTER DE PAGINACIÓN CORPORATIVO -->
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500 mt-auto">
-                        <div class="w-full sm:w-auto">
-                            @if(isset($roomTypes) && method_exists($roomTypes, 'hasPages') && $roomTypes->hasPages())
-                                {{ $roomTypes->appends(request()->query())->links() }}
-                            @else
-                                <span class="uppercase tracking-wider">Fin de los registros</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span>Mostrar</span>
-                            <select x-model="perPage" @change="submitForm()" class="border-slate-300 rounded-lg py-1.5 px-3 text-xs font-bold cursor-pointer shadow-sm bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all">
-                                <option value="5">5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-                            </select>
-                            <span>registros</span>
-                        </div>
-                    </div>
+                    <x-pagination-footer :paginator="$roomTypes" label="tipos de espacio" />
                 </div>
             </div>
 

@@ -2,3 +2,279 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Shared visual system for list filters across SIGMA modules. */
+.sigma-filter-panel {
+    background-color: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+.sigma-filter-toolbar {
+    background-color: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 1.25rem;
+}
+
+.sigma-filter-section {
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+:is(.sigma-filter-panel, .sigma-filter-toolbar, .sigma-filter-section) input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+:is(.sigma-filter-panel, .sigma-filter-toolbar, .sigma-filter-section) select {
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    background-color: #f8fafc;
+    color: #334155;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+    transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+:is(.sigma-filter-panel, .sigma-filter-toolbar, .sigma-filter-section) input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])::placeholder {
+    color: #94a3b8;
+}
+
+:is(.sigma-filter-panel, .sigma-filter-toolbar, .sigma-filter-section) input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):focus,
+:is(.sigma-filter-panel, .sigma-filter-toolbar, .sigma-filter-section) select:focus {
+    border-color: #3b82f6;
+    background-color: #fff;
+    outline: none;
+    box-shadow: 0 0 0 4px rgb(59 130 246 / 0.12);
+}
+/* Shared layout for list filter rows and their actions. */
+.sigma-filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.sigma-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.sigma-filter-search {
+    flex: 1 1 20rem;
+    min-width: min(100%, 18rem);
+}
+
+.sigma-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+}
+
+.sigma-filter-actions :is(button, a) {
+    height: 2.5rem;
+    min-height: 2.5rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    border-radius: 0.75rem;
+}
+
+:is(.sigma-filter-panel, .sigma-filter-toolbar, .sigma-filter-section) input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+:is(.sigma-filter-panel, .sigma-filter-toolbar, .sigma-filter-section) select {
+    height: 2.5rem;
+}
+
+@media (max-width: 640px) {
+    .sigma-filter-search { min-width: 100%; }
+    .sigma-filter-actions { width: 100%; justify-content: flex-start; }
+}
+/* Sigma: composición única para los bloques de búsqueda y filtros de los listados. */
+.sigma-filter-panel {
+    background: #fff !important;
+    border: 1px solid #dbe3ef !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 1px 3px rgb(15 23 42 / 7%) !important;
+}
+.sigma-filter-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: .75rem !important;
+    width: 100% !important;
+}
+.sigma-filter-toolbar.sigma-filter-row,
+.sigma-filter-panel > .sigma-filter-row {
+    padding: 1rem !important;
+}
+.sigma-filter-search {
+    flex: 1 1 22rem !important;
+    width: auto !important;
+    min-width: min(100%, 18rem) !important;
+}
+.sigma-filter-search input[type="text"],
+.sigma-filter-search input[type="search"],
+.sigma-filter-search select,
+.sigma-filter-section input[type="text"],
+.sigma-filter-section input[type="search"],
+.sigma-filter-section select,
+.sigma-filter-panel input[type="text"],
+.sigma-filter-panel input[type="search"],
+.sigma-filter-panel select {
+    min-height: 2.5rem !important;
+    height: 2.5rem !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: .625rem !important;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    font-size: .8125rem !important;
+    font-weight: 500 !important;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 5%) !important;
+}
+.sigma-filter-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: .5rem !important;
+    width: auto !important;
+    min-height: 2.5rem !important;
+}
+.sigma-filter-actions > button,
+.sigma-filter-actions > a {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.5rem !important;
+    height: 2.5rem !important;
+    padding: 0 .875rem !important;
+    border-radius: .625rem !important;
+    white-space: nowrap !important;
+}
+@media (max-width: 640px) {
+    .sigma-filter-row { flex-direction: column !important; align-items: stretch !important; }
+    .sigma-filter-search, .sigma-filter-actions { width: 100% !important; min-width: 0 !important; }
+    .sigma-filter-actions { justify-content: flex-end !important; }
+}
+
+/* Infraestructura: misma fila y proporciones para Sedes, Bloques y Oficinas. */
+.sigma-filter-panel.sigma-infrastructure-filters {
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 1px solid #dbe3ef !important;
+    border-radius: 1rem !important;
+    background: #fff !important;
+    box-shadow: 0 1px 3px rgb(15 23 42 / 7%) !important;
+}
+.sigma-infrastructure-filters > .sigma-filter-row {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: .75rem !important;
+    width: 100% !important;
+    min-height: 4.25rem !important;
+    padding: .75rem !important;
+    border: 0 !important;
+}
+.sigma-infrastructure-filters .sigma-filter-search {
+    flex: 1 1 0% !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+.sigma-infrastructure-filters .sigma-filter-search input[type="text"] {
+    display: block !important;
+    width: 100% !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: .625rem !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    font-size: .8125rem !important;
+    font-weight: 500 !important;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 5%) !important;
+}
+.sigma-infrastructure-filters .sigma-filter-actions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: .5rem !important;
+    width: auto !important;
+    min-height: 2.5rem !important;
+}
+.sigma-infrastructure-filters .sigma-filter-actions > button,
+.sigma-infrastructure-filters .sigma-filter-actions > div > button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
+    padding: 0 .875rem !important;
+    border-radius: .625rem !important;
+    white-space: nowrap !important;
+}
+.sigma-infrastructure-filters .sigma-infrastructure-view-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: .125rem !important;
+    height: 2.5rem !important;
+    padding: .25rem !important;
+    border: 1px solid #dbe3ef !important;
+    border-radius: .625rem !important;
+    background: #f1f5f9 !important;
+}
+.sigma-infrastructure-filters .sigma-infrastructure-view-toggle > button {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
+    padding: 0 !important;
+    border-radius: .375rem !important;
+}
+.sigma-infrastructure-advanced {
+    border-top: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+}
+@media (max-width: 640px) {
+    .sigma-infrastructure-filters > .sigma-filter-row {
+        flex-wrap: wrap !important;
+        min-height: 0 !important;
+        padding: .75rem !important;
+    }
+    .sigma-infrastructure-filters .sigma-filter-search,
+    .sigma-infrastructure-filters .sigma-filter-actions {
+        width: 100% !important;
+    }
+    .sigma-infrastructure-filters .sigma-filter-actions { justify-content: flex-end !important; }
+}
+
+/* Ajustes de alineación visual del módulo Infraestructura. */
+.sigma-infrastructure-filters .sigma-filter-actions {
+    flex: 0 0 14.5rem !important;
+    width: 14.5rem !important;
+}
+.sigma-infrastructure-filters .sigma-filter-actions .sigma-infrastructure-view-toggle > button {
+    flex: 0 0 2rem !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    min-height: 2rem !important;
+    padding: 0 !important;
+}
+.sigma-infrastructure-filters .sigma-infrastructure-view-toggle > button svg {
+    display: block !important;
+    flex: 0 0 1.25rem !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+@media (max-width: 640px) {
+    .sigma-infrastructure-filters .sigma-filter-actions {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+    }
+}

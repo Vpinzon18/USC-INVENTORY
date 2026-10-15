@@ -60,22 +60,22 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-6 relative z-30">
+            <div class="sigma-filter-panel p-4 mb-6 relative z-30">
                 <form action="{{ route('assets.index') }}" method="GET" class="w-full"
                     x-data="{ showFilters: {{ request()->hasAny(['campus_id', 'building_id', 'room_id', 'custodian_id', 'os_version', 'agent', 'inventory_status', 'connectivity']) ? 'true' : 'false' }} }">
 
-                    <div class="flex flex-col md:flex-row gap-3 items-center w-full">
-                        <div class="relative flex-1 w-full group">
+                    <div class="sigma-filter-row flex flex-col md:flex-row gap-3 items-center w-full">
+                        <div class="sigma-filter-search relative flex-1 w-full group">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por Hostname, IP, Serial o MAC..."
+                            <input type="text" name="search" value="{{ data_get($filters, 'search', '') }}" placeholder="Buscar por Hostname, IP, Serial o MAC..."
                                 class="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border-transparent rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm transition-all">
                         </div>
 
-                        <div class="flex items-center gap-2 w-full md:w-auto">
+                        <div class="sigma-filter-actions flex items-center gap-2 w-full md:w-auto">
                             <button type="button" @click="showFilters = !showFilters"
                                 :class="{'bg-blue-50 text-blue-700 border-blue-200': showFilters, 'bg-white text-slate-700 border-slate-300': !showFilters}"
                                 class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 border rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">
@@ -95,17 +95,17 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
-                            <x-enterprise-select name="campus_id" placeholder="Sede" endpoint="/api/filters/campuses" initial-value="{{ request('campus_id') }}" initial-text="{{ $selectedCampusName ?? '' }}" />
-                            <x-enterprise-select name="building_id" placeholder="Bloque / Edificio" endpoint="/api/filters/buildings" initial-value="{{ request('building_id') }}" initial-text="{{ $selectedBuildingName ?? '' }}" />
-                            <x-enterprise-select name="room_id" placeholder="Oficina / Salón" endpoint="/api/filters/api/sigma-filters/rooms" initial-value="{{ request('room_id') }}" initial-text="{{ $selectedRoomName ?? '' }}" />
-                            <x-enterprise-select name="custodian_id" placeholder="Responsable" endpoint="/api/filters/custodians" initial-value="{{ request('custodian_id') }}" initial-text="{{ $selectedCustodianName ?? '' }}" />
+                            <x-enterprise-select name="campus_id" placeholder="Sede" endpoint="/api/filters/campuses" initial-value="{{ data_get($filters, 'campus_id', '') }}" initial-text="{{ $selectedCampusName ?? '' }}" />
+                            <x-enterprise-select name="building_id" placeholder="Bloque / Edificio" endpoint="/api/filters/buildings" initial-value="{{ data_get($filters, 'building_id', '') }}" initial-text="{{ $selectedBuildingName ?? '' }}" />
+                            <x-enterprise-select name="room_id" placeholder="Oficina / Salón" endpoint="/api/filters/api/sigma-filters/rooms" initial-value="{{ data_get($filters, 'room_id', '') }}" initial-text="{{ $selectedRoomName ?? '' }}" />
+                            <x-enterprise-select name="custodian_id" placeholder="Responsable" endpoint="/api/filters/custodians" initial-value="{{ data_get($filters, 'custodian_id', '') }}" initial-text="{{ $selectedCustodianName ?? '' }}" />
 
                             <div class="flex flex-col gap-1">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sistema Operativo</label>
                                 <select name="os_version" class="w-full text-sm border border-slate-300 rounded-lg shadow-sm h-[42px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
                                     <option value="">Cualquier S.O.</option>
                                     @foreach($osVersions ?? [] as $os)
-                                    <option value="{{ $os }}" {{ request('os_version') == $os ? 'selected' : '' }}>{{ $os }}</option>
+                                    <option value="{{ $os }}" {{ data_get($filters, 'os_version', '') == $os ? 'selected' : '' }}>{{ $os }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -114,8 +114,8 @@
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Conectividad</label>
                                 <select name="connectivity" class="w-full text-sm border border-slate-300 rounded-lg shadow-sm h-[42px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
                                     <option value="">Todos los estados</option>
-                                    <option value="online" {{ request('connectivity') == 'online' ? 'selected' : '' }}> En Línea</option>
-                                    <option value="offline" {{ request('connectivity') == 'offline' ? 'selected' : '' }}> Desconectados</option>
+                                    <option value="online" {{ data_get($filters, 'connectivity', '') == 'online' ? 'selected' : '' }}> En Línea</option>
+                                    <option value="offline" {{ data_get($filters, 'connectivity', '') == 'offline' ? 'selected' : '' }}> Desconectados</option>
                                 </select>
                             </div>
 
@@ -123,8 +123,8 @@
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Ficha Técnica</label>
                                 <select name="inventory_status" class="w-full text-sm border border-slate-300 rounded-lg shadow-sm h-[42px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
                                     <option value="">Completa / Incompleta</option>
-                                    <option value="completo" {{ request('inventory_status') == 'completo' ? 'selected' : '' }}>✔ Inventario Completo</option>
-                                    <option value="incompleto" {{ request('inventory_status') == 'incompleto' ? 'selected' : '' }}>⚠ Pendiente Físico</option>
+                                    <option value="completo" {{ data_get($filters, 'inventory_status', '') == 'completo' ? 'selected' : '' }}>✔ Inventario Completo</option>
+                                    <option value="incompleto" {{ data_get($filters, 'inventory_status', '') == 'incompleto' ? 'selected' : '' }}>⚠ Pendiente Físico</option>
                                 </select>
                             </div>
 
@@ -132,8 +132,8 @@
                                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Gestión de Agente</label>
                                 <select name="agent" class="w-full text-sm border border-slate-300 rounded-lg shadow-sm h-[42px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
                                     <option value="">Agente SIGMA</option>
-                                    <option value="1" {{ request('agent') == '1' ? 'selected' : '' }}>Instalado</option>
-                                    <option value="0" {{ request('agent') == '0' ? 'selected' : '' }}>Sin Agente</option>
+                                    <option value="1" {{ data_get($filters, 'agent', '') == '1' ? 'selected' : '' }}>Instalado</option>
+                                    <option value="0" {{ data_get($filters, 'agent', '') == '0' ? 'selected' : '' }}>Sin Agente</option>
                                 </select>
                             </div>
                         </div>
@@ -322,9 +322,7 @@
 
             </div>
 
-            <div class="mt-6 relative z-10">
-                {{ $assets->links() }}
-            </div>
+            <x-pagination-footer :paginator="$assets" label="activos" />
 
         </div>
     </div>

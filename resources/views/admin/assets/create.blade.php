@@ -2992,6 +2992,8 @@
                             custodianSelect.selectedIndex
                         ];
 
+                    custodianSelect.setCustomValidity('');
+
 
                     roomSelect.innerHTML =
                         '<option value="">2. Seleccione ubicación...</option>';
@@ -3051,6 +3053,7 @@
                             '<option value="">No hay ubicaciones disponibles</option>';
 
                         roomSelect.disabled = true;
+                        custodianSelect.setCustomValidity('El custodiante seleccionado no tiene ubicaciones asignadas. Asigna una ubicación antes de registrar el activo.');
 
                         return;
 
@@ -4112,6 +4115,17 @@
             |----------------------------------------------------------
             */
 
+            const custodianSelect = document.getElementById('custodian_id');
+            const roomSelect = document.getElementById('room_id');
+
+            if (!roomSelect.value || roomSelect.disabled) {
+                custodianSelect.setCustomValidity('Selecciona un custodiante que tenga al menos una ubicación asignada.');
+                form.reportValidity();
+                return;
+            }
+
+            custodianSelect.setCustomValidity('');
+
             if (!form.checkValidity()) {
 
                 form.reportValidity();
@@ -4194,7 +4208,7 @@
                     });
 
 
-                    form.submit();
+                    form.requestSubmit();
 
                 }
 

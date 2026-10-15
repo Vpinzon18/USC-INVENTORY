@@ -19,8 +19,9 @@ class MovementController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->query();
         $search = $request->input('search');
-        $perPage = $request->input('per_page', 10);
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
 
         // Agregamos 'user' al ->with() para cargar la relación
         $movements = \App\Models\Assignment::with(['custodian', 'user'])
@@ -50,7 +51,7 @@ class MovementController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('admin.movements.index', compact('movements', 'search', 'perPage'));
+        return view('admin.movements.index', compact('movements', 'search', 'perPage', 'filters'));
     }
     public function edit(string $id)
     {

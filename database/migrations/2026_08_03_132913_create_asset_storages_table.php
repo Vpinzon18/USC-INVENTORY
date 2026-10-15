@@ -28,7 +28,6 @@ return new class extends Migration
 
             $table->string('type')->nullable();
 
-            $table->string('health')->nullable();
 
             $table->timestamps();
         });

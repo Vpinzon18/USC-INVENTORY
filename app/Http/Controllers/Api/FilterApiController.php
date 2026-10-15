@@ -276,7 +276,7 @@ public function getAssets(Request $request)
     {
         $search = $request->query('search');
         
-        $technicians = User::select('id', 'name')
+        $technicians = User::select('id', 'name')->where('role', 2)
             ->when($search, function($query) use ($search) {
                 $query->where('name', 'ilike', "%{$search}%");
             })
@@ -377,7 +377,8 @@ public function getAssets(Request $request)
             return response()->json($offices);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error('Error en consulta de filtros.', ['exception' => $e]);
+            return response()->json(['error' => 'No fue posible consultar los datos.'], 500);
         }
     }
     // Buscar Categorías de Equipos
@@ -413,7 +414,8 @@ public function getAssets(Request $request)
 
             return response()->json($types);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            Log::error('Error en consulta de filtros.', ['exception' => $e]);
+            return response()->json(['error' => 'No fue posible consultar los datos.'], 500);
         }
     }
 }

@@ -13,6 +13,7 @@ class RoomTypeController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->query();
         // Traemos los tipos y contamos cuántas oficinas tienen asignadas para evitar su eliminación si están en uso
         $query = RoomType::withCount('rooms');
 
@@ -25,10 +26,10 @@ class RoomTypeController extends Controller
         }
 
         // Paginación Dinámica
-        $perPage = $request->input('per_page', 15);
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
         $roomTypes = $query->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
 
-        return view('admin.room_types.index', compact('roomTypes'));
+        return view('admin.room_types.index', compact('roomTypes', 'filters'));
     }
 
     /**

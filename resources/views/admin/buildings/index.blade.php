@@ -2,7 +2,7 @@
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div class="py-6 bg-slate-50 min-h-screen font-sans text-slate-800" x-data="buildingsEngine()" x-cloak>
+    <div class="py-6 bg-slate-50 min-h-screen font-sans text-slate-800" x-data="buildingsEngine()" data-initial-search="{{ data_get($filters, 'search', '') }}" data-initial-campus="{{ data_get($filters, 'campus_id', '') }}" data-initial-per-page="{{ data_get($filters, 'per_page', '15') }}" x-cloak>
         <div class="max-w-[1400px] w-[96%] mx-auto space-y-6">
 
             <!-- ENCABEZADO CORPORATIVO -->
@@ -39,11 +39,11 @@
             </div>
 
             <!-- BARRA DE BÚSQUEDA Y FILTROS -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 relative z-30">
-                <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="sigma-filter-panel sigma-infrastructure-filters relative z-30">
+                <div class="sigma-filter-row flex items-center gap-3">
                     
                     <!-- Buscador Inteligente -->
-                    <div class="relative w-full lg:w-96 flex-1">
+                    <div class="sigma-filter-search relative w-full flex-1">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none z-10">
                             <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
@@ -52,7 +52,7 @@
                     </div>
 
                     <!-- Filtros Rápidos -->
-                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <div class="sigma-filter-actions flex items-center justify-end">
                         
                         <!-- Dropdown Filtro Sede (AJAX Real) -->
                         <div class="relative" @click.away="campusOpen = false">
@@ -212,29 +212,7 @@
                     </div>
                     
                     <!-- FOOTER DE PAGINACIÓN CORPORATIVO -->
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500 mt-auto">
-                        <div class="w-full sm:w-auto">
-                            @if(isset($buildings) && method_exists($buildings, 'hasPages') && $buildings->hasPages())
-                                {{ $buildings->appends(request()->query())->links() }}
-                            @else
-                                <span class="uppercase tracking-wider">Fin de los registros</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span>Mostrar</span>
-                            <!-- SELECTOR DE PAGINACIÓN DINÁMICO -->
-                            <select x-model="perPage" @change="submitForm()" class="border-slate-300 rounded-lg py-1.5 px-3 text-xs font-bold cursor-pointer shadow-sm bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all">
-                                <option value="5">5</option>
-                                <option value="10">10</option>
-                                <option value="15">15</option>
-                                <option value="20">20</option>
-                                <option value="30">30</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                            <span>registros</span>
-                        </div>
-                    </div>
+                    <x-pagination-footer :paginator="$buildings" label="edificios" />
                 </div>
             </div>
 
@@ -246,18 +224,21 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('buildingsEngine', () => ({
                 // Buscadores y Filtros
-                search: new URLSearchParams(window.location.search).get('search') || '',
+                search: '',
                 campusSearch: '',
-                selectedCampus: new URLSearchParams(window.location.search).get('campus_id') || '', 
+                selectedCampus: '',
                 selectedCampusName: '', // Para mostrar el nombre en el botón
                 campusOpen: false,
-                perPage: new URLSearchParams(window.location.search).get('per_page') || '15',
+                perPage: '15',
                 
                 // Arreglo que contendrá los datos reales de la base de datos
                 campuses: [],
                 isFetchingCampuses: false,
 
                 init() {
+                    this.search = this.$root.dataset.initialSearch || '';
+                    this.selectedCampus = this.$root.dataset.initialCampus || '';
+                    this.perPage = this.$root.dataset.initialPerPage || '15';
                     // Cargamos los campus iniciales en cuanto se renderiza la vista
                     this.fetchCampuses();
                 },

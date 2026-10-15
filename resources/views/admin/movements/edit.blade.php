@@ -418,7 +418,7 @@
                         this.abortControllerRooms = new AbortController();
 
                         try {
-                            const url = `/api/filters/api/filters/api/sigma-filters/offices?responsible_id=${this.form.custodian_id}&search=${encodeURIComponent(dd.search)}`;
+                            const url = `/api/filters/api/sigma-filters/offices?responsible_id=${this.form.custodian_id}&search=${encodeURIComponent(dd.search)}`;
                             const res = await fetch(url, {
                                 signal: this.abortControllerRooms.signal
                             });

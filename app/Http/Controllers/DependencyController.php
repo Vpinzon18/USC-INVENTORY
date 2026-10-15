@@ -11,11 +11,12 @@ class DependencyController extends Controller
     // Mostrar la lista completa
     public function index(Request $request)
 {
+        $filters = $request->query();
     // 1. Capturamos lo que el usuario quiere buscar (si no hay nada, queda vacío)
     $search = $request->input('search');
     
     // 2. Capturamos cuántos registros quiere ver (por defecto mostrará 5)
-    $perPage = $request->input('per_page', 5);
+    $perPage = \App\Support\PaginationOptions::fromRequest($request);
 
     // 3. Armamos la consulta a la base de datos
     $dependencies = Dependency::query()
@@ -26,7 +27,7 @@ class DependencyController extends Controller
         ->paginate($perPage)
         ->appends($request->query()); // Mantiene la búsqueda al cambiar de página
 
-    return view('admin.dependencies.index', compact('dependencies', 'search', 'perPage'));
+    return view('admin.dependencies.index', compact('dependencies', 'search', 'perPage', 'filters'));
 }
     // Mostrar el formulario para crear
     public function create()

@@ -20,6 +20,9 @@ class Asset extends Model
 
         'hostname',
         'serial_number',
+        'agent_uuid',
+        'hardware_uuid',
+        'manufacturer',
         'internal_code',
 
         // =========================================================

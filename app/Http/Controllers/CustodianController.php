@@ -16,9 +16,10 @@ class CustodianController extends Controller
      */
     public function index(Request $request)
 {
+        $filters = $request->query();
     // 1. CAPTURAR VARIABLES DE BÚSQUEDA Y FILTROS
     $search = $request->input('search');
-    $perPage = $request->input('per_page', 15); // Paginación dinámica
+    $perPage = \App\Support\PaginationOptions::fromRequest($request); // Paginación dinámica
     $quickFilter = $request->input('quick'); // Filtros rápidos
 
     // 2. CONSTRUIR LA CONSULTA PRINCIPAL
@@ -58,7 +59,7 @@ class CustodianController extends Controller
     // 3. EJECUTAR CONSULTA Y ENVIAR A LA VISTA
     $custodians = $query->latest()->paginate($perPage)->withQueryString();
 
-    return view('admin.custodians.index', compact('custodians', 'search', 'perPage'));
+    return view('admin.custodians.index', compact('custodians', 'search', 'perPage', 'filters'));
 }
 
     /**

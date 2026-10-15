@@ -1,0 +1,39 @@
+# Git and local configuration
+.git
+.gitignore
+.gitattributes
+.env
+.env.*
+!.env.example
+
+# Host dependencies and generated assets
+vendor/
+node_modules/
+public/build/
+public/hot
+public/storage
+
+# Laravel runtime data (created with correct ownership in the image)
+storage/logs/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/views/
+bootstrap/cache/
+
+# Local backups, exports, and temporary files
+*.log
+*.tmp
+*.temp
+*.sql
+*.tar
+*.zip
+lista-*.txt
+docker-compose.override.yml
+*.patch
+
+# Editors and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.phpunit.result.cache

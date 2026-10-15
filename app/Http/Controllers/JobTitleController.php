@@ -13,9 +13,10 @@ class JobTitleController extends Controller
      */
     public function index(Request $request)
 {
+        $filters = $request->query();
     // Capturamos la búsqueda y la paginación
     $search = $request->input('search');
-    $perPage = $request->input('per_page', 5);
+    $perPage = \App\Support\PaginationOptions::fromRequest($request);
 
     // Consulta inteligente a la base de datos
     $jobtitles = \App\Models\JobTitle::query()
@@ -26,7 +27,7 @@ class JobTitleController extends Controller
         ->appends($request->query());
 
     // Retornamos a la vista dentro de la carpeta admin/jobtitles
-    return view('admin.jobtitles.index', compact('jobtitles', 'search', 'perPage'));
+    return view('admin.jobtitles.index', compact('jobtitles', 'search', 'perPage', 'filters'));
 }
 
     /**

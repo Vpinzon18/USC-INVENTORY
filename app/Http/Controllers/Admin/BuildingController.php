@@ -10,31 +10,33 @@ use Illuminate\Http\Request;
 class BuildingController extends Controller
 {
     public function index(Request $request)
-{
-    // Iniciamos la consulta base
-    $query = \App\Models\Building::with('campus'); // O el namespace de tu modelo
+    {
+        $filters = $request->only(['search', 'campus_id', 'per_page', 'page']);
+        $search = trim((string) ($filters['search'] ?? ''));
+        $campusId = filter_var(
+            $filters['campus_id'] ?? null,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 1]]
+        ) ?: null;
 
-    // 1. Filtro de Búsqueda por Texto
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where('name', 'ilike', "%{$search}%"); 
+        $query = Building::with('campus');
+
+        if ($search !== '') {
+            $query->where('name', 'ilike', "%{$search}%");
+        }
+
+        if ($campusId) {
+            $query->where('campus_id', $campusId);
+        }
+
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
+        $buildings = $query->orderBy('name', 'asc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('admin.buildings.index', compact('buildings', 'filters'));
     }
 
-    // 2. 🌟 ESTE ES EL FILTRO DE SEDES QUE TE FALTA 🌟
-    if ($request->filled('campus_id')) {
-        $query->where('campus_id', $request->campus_id);
-    }
-
-    // 3. 🌟 ESTO RECIBE LA CANTIDAD DE LA PAGINACIÓN 🌟
-    $perPage = $request->input('per_page', 15);
-
-    // Ejecutamos la consulta y paginamos conservando los filtros (withQueryString)
-    $buildings = $query->orderBy('name', 'asc')
-                       ->paginate($perPage)
-                       ->withQueryString();
-
-    return view('admin.buildings.index', compact('buildings'));
-}
     public function create()
 {
     $campuses = Campus::all(); 

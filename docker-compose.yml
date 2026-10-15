@@ -1,0 +1,114 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    image: sigma-app:latest
+    container_name: sigma_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    env_file:
+      - .env
+    environment: &laravel_environment
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:?Set APP_KEY in .env}
+      APP_URL: ${APP_URL:?Set APP_URL in .env}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:?Set DB_DATABASE in .env}
+      DB_USERNAME: ${DB_USERNAME:?Set DB_USERNAME in .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      PUPPETEER_CACHE_DIR: /opt/puppeteer
+      XDG_CONFIG_HOME: /tmp/.chromium
+      XDG_CACHE_HOME: /tmp/.chromium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - sigma_storage:/var/www/html/storage
+    networks:
+      - sigma_network
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    image: sigma-web:latest
+    container_name: sigma_nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      - sigma_storage:/var/www/html/storage:ro
+    depends_on:
+      - app
+    networks:
+      - sigma_network
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: sigma_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:?Set DB_DATABASE in .env}
+      POSTGRES_USER: ${DB_USERNAME:?Set DB_USERNAME in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - sigma_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sigma_network
+
+  queue:
+    image: sigma-app:latest
+    container_name: sigma_queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    env_file:
+      - .env
+    environment: *laravel_environment
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    depends_on:
+      postgres:
+        condition: service_healthy
+      app:
+        condition: service_started
+    volumes:
+      - sigma_storage:/var/www/html/storage
+    networks:
+      - sigma_network
+
+  scheduler:
+    image: sigma-app:latest
+    container_name: sigma_scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    env_file:
+      - .env
+    environment: *laravel_environment
+    command: php artisan schedule:work
+    depends_on:
+      postgres:
+        condition: service_healthy
+      app:
+        condition: service_started
+    volumes:
+      - sigma_storage:/var/www/html/storage
+    networks:
+      - sigma_network
+
+volumes:
+  sigma_postgres_data:
+  sigma_storage:
+
+networks:
+  sigma_network:
+    driver: bridge

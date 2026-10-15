@@ -3,6 +3,7 @@
 namespace App\Services\Inventory;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 use App\Services\Inventory\Processors\DeviceProcessor;
 use App\Services\Inventory\Processors\NetworkProcessor;
@@ -70,7 +71,17 @@ class InventoryProcessor
 
     public function process(Request $request)
     {
-        $inventory = $request->all();
+        return DB::transaction(function () use ($request) {
+            return $this->processInventory($request->all());
+        });
+    }
+
+    /**
+     * Persist the complete inventory atomically so a processor failure
+     * cannot leave only some of the device components updated.
+     */
+    protected function processInventory(array $inventory)
+    {
 
         /*
         |--------------------------------------------------------------------------
@@ -280,6 +291,7 @@ class InventoryProcessor
         return response()->json([
             'success' => true,
             'asset_id' => $asset->id,
+            'agent_id' => $asset->agent_uuid,
         ]);
     }
 }

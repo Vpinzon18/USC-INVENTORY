@@ -2,26 +2,25 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
     /**
-     * Get the validation rules that apply to the request.
+     * Reglas de validación del formulario.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -34,7 +33,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Autenticación local mediante PostgreSQL.
      *
      * @throws ValidationException
      */
@@ -42,41 +41,26 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // 1. Preparamos los datos en el idioma de Active Directory
-        $ldapCredentials = [
-            'mail' => $this->input('email'), 
+        $credentials = [
+            'email' => $this->input('email'),
             'password' => $this->input('password'),
         ];
 
-        // 2. INTENTO A: Servidor de la Universidad (Active Directory)
-        if (\Illuminate\Support\Facades\Auth::attempt($ldapCredentials, $this->boolean('remember'))) {
-            \Illuminate\Support\Facades\RateLimiter::clear($this->throttleKey());
-            return; // ¡Login exitoso por AD!
+        if (Auth::attempt($credentials, $this->boolean('remember'))) {
+            RateLimiter::clear($this->throttleKey());
+
+            return;
         }
 
-        // 3. INTENTO B: Base de datos Local (El Respaldo Infalible)
-        // Buscamos si el correo existe físicamente en nuestra tabla 'users'
-        $localUser = \App\Models\User::where('email', $this->input('email'))->first();
+        RateLimiter::hit($this->throttleKey());
 
-        // Si el usuario existe Y su contraseña local coincide con la que escribió
-        if ($localUser && \Illuminate\Support\Facades\Hash::check($this->input('password'), $localUser->password)) {
-            
-            // Le iniciamos sesión forzosamente (Bypass de LDAP)
-            \Illuminate\Support\Facades\Auth::login($localUser, $this->boolean('remember'));
-            \Illuminate\Support\Facades\RateLimiter::clear($this->throttleKey());
-            return; // ¡Login exitoso por Base de Datos Local!
-        }
-
-        // 4. Si no está en la Universidad ni en la Base de datos local, lo rechazamos
-        \Illuminate\Support\Facades\RateLimiter::hit($this->throttleKey());
-
-        throw \Illuminate\Validation\ValidationException::withMessages([
-            'email' => trans('auth.failed'), // 'Estas credenciales no coinciden con nuestros registros.'
+        throw ValidationException::withMessages([
+            'email' => trans('auth.failed'),
         ]);
     }
 
     /**
-     * Ensure the login request is not rate limited.
+     * Verifica el límite de intentos de inicio de sesión.
      *
      * @throws ValidationException
      */
@@ -99,10 +83,12 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Clave utilizada para limitar los intentos.
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(
+            Str::lower($this->string('email')).'|'.$this->ip()
+        );
     }
 }

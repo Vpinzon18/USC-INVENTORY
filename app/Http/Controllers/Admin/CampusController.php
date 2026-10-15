@@ -13,16 +13,17 @@ class CampusController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->only(['search', 'per_page', 'page']);
+        $search = trim((string) ($filters['search'] ?? ''));
         $query = Campus::query();
 
         // Filtro de Búsqueda General (Solo por Nombre)
-        if ($request->filled('search')) {
-            $search = $request->search;
+        if ($search !== '') {
             $query->where('name', 'ilike', "%{$search}%"); // Si usas MySQL cambia 'ilike' por 'like'
         }
 
         // Paginación Dinámica
-        $perPage = $request->input('per_page', 15);
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
 
         // Ejecutamos la consulta
         $campuses = $query->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
@@ -41,7 +42,7 @@ class CampusController extends Controller
             'bajas'         => 0,
         ];
 
-        return view('admin.campuses.index', compact('campuses', 'kpis'));
+        return view('admin.campuses.index', compact('campuses', 'kpis', 'filters'));
     }
 
     /**

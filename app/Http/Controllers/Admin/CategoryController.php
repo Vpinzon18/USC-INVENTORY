@@ -13,10 +13,11 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
+        $filters = $request->query();
         $search = $request->input('search');
         
         // 🌟 CAPTURAMOS EL LÍMITE (Con 15 por defecto para coincidir con la vista)
-        $perPage = $request->input('per_page', 15);
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
         
         $categories = Category::query()
             ->when($search, function($query, $search) {
@@ -26,7 +27,7 @@ class CategoryController extends Controller
             ->paginate($perPage) // 🌟 REEMPLAZAMOS EL 10 POR LA VARIABLE DINÁMICA
             ->withQueryString();
 
-        return view('admin.categories.index', compact('categories', 'search'));
+        return view('admin.categories.index', compact('categories', 'search', 'perPage', 'filters'));
     }
 
     /**

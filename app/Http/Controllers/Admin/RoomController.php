@@ -12,12 +12,16 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
+        $filters = $request->only(['search', 'campus_id', 'building_id', 'room_type_id', 'per_page', 'page']);
+        $search = trim((string) ($filters['search'] ?? ''));
+        $campusId = filter_var($filters['campus_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
+        $buildingId = filter_var($filters['building_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
+        $roomTypeId = filter_var($filters['room_type_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
         // 1. Traemos las relaciones necesarias (Eager Loading)
         $query = Room::with(['building.campus', 'type']);
 
         // 2. Filtros dinámicos recibidos por AJAX
-        if ($request->filled('search')) {
-            $search = $request->search;
+        if ($search !== '') {
             $query->where(function($q) use ($search) {
                 // Cambia 'ilike' por 'like' si estás usando MySQL
                 $q->where('name', 'ilike', "%{$search}%")
@@ -25,31 +29,31 @@ class RoomController extends Controller
             });
         }
 
-        if ($request->filled('campus_id')) {
-            $query->whereHas('building', function($q) use ($request) {
-                $q->where('campus_id', $request->campus_id);
+        if ($campusId) {
+            $query->whereHas('building', function ($q) use ($campusId) {
+                $q->where('campus_id', $campusId);
             });
         }
 
-        if ($request->filled('building_id')) {
-            $query->where('building_id', $request->building_id);
+        if ($buildingId) {
+            $query->where('building_id', $buildingId);
         }
 
-        if ($request->filled('room_type_id')) {
-            $query->where('room_type_id', $request->room_type_id);
+        if ($roomTypeId) {
+            $query->where('room_type_id', $roomTypeId);
         }
 
         // 3. Paginación
-        $perPage = $request->input('per_page', 15);
+        $perPage = \App\Support\PaginationOptions::fromRequest($request);
         $rooms = $query->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
 
         // 🌟 LA MAGIA DEL AJAX: Si la petición viene de AlpineJS, devolvemos SOLO la tabla
         if ($request->ajax()) {
-            return view('admin.rooms.partials.table', compact('rooms'))->render();
+            return view('admin.rooms.partials.table', compact('rooms', 'filters'))->render();
         }
 
         // Si es una carga normal, devolvemos la vista completa
-        return view('admin.rooms.index', compact('rooms'));
+        return view('admin.rooms.index', compact('rooms', 'filters'));
     }
 
     public function create()

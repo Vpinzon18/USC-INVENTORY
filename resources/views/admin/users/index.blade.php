@@ -28,6 +28,36 @@
                     </a>
                 </div>
 
+                <form method="GET" action="{{ route('users.index') }}" class="p-4 md:px-6 border-b border-slate-200 bg-white">
+                    <div class="flex flex-col md:flex-row md:items-center gap-3">
+                        <label class="relative flex-1">
+                            <span class="sr-only">Buscar usuarios por nombre o correo</span>
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+                            <input type="search" name="search" value="{{ $filters['search'] }}" maxlength="100" placeholder="Buscar por nombre o correo..." class="w-full h-10 pl-10 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+                        </label>
+
+                        <label class="sr-only" for="user-role-filter">Filtrar por rol</label>
+                        <select id="user-role-filter" name="role" class="w-full md:w-52 h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+                            <option value="">Todos los roles</option>
+                            <option value="1" @selected($filters['role'] === '1')>Administrador</option>
+                            <option value="2" @selected($filters['role'] === '2')>Técnico</option>
+                            <option value="3" @selected($filters['role'] === '3')>Consulta</option>
+                        </select>
+
+                        <input type="hidden" name="per_page" value="{{ $filters['per_page'] }}">
+                        <button type="submit" class="inline-flex h-10 items-center justify-center gap-2 px-4 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold uppercase tracking-wide transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+                            Filtrar
+                        </button>
+                        @if ($filters['search'] !== '' || $filters['role'] !== '')
+                            <a href="{{ route('users.index', ['per_page' => $filters['per_page']]) }}" class="inline-flex h-10 items-center justify-center px-4 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wide transition-colors">Limpiar</a>
+                        @endif
+                    </div>
+                    @error('search')<p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>@enderror
+                    @error('role')<p class="mt-2 text-xs font-medium text-rose-600">Selecciona un rol válido.</p>@enderror
+                    @error('per_page')<p class="mt-2 text-xs font-medium text-rose-600">Selecciona un tamaño de página válido.</p>@enderror
+                </form>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -108,9 +138,7 @@
                     </table>
                 </div>
 
-                <div class="bg-slate-50 border-t border-slate-200 p-4">
-                    <p class="text-xs text-slate-500 text-center font-medium">Fin de los registros.</p>
-                </div>
+                <x-pagination-footer :paginator="$users" label="usuarios" />
 
             </div>
         </div>

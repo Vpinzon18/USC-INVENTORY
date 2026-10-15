@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -7,30 +8,38 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('assets', function (Blueprint $table) {
+        Schema::create('asset_batteries', function (Blueprint $table) {
+            $table->id();
 
-            $table->dropColumn([
-                'battery_health',
-                'battery_cycle_count',
-                'battery_design_capacity',
-                'battery_full_charge_capacity',
-            ]);
+            $table->foreignId('asset_id')
+                ->constrained('assets')
+                ->cascadeOnDelete();
 
+            $table->string('manufacturer')->nullable();
+            $table->string('model')->nullable();
+            $table->string('serial_number')->nullable();
+
+            $table->string('health')->nullable();
+
+            $table->integer('cycle_count')->nullable();
+
+            $table->integer('design_capacity')->nullable();
+            $table->integer('full_charge_capacity')->nullable();
+            $table->integer('remaining_capacity')->nullable();
+
+            $table->integer('charge_percent')->nullable();
+
+            $table->boolean('is_charging')
+                ->default(false);
+
+            $table->integer('estimated_runtime_minutes')->nullable();
+
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::table('assets', function (Blueprint $table) {
-
-            $table->string('battery_health')->nullable();
-
-            $table->integer('battery_cycle_count')->nullable();
-
-            $table->integer('battery_design_capacity')->nullable();
-
-            $table->integer('battery_full_charge_capacity')->nullable();
-
-        });
+        Schema::dropIfExists('asset_batteries');
     }
 };

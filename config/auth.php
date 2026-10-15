@@ -33,15 +33,11 @@ return [
     */
 
 'providers' => [
-        'users' => [
-            'driver' => 'ldap',
-            'model' => LdapRecord\Models\ActiveDirectory\User::class,
-            
-            // --- AGREGA ESTE BLOQUE PARA SALVAR A TUS USUARIOS LOCALES ---
-            'fallback' => [
-                'enabled' => true,
-                'password' => 'password', // La columna donde guardas la clave en tu tabla users
-            ],
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class,
+    ],
+],
             // -------------------------------------------------------------
 
             'database' => [
@@ -52,8 +48,8 @@ return [
                     'email' => 'mail', 
                 ],
             ],
-        ],
-    ],
+    
+    
 
     /*
     |--------------------------------------------------------------------------

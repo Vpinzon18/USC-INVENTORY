@@ -6,14 +6,49 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Support\PaginationOptions;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
-        return view('admin.users.index', compact('users'));
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'role' => ['nullable', 'integer', Rule::in([1, 2, 3])],
+            'per_page' => ['nullable', 'integer', Rule::in(PaginationOptions::SIZES)],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $filters = [
+            'search' => trim((string) ($validated['search'] ?? '')),
+            'role' => (string) ($validated['role'] ?? ''),
+            'per_page' => (string) ($validated['per_page'] ?? PaginationOptions::fromRequest($request)),
+        ];
+
+        $query = User::query();
+
+        if ($filters['search'] !== '') {
+            $term = mb_strtolower($filters['search']);
+            $query->where(function ($usersQuery) use ($term) {
+                $usersQuery
+                    ->whereRaw('LOWER(name) LIKE ?', ['%' . $term . '%'])
+                    ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $term . '%']);
+            });
+        }
+
+        if ($filters['role'] !== '') {
+            $query->where('role', (int) $filters['role']);
+        }
+
+        $users = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate((int) $filters['per_page'])
+            ->withQueryString();
+
+        return view('admin.users.index', compact('users', 'filters'));
     }
 
     public function edit(User $user)
