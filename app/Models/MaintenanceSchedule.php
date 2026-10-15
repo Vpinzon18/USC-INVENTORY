@@ -23,7 +23,7 @@ class MaintenanceSchedule extends Model
     return $this->belongsTo(User::class, 'technician_id');
 }
 public function technicalService() {
-    return $this->hasOne(TechnicalService::class, 'maintenance_schedule_id');
+    return $this->hasOne(TechnicalService::class, 'maintenance_schedule_id')->latestOfMany();
 }
 
 }

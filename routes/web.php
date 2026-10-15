@@ -14,6 +14,7 @@ use App\Http\Controllers\CustodianController;
 use App\Http\Controllers\DependencyController;
 use App\Http\Controllers\JobTitleController;
 use App\Http\Controllers\MovementController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TechnicalServiceController;
 use App\Http\Controllers\Web\DashboardController;
@@ -34,6 +35,9 @@ Route::post('/', [AuthenticatedSessionController::class, 'store'])
     ->name('login.post');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('/seleccion', fn () => view('welcome'))->name('selector');
 
     // The dashboard view is intentionally left untouched; access still requires a session.
@@ -111,7 +115,7 @@ Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->middlewar
 */
 Route::middleware(['auth', 'role:1,2,3'])->group(function () {
     Route::get('/schedules', [MaintenanceScheduleController::class, 'index'])->name('schedules.index');
-    Route::get('/schedules/calendar', fn () => view('admin.schedules.calendar'))->name('schedules.calendar');
+    Route::get('/schedules/calendar', [MaintenanceScheduleController::class, 'calendar'])->name('schedules.calendar');
     Route::get('/maintenances', [TechnicalServiceController::class, 'index'])->name('maintenances.index');
     Route::get('/maintenances/{maintenance}/export', [TechnicalServiceController::class, 'export'])
         ->name('maintenances.export');

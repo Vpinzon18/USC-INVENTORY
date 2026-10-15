@@ -19,14 +19,14 @@
                 </div>
             </div>
 
-            <form action="{{ route('schedules.store') }}" method="POST" id="scheduleCreateForm" x-data="scheduleFormEngine()">
+            <form action="{{ route('schedules.store') }}" method="POST" id="scheduleCreateForm" data-sigma-create-form data-swal-required-hidden="technician_id,asset_ids[]" data-swal-title="¿Crear las agendas de mantenimiento?" data-swal-text="Se generará una agenda para cada equipo seleccionado." x-data="scheduleFormEngine()">
                 @csrf
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                     <div class="lg:col-span-2 space-y-6">
                         
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-visible">
+                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2 rounded-t-xl">
                                 <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                                 <h3 class="font-bold text-slate-800">Detalles de Programación</h3>
                             </div>
@@ -65,7 +65,7 @@
                                     @error('asset_ids') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
 
                                     <div x-show="dropdowns.assets.open" x-transition.opacity.duration.200ms
-                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto overscroll-contain divide-y divide-slate-100">
                                         
                                         <div x-show="dropdowns.assets.results.length === 0 && dropdowns.assets.search.length === 0 && !dropdowns.assets.loading" class="p-6 text-center">
                                             <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -127,7 +127,7 @@
                                     @error('technician_id') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
 
                                     <div x-show="dropdowns.technicians.open && form.technician_id === ''" x-transition.opacity.duration.200ms
-                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto overscroll-contain divide-y divide-slate-100">
                                         
                                         <div x-show="dropdowns.technicians.results.length === 0 && !dropdowns.technicians.loading" class="p-6 text-center">
                                             <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -289,3 +289,4 @@
         });
     </script>
 </x-app-layout>
+

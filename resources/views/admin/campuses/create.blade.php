@@ -51,7 +51,7 @@
                 
                 <!-- COLUMNA IZQUIERDA: FORMULARIO (70%) -->
                 <div class="lg:col-span-8">
-                    <form action="{{ route('campuses.store') }}" method="POST" id="createCampusForm" @submit="isSubmitting = true">
+                    <form action="{{ route('campuses.store') }}" method="POST" id="createCampusForm" data-sigma-create-form @submit="isSubmitting = true">
                         @csrf
                         
                         <!-- TARJETA ÚNICA DE FORMULARIO -->

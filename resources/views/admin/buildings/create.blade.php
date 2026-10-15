@@ -64,7 +64,7 @@
                 
                 <!-- COLUMNA IZQUIERDA: FORMULARIO (70%) -->
                 <div class="lg:col-span-8">
-                    <form action="{{ route('buildings.store') }}" method="POST" id="createBuildingForm" class="space-y-6">
+                    <form action="{{ route('buildings.store') }}" method="POST" id="createBuildingForm" data-sigma-create-form="manual" class="space-y-6">
                         @csrf
                         
                         <!-- TARJETA: INFORMACIÓN GENERAL -->
@@ -335,7 +335,7 @@
                     
                     // Asegurar que las validaciones HTML5 nativas (como "required") se respeten
                     if (!form.checkValidity()) {
-                        form.reportValidity();
+                        window.SigmaFormFeedback.showFirstInvalid(form);
                         return;
                     }
 
@@ -375,3 +375,4 @@
         }
     </style>
 </x-app-layout>
+

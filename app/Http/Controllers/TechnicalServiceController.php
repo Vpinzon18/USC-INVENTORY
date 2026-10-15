@@ -111,24 +111,28 @@ if ($request->filled('date_end')) {
 }
 
    public function create(Request $request)
-{
-    // 1. Iniciamos una colección vacía por defecto (Carga ultra rápida)
-    $assets = collect();
+    {
+        $assets = collect();
+        $schedule = null;
 
-    // 2. ¿Viene preseleccionado un equipo desde otra vista? (Ej: ?asset_id=25)
-    if ($request->filled('asset_id')) {
-        $assets = Asset::with('room.building')
-            ->where('id', $request->asset_id)
-            ->get(); // Solo traemos 1 registro, no miles.
+        if ($request->filled('schedule_id')) {
+            $schedule = MaintenanceSchedule::with('asset.room.building')->findOrFail($request->integer('schedule_id'));
+            abort_if((int) Auth::user()->role === 2 && (int) $schedule->technician_id !== (int) Auth::id(), 403);
+
+            if ($request->filled('asset_id') && (int) $request->input('asset_id') !== (int) $schedule->asset_id) {
+                abort(404);
+            }
+
+            $assets = collect([$schedule->asset])->filter();
+        } elseif ($request->filled('asset_id')) {
+            $assets = Asset::with('room.building')->where('id', $request->integer('asset_id'))->get();
+        }
+
+        $categories = \App\Models\Category::orderBy('name', 'asc')->get();
+
+        return view('admin.maintenances.create', compact('assets', 'categories', 'schedule'));
     }
-
-    // 3. Consultamos el catálogo dinámico (Tipos de Intervención)
-    $categories = \App\Models\Category::orderBy('name', 'asc')->get();
-
-    return view('admin.maintenances.create', compact('assets', 'categories'));
-}
-
-    public function edit(int $id)
+public function edit(int $id)
     {
         $maintenance = TechnicalService::findOrFail($id);
         
@@ -155,6 +159,11 @@ if ($request->filled('date_end')) {
         'maintenance_schedule_id' => 'nullable|exists:maintenance_schedules,id', 
     ]);
 
+    if (!empty($validated['maintenance_schedule_id'])) {
+        $schedule = MaintenanceSchedule::findOrFail($validated['maintenance_schedule_id']);
+        abort_unless((int) $schedule->asset_id === (int) $validated['asset_id'], 422, 'El cronograma seleccionado no corresponde al activo.');
+        abort_if((int) Auth::user()->role === 2 && (int) $schedule->technician_id !== (int) Auth::id(), 403);
+    }
     // 2. ESCUDO LIGERO (Procesamiento de datos)
     $tipoBase = strip_tags($validated['type']);
     $tipoPersonalizado = isset($validated['custom_type']) ? strip_tags($validated['custom_type']) : null;

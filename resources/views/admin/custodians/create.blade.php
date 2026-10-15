@@ -2,7 +2,7 @@
     <div class="py-8 bg-slate-50 min-h-screen">
         <div class="max-w-[1400px] w-[96%] mx-auto">
 
-            <form action="{{ route('custodians.store') }}" method="POST" id="createCustodianForm">
+            <form action="{{ route('custodians.store') }}" method="POST" id="createCustodianForm" data-sigma-create-form>
                 @csrf
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">

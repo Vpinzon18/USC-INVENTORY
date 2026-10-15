@@ -52,7 +52,7 @@
                     
                     <!-- COLUMNA IZQUIERDA: FORMULARIO (70%) -->
                     <div class="lg:col-span-8 border-b lg:border-b-0 lg:border-r border-slate-100">
-                        <form action="{{ route('jobtitles.store') }}" method="POST" id="createJobtitleForm" class="flex flex-col h-full">
+                        <form action="{{ route('jobtitles.store') }}" method="POST" id="createJobtitleForm" data-sigma-create-form="manual" class="flex flex-col h-full">
                             @csrf
 
                             <div class="p-6 md:p-8 flex-1">
@@ -176,7 +176,7 @@
                     const form = document.getElementById('createJobtitleForm');
                     
                     if (!form.checkValidity()) {
-                        form.reportValidity();
+                        window.SigmaFormFeedback.showFirstInvalid(form);
                         return;
                     }
 
@@ -206,3 +206,4 @@
         });
     </script>
 </x-app-layout>
+

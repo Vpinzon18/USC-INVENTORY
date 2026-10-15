@@ -51,7 +51,7 @@
                 
                 <!-- COLUMNA IZQUIERDA: FORMULARIO (70%) -->
                 <div class="lg:col-span-8">
-                    <form action="{{ route('dependencies.store') }}" method="POST" id="createDependencyForm" class="space-y-6">
+                    <form action="{{ route('dependencies.store') }}" method="POST" id="createDependencyForm" data-sigma-create-form="manual" class="space-y-6">
                         @csrf
                         
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 relative z-20">
@@ -176,7 +176,7 @@
                     const form = document.getElementById('createDependencyForm');
                     
                     if (!form.checkValidity()) {
-                        form.reportValidity();
+                        window.SigmaFormFeedback.showFirstInvalid(form);
                         return;
                     }
 
@@ -206,3 +206,4 @@
         });
     </script>
 </x-app-layout>
+

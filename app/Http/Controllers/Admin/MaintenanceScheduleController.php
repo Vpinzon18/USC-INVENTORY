@@ -8,6 +8,8 @@ use App\Models\Asset;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\User;
+use App\Notifications\MaintenanceAssignedNotification;
+use Illuminate\Support\Facades\DB;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class MaintenanceScheduleController extends Controller
@@ -124,6 +126,69 @@ class MaintenanceScheduleController extends Controller
         return view('admin.schedules.create', compact('technicians'));
     }
 
+    public function calendar()
+    {
+        $schedules = MaintenanceSchedule::query()
+            ->with([
+                'asset.room.building.campus',
+                'asset.currentCustodian',
+                'asset.custodian',
+                'technician',
+                'technicalService.technician',
+            ])
+            ->orderBy('scheduled_date')
+            ->get();
+
+        $maintenanceRows = $schedules->map(function (MaintenanceSchedule $schedule): array {
+            $asset = $schedule->asset;
+            $room = $asset?->room;
+            $building = $room?->building;
+            $service = $schedule->technicalService;
+            $custodian = $asset?->currentCustodian ?? $asset?->custodian;
+
+            return [
+                'id' => $schedule->id,
+                'scheduledDate' => $schedule->scheduled_date,
+                'status' => $schedule->status,
+                'technicianId' => $schedule->technician_id,
+                'technician' => $schedule->technician?->name ?? 'Técnico no asignado',
+                'performedDate' => $service?->performed_at
+                    ? \Illuminate\Support\Carbon::parse($service->performed_at)->toDateString()
+                    : null,
+                'performer' => $service?->technician?->name,
+                'serviceType' => $service?->type,
+                'assetName' => trim(implode(' ', array_filter([
+                    $asset?->manufacturer,
+                    $asset?->model_version,
+                ]))) ?: ($asset?->hostname ?: 'Activo sin nombre'),
+                'serial' => $asset?->serial_number ?? 'Sin serial',
+                'plate' => $asset?->internal_code ?? 'Sin placa',
+                'location' => implode(' · ', array_filter([
+                    $building?->campus?->name,
+                    $building?->name,
+                    $room?->nomenclatura ?: $room?->name,
+                ])) ?: 'Ubicación sin asignar',
+                'campus' => $building?->campus?->name ?? 'Sin sede',
+                'building' => $building?->name ?? 'Sin bloque',
+                'room' => $room?->nomenclatura ?: ($room?->name ?? 'Sin espacio'),
+                'custodian' => $custodian?->full_name ?? 'Sin custodiante',
+                'executionUrl' => $schedule->status === 'REALIZADO' || $service
+                    || !in_array((int) auth()->user()->role, [1, 2], true)
+                    || ((int) auth()->user()->role === 2 && (int) $schedule->technician_id !== (int) auth()->id())
+                    ? null
+                    : route('maintenances.create', ['asset_id' => $asset?->id, 'schedule_id' => $schedule->id]),
+            ];
+        })->values();
+
+        $today = now()->toDateString();
+        $focusDate = $schedules->first(fn (MaintenanceSchedule $schedule) => $schedule->scheduled_date >= $today)?->scheduled_date
+            ?? $schedules->last()?->scheduled_date
+            ?? $today;
+        $calendarMonth = \Illuminate\Support\Carbon::parse($focusDate)->format('Y-m');
+
+        return view('admin.schedules.calendar', compact('maintenanceRows', 'calendarMonth'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -136,16 +201,23 @@ class MaintenanceScheduleController extends Controller
 
         $status = $validated['status'] ?? 'PENDIENTE';
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $status): void {
+        $schedules = DB::transaction(function () use ($validated, $status): array {
+            $createdSchedules = [];
             foreach ($validated['asset_ids'] as $assetId) {
-                MaintenanceSchedule::create([
+                $createdSchedules[] = MaintenanceSchedule::create([
                     'asset_id' => $assetId,
                     'technician_id' => $validated['technician_id'],
                     'scheduled_date' => $validated['scheduled_date'],
                     'status' => $status,
                 ]);
             }
+            return $createdSchedules;
         });
+
+        $technician = User::findOrFail($validated['technician_id']);
+        foreach ($schedules as $assignedSchedule) {
+            $technician->notify(new MaintenanceAssignedNotification($assignedSchedule->load('asset')));
+        }
 
         return redirect()->route('schedules.index')
             ->with('success', 'Cronograma creado correctamente.');
@@ -177,43 +249,49 @@ class MaintenanceScheduleController extends Controller
     return view('admin.schedules.edit', compact('schedule', 'assets', 'technicians'));
 }
 
-   public function update(Request $request, MaintenanceSchedule $schedule)
-{
-    // 1. Validamos. Permitimos asset_ids como array.
-    $request->validate([
-        'asset_ids'      => 'required|array|min:1',
-        'asset_ids.*'    => 'exists:assets,id',
-        'technician_id'  => ['required', Rule::exists('users', 'id')->where('role', 2)],
-        'scheduled_date' => 'required|date',
-        'status'         => 'required|in:PENDIENTE,REALIZADO,VENCIDO',
-    ]);
-
-    $assetIds = $request->input('asset_ids');
-
-    // 2. Extraemos el primer ID para actualizar la instancia actual ($schedule)
-    $firstAssetId = array_shift($assetIds); 
-
-    // Actualizamos el registro principal
-    $schedule->update([
-        'asset_id'       => $firstAssetId,
-        'technician_id'  => $request->technician_id,
-        'scheduled_date' => $request->scheduled_date,
-        'status'         => $request->status,
-    ]);
-
-    // 3. Si se añadieron más equipos (nuevos IDs), creamos registros nuevos
-    foreach ($assetIds as $asset_id) {
-        MaintenanceSchedule::create([
-            'asset_id'       => $asset_id,
-            'technician_id'  => $request->technician_id,
-            'scheduled_date' => $request->scheduled_date,
-            'status'         => 'PENDIENTE',
+    public function update(Request $request, MaintenanceSchedule $schedule)
+    {
+        $validated = $request->validate([
+            'asset_ids' => ['required', 'array', 'min:1'],
+            'asset_ids.*' => ['required', 'integer', 'distinct', 'exists:assets,id'],
+            'technician_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 2)],
+            'scheduled_date' => ['required', 'date'],
+            'status' => ['required', 'in:PENDIENTE,REALIZADO,VENCIDO'],
         ]);
-    }
 
-    return redirect()->route('schedules.index')
-        ->with('success', 'Agenda actualizada y nuevos equipos procesados.');
-}
+        $assetIds = array_values($validated['asset_ids']);
+        $assignmentChanged = (int) $schedule->technician_id !== (int) $validated['technician_id'] || (int) $schedule->asset_id !== (int) $assetIds[0];
+        $additionalSchedules = DB::transaction(function () use ($schedule, $validated, $assetIds): array {
+            $schedule->update([
+                'asset_id' => array_shift($assetIds),
+                'technician_id' => $validated['technician_id'],
+                'scheduled_date' => $validated['scheduled_date'],
+                'status' => $validated['status'],
+            ]);
+
+            $createdSchedules = [];
+            foreach ($assetIds as $assetId) {
+                $createdSchedules[] = MaintenanceSchedule::create([
+                    'asset_id' => $assetId,
+                    'technician_id' => $validated['technician_id'],
+                    'scheduled_date' => $validated['scheduled_date'],
+                    'status' => 'PENDIENTE',
+                ]);
+            }
+            return $createdSchedules;
+        });
+
+        $technician = User::findOrFail($validated['technician_id']);
+        if ($assignmentChanged) {
+            $technician->notify(new MaintenanceAssignedNotification($schedule->fresh()->load('asset')));
+        }
+        foreach ($additionalSchedules as $assignedSchedule) {
+            $technician->notify(new MaintenanceAssignedNotification($assignedSchedule->load('asset')));
+        }
+
+        return redirect()->route('schedules.index')
+            ->with('success', 'Agenda actualizada y nuevos equipos procesados.');
+    }
     public function export(Request $request)
     {
         $query = MaintenanceSchedule::with([

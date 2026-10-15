@@ -14,7 +14,7 @@
                     </div>
                 </div>
 
-                <form action="{{ route('users.store') }}" method="POST" class="p-6 md:p-8 flex flex-col gap-6">
+                <form action="{{ route('users.store') }}" method="POST" data-sigma-create-form class="p-6 md:p-8 flex flex-col gap-6">
                     @csrf
                     
                     @if ($errors->any())

@@ -334,7 +334,13 @@
 
                 <div class="hidden lg:block"></div>
 
-                <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-slate-50 hover:bg-blue-50 border border-slate-200 transition-all group">
+                <div class="ml-auto flex items-center gap-3 sm:ml-0">
+                    <a href="{{ route('notifications.index') }}" aria-label="Notificaciones" title="Notificaciones" class="relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-12 0v3.2A2 2 0 015.4 16L4 17h5m6 0a3 3 0 11-6 0" /></svg>
+                        @php($unreadNotificationsCount = Auth::user()->unreadNotifications()->count())
+                        @if($unreadNotificationsCount > 0)<span class="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-red-600 px-1 text-[10px] font-extrabold leading-none text-white">{{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}</span>@endif
+                    </a>
+                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-slate-50 hover:bg-blue-50 border border-slate-200 transition-all group">
                     <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-sm select-none group-hover:scale-105 transition-transform">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                     </div>
@@ -357,6 +363,7 @@
                         </span>
                     </div>
                 </a>
+                </div>
             </header>
 
             <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -404,6 +411,25 @@
             /* slate-600 */
         }
     </style>
+@if ($errors->any() || session()->has('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const validationErrors = @json($errors->all());
+            const flashError = @json(session('error'));
+            const messages = [...validationErrors, ...(flashError ? [flashError] : [])];
+            if (!messages.length || !window.Swal) return;
+            Swal.fire({
+                icon: 'error',
+                title: validationErrors.length ? 'No se pudo guardar' : 'Ocurrió un problema',
+                text: messages.join('\n'),
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#2563eb',
+                didOpen: () => { Swal.getPopup().querySelector('.swal2-html-container').style.whiteSpace = 'pre-line'; },
+            });
+        });
+    </script>
+@endif
 </body>
 
 </html>
+

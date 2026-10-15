@@ -43,8 +43,11 @@
                 </div>
             </div>
 
-            <form action="{{ route('maintenances.store') }}" method="POST" id="createForm" class="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
+            <form action="{{ route('maintenances.store') }}" method="POST" id="createForm" data-sigma-create-form="manual" class="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
                 @csrf
+                @if($schedule)
+                    <input type="hidden" name="maintenance_schedule_id" value="{{ old('maintenance_schedule_id', $schedule->id) }}">
+                @endif
 
                 <div class="lg:col-span-8 space-y-6">
                     
@@ -60,7 +63,7 @@
                         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="relative">
                                 <label class="block text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">Fecha Realizada <span class="text-rose-500">*</span></label>
-                                <input type="date" name="performed_at" value="{{ old('performed_at', now()->format('Y-m-d')) }}"
+                                <input type="date" name="performed_at" required value="{{ old('performed_at', now()->format('Y-m-d')) }}"
                                     class="w-full border-slate-300 rounded-xl py-2.5 px-4 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm">
                                 @error('performed_at') <p class="text-xs text-rose-500 mt-1 font-medium">{{ $message }}</p> @enderror
                             </div>
@@ -195,7 +198,7 @@
                             <span class="text-[10px] font-bold text-slate-400" x-text="desc.length + ' / 2000 chars'"></span>
                         </div>
                         <div class="p-6">
-                            <textarea x-ref="descInput" x-init="desc = $el.value" x-model="desc" name="description" rows="5" maxlength="2000"
+                            <textarea x-ref="descInput" x-init="desc = $el.value" x-model="desc" name="description" required minlength="3" rows="5" maxlength="2000"
                                 class="w-full border-slate-300 rounded-xl py-3 px-4 text-sm text-slate-700 focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all leading-relaxed shadow-sm resize-y"
                                 placeholder="Describe detalladamente el mantenimiento realizado, síntomas, diagnósticos y piezas cambiadas...">{{ old('description') }}</textarea>
                             @error('description') <p class="text-xs text-rose-500 mt-2 font-medium">{{ $message }}</p> @enderror
@@ -403,8 +406,17 @@
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('updateForm') || document.getElementById('createForm');
             if (form) {
+                form.noValidate = true;
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
+                    if (!form.checkValidity()) {
+                        window.SigmaFormFeedback.showFirstInvalid(form);
+                        return;
+                    }
+                    if (!form.elements.namedItem('asset_id')?.value || !form.elements.namedItem('type')?.value) {
+                        window.SigmaFormFeedback.showMessage('Información incompleta', !form.elements.namedItem('asset_id')?.value ? 'Selecciona el activo que recibió el mantenimiento.' : 'Selecciona el tipo de servicio.');
+                        return;
+                    }
                     const btn = form.querySelector('button[type="submit"]');
 
                     Swal.fire({
@@ -435,3 +447,5 @@
         });
     </script>
 </x-app-layout>
+
+

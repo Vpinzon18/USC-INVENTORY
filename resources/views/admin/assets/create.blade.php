@@ -63,7 +63,7 @@
                      FORMULARIO
                 ================================================== --}}
 
-                <form id="create-asset-form"
+                <form id="create-asset-form" data-sigma-create-form="manual"
                     action="{{ route('assets.store') }}"
                     method="POST"
                     class="p-6 md:p-8 space-y-6">
@@ -4120,7 +4120,7 @@
 
             if (!roomSelect.value || roomSelect.disabled) {
                 custodianSelect.setCustomValidity('Selecciona un custodiante que tenga al menos una ubicación asignada.');
-                form.reportValidity();
+                window.SigmaFormFeedback.showFirstInvalid(form);
                 return;
             }
 
@@ -4128,7 +4128,7 @@
 
             if (!form.checkValidity()) {
 
-                form.reportValidity();
+                window.SigmaFormFeedback.showFirstInvalid(form);
 
                 return;
 
@@ -4219,3 +4219,4 @@
     </script>
 
 </x-app-layout>
+

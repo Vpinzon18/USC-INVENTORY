@@ -51,7 +51,7 @@
                 
                 <!-- COLUMNA IZQUIERDA: FORMULARIO (70%) -->
                 <div class="lg:col-span-8">
-                    <form action="{{ route('admin.room_types.store') }}" method="POST" id="createRoomTypeForm" class="space-y-6">
+                    <form action="{{ route('admin.room_types.store') }}" method="POST" id="createRoomTypeForm" data-sigma-create-form="manual" class="space-y-6">
                         @csrf
                         
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -186,7 +186,7 @@
                     const form = document.getElementById('createRoomTypeForm');
                     
                     if (!form.checkValidity()) {
-                        form.reportValidity();
+                        window.SigmaFormFeedback.showFirstInvalid(form);
                         return;
                     }
 
@@ -216,3 +216,4 @@
         });
     </script>
 </x-app-layout>
+

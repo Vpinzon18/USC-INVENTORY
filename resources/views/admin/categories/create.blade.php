@@ -51,7 +51,7 @@
                 
                 <!-- COLUMNA IZQUIERDA: FORMULARIO (70%) -->
                 <div class="lg:col-span-8">
-                    <form action="{{ route('categories.store') }}" method="POST" id="createCategoryForm" class="space-y-6">
+                    <form action="{{ route('categories.store') }}" method="POST" id="createCategoryForm" data-sigma-create-form="manual" class="space-y-6">
                         @csrf
                         
                         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 relative z-20 overflow-hidden">
@@ -208,7 +208,7 @@
                     const form = document.getElementById('createCategoryForm');
                     
                     if (!form.checkValidity()) {
-                        form.reportValidity();
+                        window.SigmaFormFeedback.showFirstInvalid(form);
                         return;
                     }
 
@@ -239,3 +239,4 @@
         });
     </script>
 </x-app-layout>
+

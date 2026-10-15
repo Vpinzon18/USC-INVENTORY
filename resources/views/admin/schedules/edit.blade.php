@@ -26,8 +26,8 @@
 
                     <div class="lg:col-span-2 space-y-6">
                         
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-visible">
+                            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2 rounded-t-xl">
                                 <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                                 <h3 class="font-bold text-slate-800">Detalles de la Agenda Actual</h3>
                             </div>
@@ -66,7 +66,7 @@
                                     @error('asset_ids') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
 
                                     <div x-show="dropdowns.assets.open" x-transition.opacity.duration.200ms
-                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-slate-100">
+                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto overscroll-contain divide-y divide-slate-100">
                                         
                                         <div x-show="dropdowns.assets.results.length === 0 && dropdowns.assets.search.length === 0 && !dropdowns.assets.loading" class="p-6 text-center">
                                             <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -116,7 +116,7 @@
                                     @error('technician_id') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
 
                                     <div x-show="dropdowns.technicians.open && form.technician_id === ''" x-transition.opacity.duration.200ms
-                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-100">
+                                         class="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl max-h-72 overflow-y-auto overscroll-contain divide-y divide-slate-100">
                                         <template x-for="item in dropdowns.technicians.results" :key="item.id">
                                             <div @mousedown.prevent="select('technicians', item)" class="group px-4 py-3 hover:bg-blue-50/80 cursor-pointer flex items-center gap-3 transition-colors">
                                                 <div class="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-blue-200 flex items-center justify-center text-slate-500 group-hover:text-blue-700 transition-colors shrink-0 font-black text-xs uppercase" x-text="item.label.substring(0,2)"></div>
