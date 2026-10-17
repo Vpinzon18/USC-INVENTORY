@@ -21,11 +21,9 @@ use Spatie\Browsershot\Browsershot;
 
 class AssetController extends Controller
 {
-    /**
-     * =========================================================
-     * LISTADO DE ACTIVOS
-     * =========================================================
-     */
+ 
+    //  LISTADO DE ACTIVOS
+     
     public function index(Request $request)
     {
         $filters = $request->query();
@@ -471,448 +469,450 @@ class AssetController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validated = $request->validate(
+            [
 
-            /*
-            |--------------------------------------------------------------------------
-            | ACTIVO PRINCIPAL
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | ACTIVO PRINCIPAL
+                |--------------------------------------------------------------------------
+                */
 
-            'room_id' => [
-                'required',
-                'integer',
-                'exists:rooms,id',
-                Rule::exists('custodian_room', 'room_id')
-                    ->where(fn ($query) => $query->where('custodian_id', $request->input('custodian_id'))),
+                'room_id' => [
+                    'required',
+                    'integer',
+                    'exists:rooms,id',
+                    Rule::exists('custodian_room', 'room_id')
+                        ->where(fn($query) => $query->where('custodian_id', $request->input('custodian_id'))),
+                ],
+
+                'serial_number' =>
+                'required|string|max:255|unique:assets,serial_number',
+
+                'internal_code' =>
+                'nullable|string|max:255|unique:assets,internal_code',
+
+                'hostname' =>
+                'nullable|string|max:255',
+
+                'manufacturer' =>
+                'nullable|string|max:255',
+
+                'model_version' =>
+                'nullable|string|max:255',
+
+                'chassis_type' =>
+                'nullable|string|max:255',
+
+                'os_version' =>
+                'nullable|string|max:255',
+
+                'domain_name' =>
+                'nullable|string|max:255',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | MOTHERBOARD
+                |--------------------------------------------------------------------------
+                */
+
+                'board_brand' =>
+                'nullable|string|max:255',
+
+                'board_model' =>
+                'nullable|string|max:255',
+
+                'board_serial' =>
+                'nullable|string|max:255',
+
+                'board_version' =>
+                'nullable|string|max:255',
+
+                'board_status' =>
+                'nullable|string|max:255',
+
+                /*
+    |--------------------------------------------------------------------------
+    | NETWORK
+    |--------------------------------------------------------------------------
+    */
+
+                'network' =>
+                'nullable|array',
+
+                'network.gateway' =>
+                'nullable|ip',
+
+                'network.dns_server' =>
+                'nullable|ip',
+
+                'network.dhcp_enabled' =>
+                'nullable|boolean',
+
+                'network.adapters' =>
+                'nullable|array',
+
+                'network.adapters.*.name' =>
+                'nullable|string|max:255',
+
+                'network.adapters.*.description' =>
+                'nullable|string|max:255',
+
+                'network.adapters.*.type' =>
+                'nullable|string|max:255',
+
+                'network.adapters.*.mac_address' => [
+                    'nullable',
+                    'string',
+                    'regex:/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/',
+                ],
+
+                'network.adapters.*.ipv4' =>
+                'nullable|ipv4',
+
+                'network.adapters.*.ipv6' =>
+                'nullable|ipv6',
+
+                'network.adapters.*.connected' =>
+                'nullable|boolean',
+
+                'network.adapters.*.is_primary' =>
+                'nullable|boolean',
+
+                'network.adapters.*.is_active' =>
+                'nullable|boolean',
+
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | BIOS
+                |--------------------------------------------------------------------------
+                */
+
+                'bios_manufacturer' =>
+                'nullable|string|max:255',
+
+                'bios_version' =>
+                'nullable|string|max:255',
+
+                'bios_serial' =>
+                'nullable|string|max:255',
+
+                'bios_release_date' =>
+                'nullable|date',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | WINDOWS
+                |--------------------------------------------------------------------------
+                */
+
+                'windows_version' =>
+                'nullable|string|max:255',
+
+                'windows_build' =>
+                'nullable|string|max:255',
+
+                'windows_edition' =>
+                'nullable|string|max:255',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SEGURIDAD
+                |--------------------------------------------------------------------------
+                */
+
+                'license_status' =>
+                'nullable|string|max:255',
+
+                'secure_boot' =>
+                'nullable|boolean',
+
+                'bitlocker_status' =>
+                'nullable|string|max:255',
+
+                'tpm_version' =>
+                'nullable|string|max:255',
+
+                'antivirus' =>
+                'nullable|string|max:255',
+
+                'firewall_enabled' =>
+                'nullable|boolean',
+
+                'uptime_minutes' =>
+                'nullable|integer|min:0',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ADMINISTRATIVO
+                |--------------------------------------------------------------------------
+                */
+
+                'custodian_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('custodians', 'id')->where('status', 'active'),
+                ],
+
+                'keyboard_serial' =>
+                'nullable|string|max:255',
+
+                'mouse_serial' =>
+                'nullable|string|max:255',
+
+                'security_guaya' =>
+                'nullable|string|max:255',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PROCESADOR
+                |--------------------------------------------------------------------------
+                */
+
+                'processor' =>
+                'nullable|array',
+
+                'processor.brand' =>
+                'nullable|string|max:255',
+
+                'processor.model' =>
+                'nullable|string|max:255',
+
+                'processor.processor_id' =>
+                'nullable|string|max:255',
+
+                'processor.socket' =>
+                'nullable|string|max:255',
+
+                'processor.status' =>
+                'nullable|string|max:255',
+
+                'processor.cores' =>
+                'nullable|integer|min:0',
+
+                'processor.threads' =>
+                'nullable|integer|min:0',
+
+                'processor.speed_mhz' =>
+                'nullable|integer|min:0',
+
+                'processor.architecture' =>
+                'nullable|string|max:255',
+
+                'processor.family' =>
+                'nullable|string|max:255',
+
+                'processor.generation' =>
+                'nullable|string|max:255',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RAM
+                |--------------------------------------------------------------------------
+                */
+
+                'ram_modules' =>
+                'nullable|array',
+
+                'ram_modules.*.manufacturer' =>
+                'nullable|string|max:255',
+
+                'ram_modules.*.model' =>
+                'nullable|string|max:255',
+
+                'ram_modules.*.serial_number' =>
+                'nullable|string|max:255',
+
+                'ram_modules.*.bank' =>
+                'nullable|string|max:255',
+
+                'ram_modules.*.slot' =>
+                'nullable|string|max:255',
+
+                'ram_modules.*.memory_type' =>
+                'nullable|string|max:255',
+
+                'ram_modules.*.capacity_gb' =>
+                'nullable|numeric|min:0',
+
+                'ram_modules.*.speed_mhz' =>
+                'nullable|integer|min:0',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | STORAGE
+                |--------------------------------------------------------------------------
+                */
+
+                'storage_devices' =>
+                'nullable|array',
+
+                'storage_devices.*.brand' =>
+                'nullable|string|max:255',
+
+                'storage_devices.*.model' =>
+                'nullable|string|max:255',
+
+                'storage_devices.*.serial_number' =>
+                'nullable|string|max:255',
+
+                'storage_devices.*.firmware' =>
+                'nullable|string|max:255',
+
+                'storage_devices.*.capacity_gb' =>
+                'nullable|numeric|min:0',
+
+                'storage_devices.*.free_gb' =>
+                'nullable|numeric|min:0',
+
+                'storage_devices.*.type' =>
+                'nullable|string|max:255',
+
+                'storage_devices.*.health' =>
+                'nullable|string|max:255',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | GPU
+                |--------------------------------------------------------------------------
+                */
+
+                'gpus' =>
+                'nullable|array',
+
+                'gpus.*.brand' =>
+                'nullable|string|max:255',
+
+                'gpus.*.model' =>
+                'nullable|string|max:255',
+
+                'gpus.*.memory_mb' =>
+                'nullable|integer|min:0',
+
+                'gpus.*.driver_version' =>
+                'nullable|string|max:255',
+
+                'gpus.*.processor' =>
+                'nullable|string|max:255',
+
+                'gpus.*.resolution' =>
+                'nullable|string|max:255',
+
+                'gpus.*.refresh_rate' =>
+                'nullable|integer|min:0',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | BATERÍA
+                |--------------------------------------------------------------------------
+                |
+                | TOTALMENTE OPCIONAL.
+                |
+                | Desktop = puede ir completamente vacío.
+                |
+                */
+
+                'battery' =>
+                'nullable|array',
+
+                'battery.manufacturer' =>
+                'nullable|string|max:255',
+
+                'battery.model' =>
+                'nullable|string|max:255',
+
+                'battery.serial_number' =>
+                'nullable|string|max:255',
+
+                'battery.health' =>
+                'nullable|string|max:255',
+
+                'battery.cycle_count' =>
+                'nullable|integer|min:0',
+
+                'battery.design_capacity' =>
+                'nullable|integer|min:0',
+
+                'battery.full_charge_capacity' =>
+                'nullable|integer|min:0',
+
+                'battery.remaining_capacity' =>
+                'nullable|integer|min:0',
+
+                'battery.charge_percent' =>
+                'nullable|integer|min:0|max:100',
+
+                'battery.is_charging' =>
+                'nullable|boolean',
+
+                'battery.estimated_runtime_minutes' =>
+                'nullable|integer|min:0|max:1440',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | MONITORES
+                |--------------------------------------------------------------------------
+                */
+
+                'monitors' =>
+                'nullable|array',
+
+                'monitors.*.brand' =>
+                'nullable|string|max:255',
+
+                'monitors.*.model' =>
+                'nullable|string|max:255',
+
+                'monitors.*.serial_number' =>
+                'nullable|string|max:255',
+
+                'monitors.*.manufacturer_code' =>
+                'nullable|string|max:255',
+
+                'monitors.*.year' =>
+                'nullable|integer|min:0',
+
+                'monitors.*.size' =>
+                'nullable|numeric|min:0',
+
+                'monitors.*.resolution' =>
+                'nullable|string|max:255',
+
+                'monitors.*.refresh_rate' =>
+                'nullable|integer|min:0',
+
+                'monitors.*.fixed_asset_code' =>
+                'nullable|string|max:255',
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SOFTWARE
+                |--------------------------------------------------------------------------
+                */
+
+                'software' =>
+                'nullable|array',
+
+                'software.*.name' =>
+                'nullable|string|max:255',
+
+                'software.*.version' =>
+                'nullable|string|max:255',
             ],
-
-            'serial_number' =>
-            'required|string|max:255|unique:assets,serial_number',
-
-            'internal_code' =>
-            'nullable|string|max:255|unique:assets,internal_code',
-
-            'hostname' =>
-            'nullable|string|max:255',
-
-            'manufacturer' =>
-            'nullable|string|max:255',
-
-            'model_version' =>
-            'nullable|string|max:255',
-
-            'chassis_type' =>
-            'nullable|string|max:255',
-
-            'os_version' =>
-            'nullable|string|max:255',
-
-            'domain_name' =>
-            'nullable|string|max:255',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | MOTHERBOARD
-            |--------------------------------------------------------------------------
-            */
-
-            'board_brand' =>
-            'nullable|string|max:255',
-
-            'board_model' =>
-            'nullable|string|max:255',
-
-            'board_serial' =>
-            'nullable|string|max:255',
-
-            'board_version' =>
-            'nullable|string|max:255',
-
-            'board_status' =>
-            'nullable|string|max:255',
-
-            /*
-|--------------------------------------------------------------------------
-| NETWORK
-|--------------------------------------------------------------------------
-*/
-
-            'network' =>
-            'nullable|array',
-
-            'network.gateway' =>
-            'nullable|ip',
-
-            'network.dns_server' =>
-            'nullable|ip',
-
-            'network.dhcp_enabled' =>
-            'nullable|boolean',
-
-            'network.adapters' =>
-            'nullable|array',
-
-            'network.adapters.*.name' =>
-            'nullable|string|max:255',
-
-            'network.adapters.*.description' =>
-            'nullable|string|max:255',
-
-            'network.adapters.*.type' =>
-            'nullable|string|max:255',
-
-            'network.adapters.*.mac_address' => [
-                'nullable',
-                'string',
-                'regex:/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/',
-            ],
-
-            'network.adapters.*.ipv4' =>
-            'nullable|ipv4',
-
-            'network.adapters.*.ipv6' =>
-            'nullable|ipv6',
-
-            'network.adapters.*.connected' =>
-            'nullable|boolean',
-
-            'network.adapters.*.is_primary' =>
-            'nullable|boolean',
-
-            'network.adapters.*.is_active' =>
-            'nullable|boolean',
-
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | BIOS
-            |--------------------------------------------------------------------------
-            */
-
-            'bios_manufacturer' =>
-            'nullable|string|max:255',
-
-            'bios_version' =>
-            'nullable|string|max:255',
-
-            'bios_serial' =>
-            'nullable|string|max:255',
-
-            'bios_release_date' =>
-            'nullable|date',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | WINDOWS
-            |--------------------------------------------------------------------------
-            */
-
-            'windows_version' =>
-            'nullable|string|max:255',
-
-            'windows_build' =>
-            'nullable|string|max:255',
-
-            'windows_edition' =>
-            'nullable|string|max:255',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SEGURIDAD
-            |--------------------------------------------------------------------------
-            */
-
-            'license_status' =>
-            'nullable|string|max:255',
-
-            'secure_boot' =>
-            'nullable|boolean',
-
-            'bitlocker_status' =>
-            'nullable|string|max:255',
-
-            'tpm_version' =>
-            'nullable|string|max:255',
-
-            'antivirus' =>
-            'nullable|string|max:255',
-
-            'firewall_enabled' =>
-            'nullable|boolean',
-
-            'uptime_minutes' =>
-            'nullable|integer|min:0',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ADMINISTRATIVO
-            |--------------------------------------------------------------------------
-            */
-
-            'custodian_id' => [
-                'required',
-                'integer',
-                Rule::exists('custodians', 'id')->where('status', 'active'),
-            ],
-
-            'keyboard_serial' =>
-            'nullable|string|max:255',
-
-            'mouse_serial' =>
-            'nullable|string|max:255',
-
-            'security_guaya' =>
-            'nullable|string|max:255',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PROCESADOR
-            |--------------------------------------------------------------------------
-            */
-
-            'processor' =>
-            'nullable|array',
-
-            'processor.brand' =>
-            'nullable|string|max:255',
-
-            'processor.model' =>
-            'nullable|string|max:255',
-
-            'processor.processor_id' =>
-            'nullable|string|max:255',
-
-            'processor.socket' =>
-            'nullable|string|max:255',
-
-            'processor.status' =>
-            'nullable|string|max:255',
-
-            'processor.cores' =>
-            'nullable|integer|min:0',
-
-            'processor.threads' =>
-            'nullable|integer|min:0',
-
-            'processor.speed_mhz' =>
-            'nullable|integer|min:0',
-
-            'processor.architecture' =>
-            'nullable|string|max:255',
-
-            'processor.family' =>
-            'nullable|string|max:255',
-
-            'processor.generation' =>
-            'nullable|string|max:255',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | RAM
-            |--------------------------------------------------------------------------
-            */
-
-            'ram_modules' =>
-            'nullable|array',
-
-            'ram_modules.*.manufacturer' =>
-            'nullable|string|max:255',
-
-            'ram_modules.*.model' =>
-            'nullable|string|max:255',
-
-            'ram_modules.*.serial_number' =>
-            'nullable|string|max:255',
-
-            'ram_modules.*.bank' =>
-            'nullable|string|max:255',
-
-            'ram_modules.*.slot' =>
-            'nullable|string|max:255',
-
-            'ram_modules.*.memory_type' =>
-            'nullable|string|max:255',
-
-            'ram_modules.*.capacity_gb' =>
-            'nullable|numeric|min:0',
-
-            'ram_modules.*.speed_mhz' =>
-            'nullable|integer|min:0',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | STORAGE
-            |--------------------------------------------------------------------------
-            */
-
-            'storage_devices' =>
-            'nullable|array',
-
-            'storage_devices.*.brand' =>
-            'nullable|string|max:255',
-
-            'storage_devices.*.model' =>
-            'nullable|string|max:255',
-
-            'storage_devices.*.serial_number' =>
-            'nullable|string|max:255',
-
-            'storage_devices.*.firmware' =>
-            'nullable|string|max:255',
-
-            'storage_devices.*.capacity_gb' =>
-            'nullable|numeric|min:0',
-
-            'storage_devices.*.free_gb' =>
-            'nullable|numeric|min:0',
-
-            'storage_devices.*.type' =>
-            'nullable|string|max:255',
-
-            'storage_devices.*.health' =>
-            'nullable|string|max:255',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | GPU
-            |--------------------------------------------------------------------------
-            */
-
-            'gpus' =>
-            'nullable|array',
-
-            'gpus.*.brand' =>
-            'nullable|string|max:255',
-
-            'gpus.*.model' =>
-            'nullable|string|max:255',
-
-            'gpus.*.memory_mb' =>
-            'nullable|integer|min:0',
-
-            'gpus.*.driver_version' =>
-            'nullable|string|max:255',
-
-            'gpus.*.processor' =>
-            'nullable|string|max:255',
-
-            'gpus.*.resolution' =>
-            'nullable|string|max:255',
-
-            'gpus.*.refresh_rate' =>
-            'nullable|integer|min:0',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | BATERÍA
-            |--------------------------------------------------------------------------
-            |
-            | TOTALMENTE OPCIONAL.
-            |
-            | Desktop = puede ir completamente vacío.
-            |
-            */
-
-            'battery' =>
-            'nullable|array',
-
-            'battery.manufacturer' =>
-            'nullable|string|max:255',
-
-            'battery.model' =>
-            'nullable|string|max:255',
-
-            'battery.serial_number' =>
-            'nullable|string|max:255',
-
-            'battery.health' =>
-            'nullable|string|max:255',
-
-            'battery.cycle_count' =>
-            'nullable|integer|min:0',
-
-            'battery.design_capacity' =>
-            'nullable|integer|min:0',
-
-            'battery.full_charge_capacity' =>
-            'nullable|integer|min:0',
-
-            'battery.remaining_capacity' =>
-            'nullable|integer|min:0',
-
-            'battery.charge_percent' =>
-            'nullable|integer|min:0|max:100',
-
-            'battery.is_charging' =>
-            'nullable|boolean',
-
-            'battery.estimated_runtime_minutes' =>
-            'nullable|integer|min:0|max:1440',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | MONITORES
-            |--------------------------------------------------------------------------
-            */
-
-            'monitors' =>
-            'nullable|array',
-
-            'monitors.*.brand' =>
-            'nullable|string|max:255',
-
-            'monitors.*.model' =>
-            'nullable|string|max:255',
-
-            'monitors.*.serial_number' =>
-            'nullable|string|max:255',
-
-            'monitors.*.manufacturer_code' =>
-            'nullable|string|max:255',
-
-            'monitors.*.year' =>
-            'nullable|integer|min:0',
-
-            'monitors.*.size' =>
-            'nullable|numeric|min:0',
-
-            'monitors.*.resolution' =>
-            'nullable|string|max:255',
-
-            'monitors.*.refresh_rate' =>
-            'nullable|integer|min:0',
-
-            'monitors.*.fixed_asset_code' =>
-            'nullable|string|max:255',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SOFTWARE
-            |--------------------------------------------------------------------------
-            */
-
-            'software' =>
-            'nullable|array',
-
-            'software.*.name' =>
-            'nullable|string|max:255',
-
-            'software.*.version' =>
-            'nullable|string|max:255',
-        ], [
+            [
                 'network.gateway.ip' =>
                 'La puerta de enlace debe ser una dirección IP válida.',
 
@@ -948,9 +948,7 @@ class AssetController extends Controller
 
 
         DB::transaction(
-            function () use (
-                $validated
-            ) {
+            function () use ($validated) {
 
                 /*
                 |--------------------------------------------------------------------------
@@ -1235,646 +1233,494 @@ class AssetController extends Controller
         );
     }
 
-/**
- * =========================================================
- * ACTUALIZAR ACTIVO
- * =========================================================
- */
-public function update(
-    Request $request,
-    Asset $asset
-) {
+    /**
+     * =========================================================
+     * ACTUALIZAR ACTIVO
+     * =========================================================
+     */
+    public function update(
+        Request $request,
+        Asset $asset
+    ) {
 
-    $agentManaged =
-        (bool) $asset->is_agent_managed;
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDACIÓN
-    |--------------------------------------------------------------------------
-    */
-
-    $validated = $request->validate([
-
-        /*
-        |--------------------------------------------------------------------------
-        | ADMINISTRATIVO
-        |--------------------------------------------------------------------------
-        */
-
-        'room_id' =>
-        'required|exists:rooms,id',
-
-        'internal_code' =>
-        'nullable|string|max:255|unique:assets,internal_code,' .
-            $asset->id,
-
-        'custodian_id' =>
-        'nullable|exists:custodians,id',
-
-        'keyboard_serial' =>
-        'nullable|string|max:255',
-
-        'mouse_serial' =>
-        'nullable|string|max:255',
-
-        'security_guaya' =>
-        'nullable|string|max:255',
+        $agentManaged =
+            (bool) $asset->is_agent_managed;
 
 
         /*
         |--------------------------------------------------------------------------
-        | INFORMACIÓN GENERAL
+        | VALIDACIÓN
         |--------------------------------------------------------------------------
         */
 
-        'serial_number' =>
-        'required|string|max:255|unique:assets,serial_number,' .
-            $asset->id,
-
-        'hostname' =>
-        'nullable|string|max:255',
-
-        'manufacturer' =>
-        'nullable|string|max:255',
-
-        'model_version' =>
-        'nullable|string|max:255',
-
-        'chassis_type' =>
-        'nullable|string|max:255',
-
-        'os_version' =>
-        'nullable|string|max:255',
-
-        'domain_name' =>
-        'nullable|string|max:255',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | MOTHERBOARD
-        |--------------------------------------------------------------------------
-        */
-
-        'board_brand' =>
-        'nullable|string|max:255',
-
-        'board_model' =>
-        'nullable|string|max:255',
-
-        'board_serial' =>
-        'nullable|string|max:255',
-
-        'board_version' =>
-        'nullable|string|max:255',
-
-        'board_status' =>
-        'nullable|string|max:255',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BIOS
-        |--------------------------------------------------------------------------
-        */
-
-        'bios_manufacturer' =>
-        'nullable|string|max:255',
-
-        'bios_version' =>
-        'nullable|string|max:255',
-
-        'bios_serial' =>
-        'nullable|string|max:255',
-
-        'bios_release_date' =>
-        'nullable|date',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | WINDOWS
-        |--------------------------------------------------------------------------
-        */
-
-        'windows_version' =>
-        'nullable|string|max:255',
-
-        'windows_build' =>
-        'nullable|string|max:255',
-
-        'windows_edition' =>
-        'nullable|string|max:255',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SEGURIDAD
-        |--------------------------------------------------------------------------
-        */
-
-        'license_status' =>
-        'nullable|string|max:255',
-
-        'secure_boot' =>
-        'nullable|boolean',
-
-        'bitlocker_status' =>
-        'nullable|string|max:255',
-
-        'tpm_version' =>
-        'nullable|string|max:255',
-
-        'antivirus' =>
-        'nullable|string|max:255',
-
-        'firewall_enabled' =>
-        'nullable|boolean',
-
-        'uptime_minutes' =>
-        'nullable|integer|min:0',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | COMPONENTES
-        |--------------------------------------------------------------------------
-        */
-
-        'processor' =>
-        'nullable|array',
-
-        'processor.brand' =>
-        'nullable|string|max:255',
-
-        'processor.model' =>
-        'nullable|string|max:255',
-
-        'processor.processor_id' =>
-        'nullable|string|max:255',
-
-        'processor.socket' =>
-        'nullable|string|max:255',
-
-        'processor.status' =>
-        'nullable|string|max:255',
-
-        'processor.cores' =>
-        'nullable|integer|min:0',
-
-        'processor.threads' =>
-        'nullable|integer|min:0',
-
-        'processor.speed_mhz' =>
-        'nullable|integer|min:0',
-
-        'processor.architecture' =>
-        'nullable|string|max:255',
-
-        'processor.family' =>
-        'nullable|string|max:255',
-
-        'processor.generation' =>
-        'nullable|string|max:255',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RAM
-        |--------------------------------------------------------------------------
-        */
-
-        'ram_modules' =>
-        'nullable|array',
-
-        'ram_modules.*.manufacturer' =>
-        'nullable|string|max:255',
-
-        'ram_modules.*.model' =>
-        'nullable|string|max:255',
-
-        'ram_modules.*.serial_number' =>
-        'nullable|string|max:255',
-
-        'ram_modules.*.bank' =>
-        'nullable|string|max:255',
-
-        'ram_modules.*.slot' =>
-        'nullable|string|max:255',
-
-        'ram_modules.*.memory_type' =>
-        'nullable|string|max:255',
-
-        'ram_modules.*.capacity_gb' =>
-        'nullable|numeric|min:0',
-
-        'ram_modules.*.speed_mhz' =>
-        'nullable|integer|min:0',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | STORAGE
-        |--------------------------------------------------------------------------
-        */
-
-        'storage_devices' =>
-        'nullable|array',
-
-        'storage_devices.*.brand' =>
-        'nullable|string|max:255',
-
-        'storage_devices.*.model' =>
-        'nullable|string|max:255',
-
-        'storage_devices.*.serial_number' =>
-        'nullable|string|max:255',
-
-        'storage_devices.*.firmware' =>
-        'nullable|string|max:255',
-
-        'storage_devices.*.capacity_gb' =>
-        'nullable|numeric|min:0',
-
-        'storage_devices.*.free_gb' =>
-        'nullable|numeric|min:0',
-
-        'storage_devices.*.type' =>
-        'nullable|string|max:255',
-
-        'storage_devices.*.health' =>
-        'nullable|string|max:255',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GPU
-        |--------------------------------------------------------------------------
-        */
-
-        'gpus' =>
-        'nullable|array',
-
-        'gpus.*.brand' =>
-        'nullable|string|max:255',
-
-        'gpus.*.model' =>
-        'nullable|string|max:255',
-
-        'gpus.*.memory_mb' =>
-        'nullable|integer|min:0',
-
-        'gpus.*.driver_version' =>
-        'nullable|string|max:255',
-
-        'gpus.*.processor' =>
-        'nullable|string|max:255',
-
-        'gpus.*.resolution' =>
-        'nullable|string|max:255',
-
-        'gpus.*.refresh_rate' =>
-        'nullable|integer|min:0',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RED
-        |--------------------------------------------------------------------------
-        */
-
-        'network' =>
-        'nullable|array',
-
-        'network.gateway' =>
-        'nullable|ip',
-
-        'network.dns_server' =>
-        'nullable|ip',
-
-        'network.dhcp_enabled' =>
-        'nullable|boolean',
-
-        'network.adapters' =>
-        'nullable|array',
-
-        'network.adapters.*.name' =>
-        'nullable|string|max:255',
-
-        'network.adapters.*.description' =>
-        'nullable|string|max:255',
-
-        'network.adapters.*.type' =>
-        'nullable|string|max:255',
-
-        'network.adapters.*.mac_address' => [
-            'nullable',
-            'string',
-            'regex:/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/',
-        ],
-
-        'network.adapters.*.ipv4' =>
-        'nullable|ipv4',
-
-        'network.adapters.*.ipv6' =>
-        'nullable|ipv6',
-
-        'network.adapters.*.connected' =>
-        'nullable|boolean',
-
-        'network.adapters.*.is_primary' =>
-        'nullable|boolean',
-
-        'network.adapters.*.is_active' =>
-        'nullable|boolean',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BATERÍA
-        |--------------------------------------------------------------------------
-        */
-
-        'battery' =>
-        'nullable|array',
-
-        'battery.manufacturer' =>
-        'nullable|string|max:255',
-
-        'battery.model' =>
-        'nullable|string|max:255',
-
-        'battery.serial_number' =>
-        'nullable|string|max:255',
-
-        'battery.health' =>
-        'nullable|string|max:255',
-
-        'battery.cycle_count' =>
-        'nullable|integer|min:0',
-
-        'battery.design_capacity' =>
-        'nullable|integer|min:0',
-
-        'battery.full_charge_capacity' =>
-        'nullable|integer|min:0',
-
-        'battery.remaining_capacity' =>
-        'nullable|integer|min:0',
-
-        'battery.charge_percent' =>
-        'nullable|integer|min:0|max:100',
-
-        'battery.is_charging' =>
-        'nullable|boolean',
-
-        'battery.estimated_runtime_minutes' =>
-        'nullable|integer|min:0|max:1440',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SOFTWARE
-        |--------------------------------------------------------------------------
-        */
-
-        'software' =>
-        'nullable|array',
-
-        'software.*.is_active' =>
-        'required|boolean',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | MONITORES
-        |--------------------------------------------------------------------------
-        */
-
-        'monitors' =>
-        'nullable|array',
-
-        'monitors.*.id' =>
-        'nullable|integer',
-
-        'monitors.*.brand' =>
-        'nullable|string|max:255',
-
-        'monitors.*.model' =>
-        'nullable|string|max:255',
-
-        'monitors.*.serial_number' =>
-        'nullable|string|max:255',
-
-        'monitors.*.manufacturer_code' =>
-        'nullable|string|max:255',
-
-        'monitors.*.year' =>
-        'nullable|integer|min:0',
-
-        'monitors.*.size' =>
-        'nullable|numeric|min:0',
-
-        'monitors.*.resolution' =>
-        'nullable|string|max:255',
-
-        'monitors.*.refresh_rate' =>
-        'nullable|integer|min:0',
-
-        'monitors.*.fixed_asset_code' =>
-        'nullable|string|max:255',
-
-    ]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSACCIÓN
-    |--------------------------------------------------------------------------
-    */
-
-    DB::transaction(
-        function () use (
-            $asset,
-            $validated,
-            $request,
-            $agentManaged
-        ) {
+        $validated = $request->validate([
 
             /*
             |--------------------------------------------------------------------------
-            | INFORMACIÓN ADMINISTRATIVA
+            | ADMINISTRATIVO
             |--------------------------------------------------------------------------
             */
 
-            $asset->update([
+            'room_id' =>
+            'required|exists:rooms,id',
 
-                'room_id' =>
-                $validated['room_id'],
+            'internal_code' =>
+            'nullable|string|max:255|unique:assets,internal_code,' .
+                $asset->id,
 
-                'internal_code' =>
-                $validated['internal_code']
-                    ?? null,
+            'custodian_id' =>
+            'nullable|exists:custodians,id',
 
-                'keyboard_serial' =>
-                $validated['keyboard_serial']
-                    ?? null,
+            'keyboard_serial' =>
+            'nullable|string|max:255',
 
-                'mouse_serial' =>
-                $validated['mouse_serial']
-                    ?? null,
+            'mouse_serial' =>
+            'nullable|string|max:255',
 
-                'security_guaya' =>
-                $validated['security_guaya']
-                    ?? null,
-
-            ]);
+            'security_guaya' =>
+            'nullable|string|max:255',
 
 
             /*
             |--------------------------------------------------------------------------
-            | INFORMACIÓN TÉCNICA
+            | INFORMACIÓN GENERAL
             |--------------------------------------------------------------------------
-            |
-            | SOLO activos MANUALES.
-            |
             */
 
-            if (!$agentManaged) {
+            'serial_number' =>
+            'required|string|max:255|unique:assets,serial_number,' .
+                $asset->id,
+
+            'hostname' =>
+            'nullable|string|max:255',
+
+            'manufacturer' =>
+            'nullable|string|max:255',
+
+            'model_version' =>
+            'nullable|string|max:255',
+
+            'chassis_type' =>
+            'nullable|string|max:255',
+
+            'os_version' =>
+            'nullable|string|max:255',
+
+            'domain_name' =>
+            'nullable|string|max:255',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | MOTHERBOARD
+            |--------------------------------------------------------------------------
+            */
+
+            'board_brand' =>
+            'nullable|string|max:255',
+
+            'board_model' =>
+            'nullable|string|max:255',
+
+            'board_serial' =>
+            'nullable|string|max:255',
+
+            'board_version' =>
+            'nullable|string|max:255',
+
+            'board_status' =>
+            'nullable|string|max:255',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | BIOS
+            |--------------------------------------------------------------------------
+            */
+
+            'bios_manufacturer' =>
+            'nullable|string|max:255',
+
+            'bios_version' =>
+            'nullable|string|max:255',
+
+            'bios_serial' =>
+            'nullable|string|max:255',
+
+            'bios_release_date' =>
+            'nullable|date',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | WINDOWS
+            |--------------------------------------------------------------------------
+            */
+
+            'windows_version' =>
+            'nullable|string|max:255',
+
+            'windows_build' =>
+            'nullable|string|max:255',
+
+            'windows_edition' =>
+            'nullable|string|max:255',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SEGURIDAD
+            |--------------------------------------------------------------------------
+            */
+
+            'license_status' =>
+            'nullable|string|max:255',
+
+            'secure_boot' =>
+            'nullable|boolean',
+
+            'bitlocker_status' =>
+            'nullable|string|max:255',
+
+            'tpm_version' =>
+            'nullable|string|max:255',
+
+            'antivirus' =>
+            'nullable|string|max:255',
+
+            'firewall_enabled' =>
+            'nullable|boolean',
+
+            'uptime_minutes' =>
+            'nullable|integer|min:0',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | COMPONENTES
+            |--------------------------------------------------------------------------
+            */
+
+            'processor' =>
+            'nullable|array',
+
+            'processor.brand' =>
+            'nullable|string|max:255',
+
+            'processor.model' =>
+            'nullable|string|max:255',
+
+            'processor.processor_id' =>
+            'nullable|string|max:255',
+
+            'processor.socket' =>
+            'nullable|string|max:255',
+
+            'processor.status' =>
+            'nullable|string|max:255',
+
+            'processor.cores' =>
+            'nullable|integer|min:0',
+
+            'processor.threads' =>
+            'nullable|integer|min:0',
+
+            'processor.speed_mhz' =>
+            'nullable|integer|min:0',
+
+            'processor.architecture' =>
+            'nullable|string|max:255',
+
+            'processor.family' =>
+            'nullable|string|max:255',
+
+            'processor.generation' =>
+            'nullable|string|max:255',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RAM
+            |--------------------------------------------------------------------------
+            */
+
+            'ram_modules' =>
+            'nullable|array',
+
+            'ram_modules.*.manufacturer' =>
+            'nullable|string|max:255',
+
+            'ram_modules.*.model' =>
+            'nullable|string|max:255',
+
+            'ram_modules.*.serial_number' =>
+            'nullable|string|max:255',
+
+            'ram_modules.*.bank' =>
+            'nullable|string|max:255',
+
+            'ram_modules.*.slot' =>
+            'nullable|string|max:255',
+
+            'ram_modules.*.memory_type' =>
+            'nullable|string|max:255',
+
+            'ram_modules.*.capacity_gb' =>
+            'nullable|numeric|min:0',
+
+            'ram_modules.*.speed_mhz' =>
+            'nullable|integer|min:0',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STORAGE
+            |--------------------------------------------------------------------------
+            */
+
+            'storage_devices' =>
+            'nullable|array',
+
+            'storage_devices.*.brand' =>
+            'nullable|string|max:255',
+
+            'storage_devices.*.model' =>
+            'nullable|string|max:255',
+
+            'storage_devices.*.serial_number' =>
+            'nullable|string|max:255',
+
+            'storage_devices.*.firmware' =>
+            'nullable|string|max:255',
+
+            'storage_devices.*.capacity_gb' =>
+            'nullable|numeric|min:0',
+
+            'storage_devices.*.free_gb' =>
+            'nullable|numeric|min:0',
+
+            'storage_devices.*.type' =>
+            'nullable|string|max:255',
+
+            'storage_devices.*.health' =>
+            'nullable|string|max:255',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | GPU
+            |--------------------------------------------------------------------------
+            */
+
+            'gpus' =>
+            'nullable|array',
+
+            'gpus.*.brand' =>
+            'nullable|string|max:255',
+
+            'gpus.*.model' =>
+            'nullable|string|max:255',
+
+            'gpus.*.memory_mb' =>
+            'nullable|integer|min:0',
+
+            'gpus.*.driver_version' =>
+            'nullable|string|max:255',
+
+            'gpus.*.processor' =>
+            'nullable|string|max:255',
+
+            'gpus.*.resolution' =>
+            'nullable|string|max:255',
+
+            'gpus.*.refresh_rate' =>
+            'nullable|integer|min:0',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RED
+            |--------------------------------------------------------------------------
+            */
+
+            'network' =>
+            'nullable|array',
+
+            'network.gateway' =>
+            'nullable|ip',
+
+            'network.dns_server' =>
+            'nullable|ip',
+
+            'network.dhcp_enabled' =>
+            'nullable|boolean',
+
+            'network.adapters' =>
+            'nullable|array',
+
+            'network.adapters.*.name' =>
+            'nullable|string|max:255',
+
+            'network.adapters.*.description' =>
+            'nullable|string|max:255',
+
+            'network.adapters.*.type' =>
+            'nullable|string|max:255',
+
+            'network.adapters.*.mac_address' => [
+                'nullable',
+                'string',
+                'regex:/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/',
+            ],
+
+            'network.adapters.*.ipv4' =>
+            'nullable|ipv4',
+
+            'network.adapters.*.ipv6' =>
+            'nullable|ipv6',
+
+            'network.adapters.*.connected' =>
+            'nullable|boolean',
+
+            'network.adapters.*.is_primary' =>
+            'nullable|boolean',
+
+            'network.adapters.*.is_active' =>
+            'nullable|boolean',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | BATERÍA
+            |--------------------------------------------------------------------------
+            */
+
+            'battery' =>
+            'nullable|array',
+
+            'battery.manufacturer' =>
+            'nullable|string|max:255',
+
+            'battery.model' =>
+            'nullable|string|max:255',
+
+            'battery.serial_number' =>
+            'nullable|string|max:255',
+
+            'battery.health' =>
+            'nullable|string|max:255',
+
+            'battery.cycle_count' =>
+            'nullable|integer|min:0',
+
+            'battery.design_capacity' =>
+            'nullable|integer|min:0',
+
+            'battery.full_charge_capacity' =>
+            'nullable|integer|min:0',
+
+            'battery.remaining_capacity' =>
+            'nullable|integer|min:0',
+
+            'battery.charge_percent' =>
+            'nullable|integer|min:0|max:100',
+
+            'battery.is_charging' =>
+            'nullable|boolean',
+
+            'battery.estimated_runtime_minutes' =>
+            'nullable|integer|min:0|max:1440',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SOFTWARE
+            |--------------------------------------------------------------------------
+            */
+
+            'software' =>
+            'nullable|array',
+
+            'software.*.is_active' =>
+            'required|boolean',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | MONITORES
+            |--------------------------------------------------------------------------
+            */
+
+            'monitors' =>
+            'nullable|array',
+
+            'monitors.*.id' =>
+            'nullable|integer',
+
+            'monitors.*.brand' =>
+            'nullable|string|max:255',
+
+            'monitors.*.model' =>
+            'nullable|string|max:255',
+
+            'monitors.*.serial_number' =>
+            'nullable|string|max:255',
+
+            'monitors.*.manufacturer_code' =>
+            'nullable|string|max:255',
+
+            'monitors.*.year' =>
+            'nullable|integer|min:0',
+
+            'monitors.*.size' =>
+            'nullable|numeric|min:0',
+
+            'monitors.*.resolution' =>
+            'nullable|string|max:255',
+
+            'monitors.*.refresh_rate' =>
+            'nullable|integer|min:0',
+
+            'monitors.*.fixed_asset_code' =>
+            'nullable|string|max:255',
+
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TRANSACCIÓN
+        |--------------------------------------------------------------------------
+        */
+
+        DB::transaction(
+            function () use ($asset, $validated, $request, $agentManaged) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | INFORMACIÓN ADMINISTRATIVA
+                |--------------------------------------------------------------------------
+                */
 
                 $asset->update([
 
-                    'serial_number' =>
-                    $validated['serial_number'],
+                    'room_id' =>
+                    $validated['room_id'],
 
-                    'hostname' =>
-                    $validated['hostname']
+                    'internal_code' =>
+                    $validated['internal_code']
                         ?? null,
 
-                    'manufacturer' =>
-                    $validated['manufacturer']
+                    'keyboard_serial' =>
+                    $validated['keyboard_serial']
                         ?? null,
 
-                    'model_version' =>
-                    $validated['model_version']
+                    'mouse_serial' =>
+                    $validated['mouse_serial']
                         ?? null,
 
-                    'chassis_type' =>
-                    $validated['chassis_type']
-                        ?? null,
-
-                    'os_version' =>
-                    $validated['os_version']
-                        ?? null,
-
-                    'domain_name' =>
-                    $validated['domain_name']
-                        ?? null,
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MOTHERBOARD
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'board_brand' =>
-                    $validated['board_brand']
-                        ?? null,
-
-                    'board_model' =>
-                    $validated['board_model']
-                        ?? null,
-
-                    'board_serial' =>
-                    $validated['board_serial']
-                        ?? null,
-
-                    'board_version' =>
-                    $validated['board_version']
-                        ?? null,
-
-                    'board_status' =>
-                    $validated['board_status']
-                        ?? null,
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | BIOS
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'bios_manufacturer' =>
-                    $validated['bios_manufacturer']
-                        ?? null,
-
-                    'bios_version' =>
-                    $validated['bios_version']
-                        ?? null,
-
-                    'bios_serial' =>
-                    $validated['bios_serial']
-                        ?? null,
-
-                    'bios_release_date' =>
-                    $validated['bios_release_date']
-                        ?? null,
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | WINDOWS
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'windows_version' =>
-                    $validated['windows_version']
-                        ?? null,
-
-                    'windows_build' =>
-                    $validated['windows_build']
-                        ?? null,
-
-                    'windows_edition' =>
-                    $validated['windows_edition']
-                        ?? null,
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | SEGURIDAD
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'license_status' =>
-                    $validated['license_status']
-                        ?? null,
-
-                    'secure_boot' =>
-                    $validated['secure_boot']
-                        ?? null,
-
-                    'bitlocker_status' =>
-                    $validated['bitlocker_status']
-                        ?? null,
-
-                    'tpm_version' =>
-                    $validated['tpm_version']
-                        ?? null,
-
-                    'antivirus' =>
-                    $validated['antivirus']
-                        ?? null,
-
-                    'firewall_enabled' =>
-                    $validated['firewall_enabled']
-                        ?? null,
-
-                    'uptime_minutes' =>
-                    $validated['uptime_minutes']
+                    'security_guaya' =>
+                    $validated['security_guaya']
                         ?? null,
 
                 ]);
@@ -1882,138 +1728,287 @@ public function update(
 
                 /*
                 |--------------------------------------------------------------------------
-                | HARDWARE NORMALIZADO
+                | INFORMACIÓN TÉCNICA
+                |--------------------------------------------------------------------------
+                |
+                | SOLO activos MANUALES.
+                |
+                */
+
+                if (!$agentManaged) {
+
+                    $asset->update([
+
+                        'serial_number' =>
+                        $validated['serial_number'],
+
+                        'hostname' =>
+                        $validated['hostname']
+                            ?? null,
+
+                        'manufacturer' =>
+                        $validated['manufacturer']
+                            ?? null,
+
+                        'model_version' =>
+                        $validated['model_version']
+                            ?? null,
+
+                        'chassis_type' =>
+                        $validated['chassis_type']
+                            ?? null,
+
+                        'os_version' =>
+                        $validated['os_version']
+                            ?? null,
+
+                        'domain_name' =>
+                        $validated['domain_name']
+                            ?? null,
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | MOTHERBOARD
+                        |--------------------------------------------------------------------------
+                        */
+
+                        'board_brand' =>
+                        $validated['board_brand']
+                            ?? null,
+
+                        'board_model' =>
+                        $validated['board_model']
+                            ?? null,
+
+                        'board_serial' =>
+                        $validated['board_serial']
+                            ?? null,
+
+                        'board_version' =>
+                        $validated['board_version']
+                            ?? null,
+
+                        'board_status' =>
+                        $validated['board_status']
+                            ?? null,
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | BIOS
+                        |--------------------------------------------------------------------------
+                        */
+
+                        'bios_manufacturer' =>
+                        $validated['bios_manufacturer']
+                            ?? null,
+
+                        'bios_version' =>
+                        $validated['bios_version']
+                            ?? null,
+
+                        'bios_serial' =>
+                        $validated['bios_serial']
+                            ?? null,
+
+                        'bios_release_date' =>
+                        $validated['bios_release_date']
+                            ?? null,
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | WINDOWS
+                        |--------------------------------------------------------------------------
+                        */
+
+                        'windows_version' =>
+                        $validated['windows_version']
+                            ?? null,
+
+                        'windows_build' =>
+                        $validated['windows_build']
+                            ?? null,
+
+                        'windows_edition' =>
+                        $validated['windows_edition']
+                            ?? null,
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | SEGURIDAD
+                        |--------------------------------------------------------------------------
+                        */
+
+                        'license_status' =>
+                        $validated['license_status']
+                            ?? null,
+
+                        'secure_boot' =>
+                        $validated['secure_boot']
+                            ?? null,
+
+                        'bitlocker_status' =>
+                        $validated['bitlocker_status']
+                            ?? null,
+
+                        'tpm_version' =>
+                        $validated['tpm_version']
+                            ?? null,
+
+                        'antivirus' =>
+                        $validated['antivirus']
+                            ?? null,
+
+                        'firewall_enabled' =>
+                        $validated['firewall_enabled']
+                            ?? null,
+
+                        'uptime_minutes' =>
+                        $validated['uptime_minutes']
+                            ?? null,
+
+                    ]);
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | HARDWARE NORMALIZADO
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $this->syncManualComponents(
+                        $asset,
+                        $validated
+                    );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | CÓDIGO ACTIVO FIJO DE MONITORES
+                |--------------------------------------------------------------------------
+                |
+                | En equipos SIGMA solamente permitimos
+                | modificar el código administrativo.
+                |
+                */
+
+                if ($agentManaged) {
+
+                    foreach (
+                        $request->input(
+                            'monitors',
+                            []
+                        ) as $monitorId => $data
+                    ) {
+
+                        if (
+                            !is_numeric($monitorId) ||
+                            !is_array($data)
+                        ) {
+                            continue;
+                        }
+
+
+                        if (
+                            !array_key_exists(
+                                'fixed_asset_code',
+                                $data
+                            )
+                        ) {
+                            continue;
+                        }
+
+
+                        AssetMonitor::where(
+                            'id',
+                            $monitorId
+                        )
+                            ->where(
+                                'asset_id',
+                                $asset->id
+                            )
+                            ->update([
+
+                                'fixed_asset_code' =>
+                                $data['fixed_asset_code'],
+
+                            ]);
+                    }
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | AUTORIZACIÓN DE SOFTWARE
+                |--------------------------------------------------------------------------
+                |
+                | El SIGMA Agent detecta el software.
+                | El administrador controla únicamente is_active.
+                |
+                | No eliminamos ni recreamos los registros.
+                |
+                */
+
+                if ($agentManaged) {
+
+                    foreach (
+                        $validated['software'] ?? []
+                        as $softwareId => $softwareData
+                    ) {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Verificar que el software pertenece al activo
+                        |--------------------------------------------------------------------------
+                        */
+
+                        /** @var \App\Models\Software|null $software */
+                        $software = $asset
+                            ->software()
+                            ->where(
+                                'id',
+                                $softwareId
+                            )
+                            ->first();
+
+                        if (!$software) {
+                            continue;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Actualizar solamente autorización
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $software->update([
+
+                            'is_active' =>
+                            (bool) $softwareData['is_active'],
+
+                        ]);
+                    }
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ASIGNACIÓN
                 |--------------------------------------------------------------------------
                 */
 
-                $this->syncManualComponents(
-                    $asset,
-                    $validated
-                );
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CÓDIGO ACTIVO FIJO DE MONITORES
-            |--------------------------------------------------------------------------
-            |
-            | En equipos SIGMA solamente permitimos
-            | modificar el código administrativo.
-            |
-            */
-
-            if ($agentManaged) {
-
-                foreach (
-                    $request->input(
-                        'monitors',
-                        []
-                    ) as $monitorId => $data
+                if (
+                    !empty($validated['custodian_id'])
                 ) {
 
-                    if (
-                        !is_numeric($monitorId) ||
-                        !is_array($data)
-                    ) {
-                        continue;
-                    }
-
-
-                    if (
-                        !array_key_exists(
-                            'fixed_asset_code',
-                            $data
-                        )
-                    ) {
-                        continue;
-                    }
-
-
-                    AssetMonitor::where(
-                        'id',
-                        $monitorId
-                    )
-                        ->where(
-                            'asset_id',
-                            $asset->id
-                        )
-                        ->update([
-
-                            'fixed_asset_code' =>
-                            $data['fixed_asset_code'],
-
-                        ]);
-                }
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUTORIZACIÓN DE SOFTWARE
-            |--------------------------------------------------------------------------
-            |
-            | El SIGMA Agent detecta el software.
-            | El administrador controla únicamente is_active.
-            |
-            | No eliminamos ni recreamos los registros.
-            |
-            */
-
-            if ($agentManaged) {
-
-                foreach (
-                    $validated['software'] ?? []
-                    as $softwareId => $softwareData
-                ) {
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Verificar que el software pertenece al activo
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $software = $asset
-                        ->software()
-                        ->where(
-                            'id',
-                            $softwareId
-                        )
-                        ->first();
-
-                    if (!$software) {
-                        continue;
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Actualizar solamente autorización
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $software->update([
-
-                        'is_active' =>
-                        (bool) $softwareData['is_active'],
-
-                    ]);
-                }
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ASIGNACIÓN
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !empty($validated['custodian_id'])
-            ) {
-
-                $activeAssignment =
-                    $asset
+                    /** @var Assignment|null $activeAssignment */
+                    $activeAssignment =
+                        $asset
                         ->assignments()
                         ->where(
                             'status',
@@ -2023,51 +2018,50 @@ public function update(
                         ->first();
 
 
-                if ($activeAssignment) {
+                    if ($activeAssignment) {
 
-                    $activeAssignment->update([
+                        $activeAssignment->update([
 
-                        'custodian_id' =>
-                        $validated['custodian_id'],
+                            'custodian_id' =>
+                            $validated['custodian_id'],
 
-                        'room_id' =>
-                        $validated['room_id'],
+                            'room_id' =>
+                            $validated['room_id'],
 
-                    ]);
+                        ]);
+                    } else {
 
-                } else {
+                        Assignment::create([
 
-                    Assignment::create([
+                            'asset_id' =>
+                            $asset->id,
 
-                        'asset_id' =>
-                        $asset->id,
+                            'custodian_id' =>
+                            $validated['custodian_id'],
 
-                        'custodian_id' =>
-                        $validated['custodian_id'],
+                            'room_id' =>
+                            $validated['room_id'],
 
-                        'room_id' =>
-                        $validated['room_id'],
+                            'status' =>
+                            'active',
 
-                        'status' =>
-                        'active',
+                            'started_at' =>
+                            now(),
 
-                        'started_at' =>
-                        now(),
-
-                    ]);
+                        ]);
+                    }
                 }
             }
-        }
-    );
-
-
-    return redirect()
-        ->route('assets.index')
-        ->with(
-            'success',
-            'Hoja de Vida actualizada correctamente.'
         );
-}
+
+
+        return redirect()
+            ->route('assets.index')
+            ->with(
+                'success',
+                'Hoja de Vida actualizada correctamente.'
+            );
+    }
 
 
     /**
@@ -2808,79 +2802,79 @@ public function update(
      * PREVISUALIZACIÓN PDF
      * =========================================================
      */
-public function previewPdf(Asset $asset)
-{
-    $asset->load([
-        'currentCustodian.dependency',
-        'currentCustodian.jobTitle',
-        'room.building',
-        'technicalServices.user',
-        'processors',
-        'ramModules',
-        'storageDevices',
-        'gpus',
-        'network.adapters',
-        'monitors',
-        'battery',
-        'software',
-    ]);
+    public function previewPdf(Asset $asset)
+    {
+        $asset->load([
+            'currentCustodian.dependency',
+            'currentCustodian.jobTitle',
+            'room.building',
+            'technicalServices.user',
+            'processors',
+            'ramModules',
+            'storageDevices',
+            'gpus',
+            'network.adapters',
+            'monitors',
+            'battery',
+            'software',
+        ]);
 
-    return view(
-        'admin.assets.pdf_preview',
-        compact('asset')
-    );
-}
-
-
-public function downloadPdf(int $id)
-{
-    $asset = Asset::with([
-        'currentCustodian.dependency',
-        'currentCustodian.jobTitle',
-        'room.building',
-        'technicalServices.user',
-        'processors',
-        'ramModules',
-        'storageDevices',
-        'gpus',
-        'network.adapters',
-        'monitors',
-        'battery',
-        'software',
-    ])->findOrFail($id);
-
-    $html = view(
-        'admin.assets.pdf_export',
-        compact('asset')
-    )->render();
-
-    $pdf = Browsershot::html($html)
-        ->setNodeBinary('/usr/local/bin/node')
-        ->addChromiumArguments([
-            'no-sandbox',
-            'disable-setuid-sandbox',
-            'disable-dev-shm-usage',
-            'disable-gpu',
-            'no-zygote',
-        ])
-        ->showBackground()
-        ->timeout(120)
-        ->setOption('waitUntil', 'domcontentloaded')
-        ->format('A4')
-        ->setMargins(0, 0, 0, 0)
-        ->pdf();
-
-    $fileName = 'Hoja_Vida_USC_' .
-        ($asset->internal_code ?? $asset->serial_number ?? $asset->id) .
-        '.pdf';
-
-    return response($pdf)
-        ->header('Content-Type', 'application/pdf')
-        ->header(
-            'Content-Disposition',
-            'attachment; filename="' . $fileName . '"'
+        return view(
+            'admin.assets.pdf_preview',
+            compact('asset')
         );
-}
+    }
+
+
+    public function downloadPdf(int $id)
+    {
+        $asset = Asset::with([
+            'currentCustodian.dependency',
+            'currentCustodian.jobTitle',
+            'room.building',
+            'technicalServices.user',
+            'processors',
+            'ramModules',
+            'storageDevices',
+            'gpus',
+            'network.adapters',
+            'monitors',
+            'battery',
+            'software',
+        ])->findOrFail($id);
+
+        $html = view(
+            'admin.assets.pdf_export',
+            compact('asset')
+        )->render();
+
+        $pdf = Browsershot::html($html)
+            ->setNodeBinary('/usr/local/bin/node')
+            ->addChromiumArguments([
+                'no-sandbox',
+                'disable-setuid-sandbox',
+                'disable-dev-shm-usage',
+                'disable-gpu',
+                'no-zygote',
+            ])
+            ->showBackground()
+            ->timeout(120)
+            ->setOption('waitUntil', 'domcontentloaded')
+            ->format('A4')
+            ->setMargins(0, 0, 0, 0)
+            ->pdf();
+
+        $fileName = 'Hoja_Vida_USC_' .
+            ($asset->internal_code ?? $asset->serial_number ?? $asset->id) .
+            '.pdf';
+
+        return response($pdf)
+            ->header('Content-Type', 'application/pdf')
+            ->header(
+                'Content-Disposition',
+                'attachment; filename="' . $fileName . '"'
+            );
+    }
     /**
      * =========================================================
      * CONSULTAR DE FORMULARIO DE ACTIVO
