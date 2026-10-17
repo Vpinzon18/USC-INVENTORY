@@ -294,6 +294,13 @@
                             Tipos de Espacio
                         </a>
 
+                        <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('admin.audit-logs.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('admin.audit-logs.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Registro de Auditorías
+                        </a>
+
                     </div>
                 </div>
                 @endif

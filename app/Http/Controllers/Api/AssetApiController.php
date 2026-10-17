@@ -72,7 +72,7 @@ class AssetApiController extends Controller
         }
 
         $actualHash = Cache::remember(
-            'sigma-agent-update-hash:' . sha1($packagePath . '|' . filemtime($packagePath) . '|' . filesize($packagePath)),
+            'sigma-agent-update-hash:' . hash('sha256', $packagePath . '|' . filemtime($packagePath) . '|' . filesize($packagePath)),
             now()->addMinutes(10),
             fn () => hash_file('sha256', $packagePath)
         );

@@ -152,6 +152,7 @@ class MaintenanceScheduleController extends Controller
                 'status' => $schedule->status,
                 'technicianId' => $schedule->technician_id,
                 'technician' => $schedule->technician?->name ?? 'Técnico no asignado',
+                'assetId' => $asset?->id,
                 'performedDate' => $service?->performed_at
                     ? \Illuminate\Support\Carbon::parse($service->performed_at)->toDateString()
                     : null,
@@ -169,8 +170,11 @@ class MaintenanceScheduleController extends Controller
                     $room?->nomenclatura ?: $room?->name,
                 ])) ?: 'Ubicación sin asignar',
                 'campus' => $building?->campus?->name ?? 'Sin sede',
+                'campusId' => $building?->campus?->id,
                 'building' => $building?->name ?? 'Sin bloque',
+                'buildingId' => $building?->id,
                 'room' => $room?->nomenclatura ?: ($room?->name ?? 'Sin espacio'),
+                'roomId' => $room?->id,
                 'custodian' => $custodian?->full_name ?? 'Sin custodiante',
                 'executionUrl' => $schedule->status === 'REALIZADO' || $service
                     || !in_array((int) auth()->user()->role, [1, 2], true)

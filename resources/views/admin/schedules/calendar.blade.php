@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="min-h-screen bg-slate-50 py-8" x-data="maintenanceGantt(@js($maintenanceRows), @js($calendarMonth))">
+    <div class="min-h-screen bg-slate-50 py-8" x-data="maintenanceGantt(@js($maintenanceRows), @js($calendarMonth), @js(url('/api/filters/api/sigma-filters')))">
         <div class="mx-auto w-[96%] max-w-[1600px] space-y-6">
             <section class="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <div class="absolute inset-y-0 left-0 w-1.5 bg-blue-600"></div>
@@ -35,20 +35,28 @@
                             <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Buscar equipo</span>
                             <input x-model.debounce.200ms="search" type="search" placeholder="Nombre, serial, placa o custodiante" class="w-full rounded-xl border-slate-300 bg-white text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </label>
-                        <label class="block">
-                            <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Técnico asignado</span>
-                            <select x-model="technicianFilter" class="w-full rounded-xl border-slate-300 bg-white text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">Todos los técnicos</option>
-                                <template x-for="name in technicians" :key="name"><option :value="name" x-text="name"></option></template>
-                            </select>
-                        </label>
-                        <label class="block">
-                            <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Sede</span>
-                            <select x-model="campusFilter" class="w-full rounded-xl border-slate-300 bg-white text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">Todas las sedes</option>
-                                <template x-for="name in campuses" :key="name"><option :value="name" x-text="name"></option></template>
-                            </select>
-                        </label>
+                                                 <template x-for="filter in lookupFilters" :key="filter.key">
+                            <div class="relative" @click.away="closeLookup(filter.key)">
+                                <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500" x-text="filter.label"></label>
+                                <input type="search" x-model="lookups[filter.key].search"
+                                    @focus="openLookup(filter.key)"
+                                    @input.debounce.300ms="lookups[filter.key].id = ''; fetchLookup(filter.key)"
+                                    :placeholder="filter.placeholder" autocomplete="off"
+                                    class="w-full rounded-xl border-slate-300 bg-white text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <div x-show="lookups[filter.key].open" x-transition
+                                    class="absolute z-[60] mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                                    <div x-show="lookups[filter.key].loading" class="px-4 py-3 text-sm text-slate-500">Buscando…</div>
+                                    <div x-show="!lookups[filter.key].loading && lookups[filter.key].results.length === 0" class="px-4 py-3 text-sm text-slate-500">No se encontraron resultados.</div>
+                                    <template x-for="item in lookups[filter.key].results" :key="item.id">
+                                        <button type="button" @mousedown.prevent="selectLookup(filter.key, item)"
+                                            class="block w-full border-b border-slate-100 px-4 py-3 text-left hover:bg-blue-50">
+                                            <span class="block truncate text-sm font-semibold text-slate-700" x-text="item.label"></span>
+                                            <span x-show="item.secondary" class="mt-0.5 block truncate text-xs text-slate-500" x-text="item.secondary"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
                         <label class="block">
                             <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Estado</span>
                             <select x-model="statusFilter" class="w-full rounded-xl border-slate-300 bg-white text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -59,7 +67,7 @@
                             </select>
                         </label>
                     </div>
-                    <button @click="search = ''; technicianFilter = ''; campusFilter = ''; statusFilter = ''" type="button" class="h-10 shrink-0 rounded-xl px-4 text-sm font-bold text-slate-500 transition hover:bg-white hover:text-blue-700">Limpiar filtros</button>
+                    <button @click="clearFilters()" type="button" class="h-10 shrink-0 rounded-xl px-4 text-sm font-bold text-slate-500 transition hover:bg-white hover:text-blue-700">Limpiar filtros</button>
                 </div>
 
                 <div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -146,20 +154,35 @@
     </div>
 
     <script>
-        window.maintenanceGantt = (items, initialMonth) => ({
+        window.maintenanceGantt = (items, initialMonth, filtersUrl) => ({
             items,
+            filtersUrl,
             search: '',
-            technicianFilter: '',
-            campusFilter: '',
             statusFilter: '',
+            lookupFilters: [
+                { key: 'technician', label: 'Técnico', placeholder: 'Buscar técnico…' },
+                { key: 'campus', label: 'Sede', placeholder: 'Buscar sede…' },
+                { key: 'building', label: 'Bloque', placeholder: 'Buscar bloque…' },
+                { key: 'room', label: 'Salón / espacio', placeholder: 'Buscar salón…' },
+                { key: 'asset', label: 'Activo', placeholder: 'Buscar serial o equipo…' },
+            ],
+            lookups: Object.fromEntries(['technician', 'campus', 'building', 'room', 'asset'].map(key => [key, {
+                id: '', search: '', results: [], loading: false, open: false, request: 0,
+            }])),
             monthCursor: (() => { const [year, month] = initialMonth.split('-').map(Number); return new Date(year, month - 1, 1); })(),
-            get technicians() { return [...new Set(this.items.map(item => item.technician))].sort((a, b) => a.localeCompare(b)); },
-            get campuses() { return [...new Set(this.items.map(item => item.campus))].sort((a, b) => a.localeCompare(b)); },
             get visibleItems() {
                 const term = this.search.trim().toLocaleLowerCase('es');
+                const selected = this.lookups;
                 return this.items.filter(item => {
                     const matchesTerm = !term || [item.assetName, item.serial, item.plate, item.custodian, item.location, item.performer, item.technician].some(value => (value || '').toLocaleLowerCase('es').includes(term));
-                    return matchesTerm && (!this.technicianFilter || item.technician === this.technicianFilter) && (!this.campusFilter || item.campus === this.campusFilter) && (!this.statusFilter || item.status === this.statusFilter);
+                    const matchesLookup = (key, value) => !selected[key].id || String(value ?? '') === selected[key].id;
+                    return matchesTerm
+                        && matchesLookup('technician', item.technicianId)
+                        && matchesLookup('campus', item.campusId)
+                        && matchesLookup('building', item.buildingId)
+                        && matchesLookup('room', item.roomId)
+                        && matchesLookup('asset', item.assetId)
+                        && (!this.statusFilter || item.status === this.statusFilter);
                 });
             },
             get groups() {
@@ -186,6 +209,55 @@
                     return { key: this.keyOf(date), number: date.getDate(), weekday: date.toLocaleDateString('es-CO', { weekday: 'short' }).replace('.', ''), inMonth: date.getMonth() === this.monthCursor.getMonth(), isToday: this.keyOf(date) === today };
                 });
             },
+            openLookup(key) { this.lookups[key].open = true; this.fetchLookup(key); },
+            closeLookup(key) { this.lookups[key].open = false; },
+            async fetchLookup(key) {
+                const state = this.lookups[key];
+                const request = ++state.request;
+                const endpoints = { technician: 'technicians', campus: 'sedes', building: 'buildings', room: 'rooms', asset: 'assets' };
+                const url = new URL(`${this.filtersUrl}/${endpoints[key]}`, window.location.origin);
+                url.searchParams.set('search', state.search.trim());
+                if (key === 'room' && this.lookups.building.id) url.searchParams.set('building_id', this.lookups.building.id);
+                if (key === 'asset') {
+                    if (this.lookups.room.id) url.searchParams.set('room_id', this.lookups.room.id);
+                    if (this.lookups.building.id) url.searchParams.set('building_id', this.lookups.building.id);
+                }
+                state.loading = true;
+                try {
+                    const response = await window.fetch(url, { headers: { Accept: 'application/json' } });
+                    if (!response.ok) throw new Error('No se pudo consultar el filtro.');
+                    const payload = await response.json();
+                    const rows = Array.isArray(payload) ? payload : (payload.data || []);
+                    if (request === state.request) {
+                        state.results = rows.map(row => ({
+                            id: String(row.id),
+                            label: row.label || row.name || row.primary || row.nomenclatura || `ID: ${row.id}`,
+                            secondary: row.secondary || '',
+                        }));
+                    }
+                } catch (error) {
+                    if (request === state.request) state.results = [];
+                } finally {
+                    if (request === state.request) state.loading = false;
+                }
+            },
+            selectLookup(key, item) {
+                const state = this.lookups[key];
+                state.id = item.id;
+                state.search = item.label;
+                state.open = false;
+                if (key === 'campus') this.clearLookups(['building', 'room', 'asset']);
+                if (key === 'building') this.clearLookups(['room', 'asset']);
+                if (key === 'room') this.clearLookups(['asset']);
+            },
+            clearLookups(keys) {
+                keys.forEach(key => Object.assign(this.lookups[key], { id: '', search: '', results: [], open: false }));
+            },
+            clearFilters() {
+                this.search = '';
+                this.statusFilter = '';
+                this.clearLookups(['technician', 'campus', 'building', 'room', 'asset']);
+            },
             keyOf(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; },
             moveMonth(amount) { this.monthCursor = new Date(this.monthCursor.getFullYear(), this.monthCursor.getMonth() + amount, 1); },
             goToday() { this.monthCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1); },
@@ -196,4 +268,5 @@
             barClass(status) { return ({ PENDIENTE: 'bg-amber-300 text-amber-950 hover:bg-amber-400', VENCIDO: 'bg-rose-500 text-white hover:bg-rose-600', REALIZADO: 'bg-emerald-500 text-white hover:bg-emerald-600' })[status] || 'bg-blue-500 text-white'; },
         });
     </script>
+
 </x-app-layout>

@@ -8,9 +8,62 @@ use App\Models\Campus;
 use App\Models\Building;
 use App\Models\Room;
 use App\Models\Dependency;
+use App\Models\AuditLog;
 
 class FilterApiController extends Controller
 {
+    /** Opciones de acción usadas por los registros de auditoría. */
+    private const AUDIT_ACTIONS = [
+        'viewed' => 'Consulta',
+        'created' => 'Creación',
+        'updated' => 'Actualización',
+        'deleted' => 'Eliminación',
+        'exported' => 'Exportación',
+        'login' => 'Inicio de sesión',
+        'logout' => 'Cierre de sesión',
+        'action' => 'Acción',
+    ];
+
+    public function auditUsers(Request $request)
+    {
+        $search = trim((string) $request->query('q', ''));
+
+        $users = AuditLog::query()
+            ->whereNotNull('user_id')
+            ->select('user_id', 'user_name', 'user_email')
+            ->distinct()
+            ->when($search !== '', function ($query) use ($search) {
+                $term = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search).'%';
+                $query->where(function ($matches) use ($term) {
+                    $matches->whereRaw('user_name ILIKE ?', [$term])
+                        ->orWhereRaw('user_email ILIKE ?', [$term]);
+                });
+            })
+            ->orderBy('user_name')
+            ->limit(20)
+            ->get();
+
+        return response()->json($users->map(fn ($user) => [
+            'id' => $user->user_id,
+            'primary' => $user->user_name ?: 'Usuario sin nombre',
+            'secondary' => $user->user_email ?: 'Sin correo disponible',
+        ])->values());
+    }
+
+    public function auditActions(Request $request)
+    {
+        $search = mb_strtolower(trim((string) $request->query('q', '')));
+
+        $actions = collect(self::AUDIT_ACTIONS)
+            ->map(fn ($label, $value) => ['id' => $value, 'primary' => $label, 'secondary' => 'Tipo de acción'])
+            ->filter(fn ($action) => $search === ''
+                || str_contains(mb_strtolower($action['primary']), $search)
+                || str_contains($action['id'], $search))
+            ->values();
+
+        return response()->json($actions);
+    }
+
     // 1. Endpoint para Responsables
     public function custodians(Request $request)
     {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BuildingController;
 use App\Http\Controllers\Admin\CampusController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -55,6 +56,7 @@ Route::middleware('auth')->group(function () {
 */
 Route::middleware(['auth', 'role:1'])->group(function () {
     Route::resource('users', UserController::class)->except(['show']);
+    Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])
         ->middleware('throttle:6,1')
         ->name('users.reset-password');
@@ -160,6 +162,12 @@ Route::middleware(['auth', 'role:1,2,3', 'throttle:120,1'])
         Route::get('/dependencies', [FilterApiController::class, 'dependencies'])->name('api.dependencies');
         Route::get('/job-titles', [FilterApiController::class, 'jobTitles'])->name('api.job-titles');
         Route::get('/api/rooms-status', [CustodianController::class, 'getRoomsData'])->name('api.rooms.status');
+
+        // Los catálogos de auditoría contienen datos de actividad y son exclusivos de administradores.
+        Route::middleware('role:1')->group(function () {
+            Route::get('/audit-users', [FilterApiController::class, 'auditUsers'])->name('audit-users');
+            Route::get('/audit-actions', [FilterApiController::class, 'auditActions'])->name('audit-actions');
+        });
 
         Route::prefix('api/sigma-filters')->group(function () {
             Route::get('/sedes', [FilterApiController::class, 'getSedes']);
