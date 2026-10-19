@@ -105,9 +105,35 @@ services:
     networks:
       - sigma_network
 
+  rustdesk-hbbs:
+    image: ${RUSTDESK_SERVER_IMAGE:-rustdesk/rustdesk-server:latest}
+    container_name: sigma_rustdesk_hbbs
+    profiles: [remote-support]
+    restart: unless-stopped
+    command: ["hbbs", "-r", "${RUSTDESK_RELAY_HOST:-127.0.0.1}:21117"]
+    volumes:
+      - rustdesk_data:/root
+    ports:
+      - "${RUSTDESK_BIND_ADDRESS:-127.0.0.1}:21115:21115/tcp"
+      - "${RUSTDESK_BIND_ADDRESS:-127.0.0.1}:21116:21116/tcp"
+      - "${RUSTDESK_BIND_ADDRESS:-127.0.0.1}:21116:21116/udp"
+    depends_on:
+      - rustdesk-hbbr
+
+  rustdesk-hbbr:
+    image: ${RUSTDESK_SERVER_IMAGE:-rustdesk/rustdesk-server:latest}
+    container_name: sigma_rustdesk_hbbr
+    profiles: [remote-support]
+    restart: unless-stopped
+    command: ["hbbr"]
+    volumes:
+      - rustdesk_data:/root
+    ports:
+      - "${RUSTDESK_BIND_ADDRESS:-127.0.0.1}:21117:21117/tcp"
 volumes:
   sigma_postgres_data:
   sigma_storage:
+  rustdesk_data:
 
 networks:
   sigma_network:

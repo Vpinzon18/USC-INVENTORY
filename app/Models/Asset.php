@@ -151,6 +151,7 @@ class Asset extends Model
         'is_online',
         'agent_version',
         'last_inventory_at',
+        'rustdesk_id',
     ];
 
     protected $casts = [

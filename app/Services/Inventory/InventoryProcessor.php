@@ -4,6 +4,9 @@ namespace App\Services\Inventory;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use App\Models\Asset;
+use App\Services\AgentTokenAuthorizer;
 
 use App\Services\Inventory\Processors\DeviceProcessor;
 use App\Services\Inventory\Processors\NetworkProcessor;
@@ -36,6 +39,7 @@ class InventoryProcessor
     protected BatteryProcessor $batteryProcessor;
     protected MotherboardProcessor $motherboardProcessor;
     protected GpuProcessor $gpuProcessor;
+    protected AgentTokenAuthorizer $tokenAuthorizer;
 
     public function __construct(
         DeviceProcessor $deviceProcessor,
@@ -52,6 +56,7 @@ class InventoryProcessor
         BatteryProcessor $batteryProcessor,
         MotherboardProcessor $motherboardProcessor,
         GpuProcessor $gpuProcessor,
+        AgentTokenAuthorizer $tokenAuthorizer,
     ) {
         $this->deviceProcessor = $deviceProcessor;
         $this->networkProcessor = $networkProcessor;
@@ -67,12 +72,13 @@ class InventoryProcessor
         $this->batteryProcessor = $batteryProcessor;
         $this->motherboardProcessor = $motherboardProcessor;
         $this->gpuProcessor = $gpuProcessor;
+        $this->tokenAuthorizer = $tokenAuthorizer;
     }
 
     public function process(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            return $this->processInventory($request->all());
+            return $this->processInventory($request->all(), $request);
         });
     }
 
@@ -80,7 +86,7 @@ class InventoryProcessor
      * Persist the complete inventory atomically so a processor failure
      * cannot leave only some of the device components updated.
      */
-    protected function processInventory(array $inventory)
+    protected function processInventory(array $inventory, Request $request)
     {
 
         /*
@@ -92,6 +98,10 @@ class InventoryProcessor
         $asset = $this->deviceProcessor->process(
             $inventory['device'] ?? []
         );
+
+        // Identity resolution and scope authorization share the transaction;
+        // a token for another asset rolls the tentative write back.
+        $this->tokenAuthorizer->authorizeAsset($request, $asset);
 
         /*
         |--------------------------------------------------------------------------
@@ -213,6 +223,30 @@ class InventoryProcessor
             $asset,
             $inventory
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | RUSTDESK
+        |--------------------------------------------------------------------------
+        | The client is optional. If its ID is absent, preserve any ID already
+        | registered on the asset; never clear it because RustDesk is unavailable.
+        */
+
+        $rustDeskId = trim((string) ($inventory['rustDeskId'] ?? ''));
+        if ($rustDeskId !== '') {
+            $duplicate = Asset::query()
+                ->where('rustdesk_id', $rustDeskId)
+                ->where('id', '!=', $asset->getKey())
+                ->exists();
+
+            if ($duplicate) {
+                throw ValidationException::withMessages([
+                    'rustDeskId' => 'Este ID de RustDesk ya está asociado a otro equipo.',
+                ]);
+            }
+
+            $asset->update(['rustdesk_id' => $rustDeskId]);
+        }
 
         /*
         |--------------------------------------------------------------------------

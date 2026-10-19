@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Auth\Access\AuthorizationException;
 use App\Models\Asset;
 use App\Services\Inventory\InventoryProcessor;
+use App\Services\AgentTokenAuthorizer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -41,6 +43,7 @@ class InventoryController extends Controller
             'battery' => ['sometimes', 'array'],
             'motherboard' => ['sometimes', 'array'],
             'software' => ['sometimes', 'array', 'max:5000'],
+            'rustDeskId' => ['sometimes', 'nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9-]+$/'],
             'hardwareHash' => ['sometimes', 'nullable', 'string', 'max:64'],
             'inventoryHash' => ['sometimes', 'nullable', 'string', 'max:64'],
             'agentVersion' => ['sometimes', 'nullable', 'string', 'max:20'],
@@ -49,6 +52,8 @@ class InventoryController extends Controller
 
         try {
             return $processor->process($request);
+        } catch (AuthorizationException $exception) {
+            throw $exception;
         } catch (ValidationException $exception) {
             return response()->json([
                 'success' => false,
@@ -71,7 +76,7 @@ class InventoryController extends Controller
     /**
      * Recibe el heartbeat del SIGMA Agent.
      */
-    public function heartbeat(Request $request)
+    public function heartbeat(Request $request, AgentTokenAuthorizer $tokenAuthorizer)
     {
         $validated = $request->validate([
             'assetId' => 'required_without:serialNumber|integer|min:1|exists:assets,id',
@@ -105,6 +110,8 @@ class InventoryController extends Controller
                 'serial_number' => $validated['serialNumber'] ?? null,
             ], 404);
         }
+
+        $tokenAuthorizer->authorizeAsset($request, $asset);
 
         $updates = [
             'agent_last_seen' => now(),

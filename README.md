@@ -6,6 +6,7 @@ SIGMA es una aplicación institucional para la consulta y gestión de activos, r
 
 - [Manuales básicos de SIGMA](docs/Manual_Basico_SIGMA.docx): guía de usuario, administración, instalación y operación técnica, con una lista de verificación para la entrega al ISTM.
 - [Actualizaciones de SIGMA Agent](SIGMA_AGENT_UPDATES.md): procedimiento específico para publicar versiones del agente.
+- [Inventario de Agentes y RustDesk OSS](docs/inventario-agente-rustdesk.md): diseño, migración, puertos y despliegue local opcional.
 
 El manual es una base para revisión institucional. Antes de radicarlo, complete responsables y contactos, aplique la plantilla vigente del ISTM y confirme los requisitos operativos y de retención de datos.
 
