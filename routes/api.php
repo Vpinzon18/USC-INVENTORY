@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Route;
 | update manifest is read-only and rate-limited.
 */
 Route::prefix('v1/agent')->name('api.v1.agent.')->group(function () {
+    Route::post('enroll', [InventoryController::class, 'enroll'])
+        ->middleware('throttle:5,1')
+        ->name('enroll');
+
     Route::get('update', [AssetApiController::class, 'update'])
         ->middleware('throttle:30,1')
         ->name('update');

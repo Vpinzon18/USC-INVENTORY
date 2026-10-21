@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AuditLogController;
-use App\Http\Controllers\Admin\AgentInventoryController;
 use App\Http\Controllers\Admin\BuildingController;
 use App\Http\Controllers\Admin\CampusController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -93,21 +92,13 @@ Route::middleware(['auth', 'role:1,2,3'])->group(function () {
     });
 });
 
-Route::middleware(['auth', 'role:1,2'])
-    ->prefix('admin/agent-inventory')
-    ->name('admin.agent-inventory.')
-    ->group(function () {
-        Route::get('/', [AgentInventoryController::class, 'index'])->name('index');
-        Route::get('/{asset}', [AgentInventoryController::class, 'show'])->whereNumber('asset')->name('show');
-        Route::patch('/{asset}/rustdesk', [AgentInventoryController::class, 'updateRustDeskId'])
-            ->whereNumber('asset')
-            ->middleware('role:1')
-            ->name('rustdesk.update');
-    });
 Route::middleware(['auth', 'role:1,2'])->group(function () {
     Route::get('/assets/create', [AssetController::class, 'create'])->name('assets.create');
     Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
     Route::get('/assets/{asset}/edit', [AssetController::class, 'edit'])->name('assets.edit');
+    Route::patch('/assets/{asset}/rustdesk', [AssetController::class, 'updateRustDeskId'])
+        ->middleware('role:1')
+        ->name('assets.rustdesk.update');
     Route::match(['put', 'patch'], '/assets/{asset}', [AssetController::class, 'update'])->name('assets.update');
 
     Route::post('/movements/validate-conflict', [MovementController::class, 'validateConflict'])->name('movements.validate-conflict');
@@ -139,17 +130,6 @@ Route::middleware(['auth', 'role:1,2,3'])->group(function () {
     });
 });
 
-Route::middleware(['auth', 'role:1,2'])
-    ->prefix('admin/agent-inventory')
-    ->name('admin.agent-inventory.')
-    ->group(function () {
-        Route::get('/', [AgentInventoryController::class, 'index'])->name('index');
-        Route::get('/{asset}', [AgentInventoryController::class, 'show'])->whereNumber('asset')->name('show');
-        Route::patch('/{asset}/rustdesk', [AgentInventoryController::class, 'updateRustDeskId'])
-            ->whereNumber('asset')
-            ->middleware('role:1')
-            ->name('rustdesk.update');
-    });
 Route::middleware(['auth', 'role:1,2'])->group(function () {
     Route::get('/schedules/search-assets', [MaintenanceScheduleController::class, 'searchAssets'])->name('schedules.search-assets');
     Route::get('/admin/schedules/search-assets', [MaintenanceScheduleController::class, 'searchAssets'])

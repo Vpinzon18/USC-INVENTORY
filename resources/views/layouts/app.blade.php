@@ -93,12 +93,6 @@
                         </span>
                     </a>
                 </div>
-                @if (Auth::check() && in_array((int) Auth::user()->role, [1, 2], true))
-                    <a href="{{ route('admin.agent-inventory.index') }}" class="flex items-center px-3 py-2.5 rounded-xl font-semibold transition-all duration-200 group {{ request()->routeIs('admin.agent-inventory.*') ? 'bg-[#2b2b40] text-blue-400' : 'text-gray-400 hover:bg-[#2b2b40] hover:text-white' }}">
-                        <svg class="w-5 h-5 shrink-0 text-gray-500 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18v12H3zM8 20h8m-4-4v4m-5-9 3-3 2 2 4-4" /></svg>
-                        <span class="ml-3 whitespace-nowrap">Inventario de Agentes</span>
-                    </a>
-                @endif
                 <div x-data="{ open: {{ request()->routeIs('schedules.*') ? 'true' : 'false' }} }">
 
                     <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"

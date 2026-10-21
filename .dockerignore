@@ -18,9 +18,13 @@ storage/logs/
 storage/framework/cache/
 storage/framework/sessions/
 storage/framework/views/
+# Runtime uploads, backups and agent packages live in the persistent volume.
+# Never bake them into distributable images.
+storage/app/**
 bootstrap/cache/
 
 # Local backups, exports, and temporary files
+/exports/
 *.log
 *.tmp
 *.temp

@@ -77,6 +77,17 @@
         <section id="asset-show"
             class="space-y-4">
 
+            <nav id="asset-section-navigation" class="hidden sticky top-3 z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur" aria-label="Secciones de la hoja de vida">
+                <div class="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[.16em] text-blue-700">Hoja de vida</p>
+                        <p class="text-xs text-slate-500">Selecciona una tarjeta para consultar su información por separado.</p>
+                    </div>
+                    <span id="asset-section-current" class="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700"></span>
+                </div>
+                <div id="asset-section-buttons" class="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Secciones disponibles"></div>
+            </nav>
+
 
             {{-- =====================================================
                  VARIABLES
@@ -173,7 +184,7 @@
 
                 @if($agentManaged)
 
-                <div class="mb-5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3 shadow-inner">
+                <div id="asset-status-notice" class="mb-5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3 shadow-inner">
 
                     <svg class="w-5 h-5 text-slate-400 shrink-0 mt-0.5"
                         fill="none"
@@ -208,7 +219,7 @@
 
                 @else
 
-                <div class="mb-5 p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 shadow-inner">
+                <div id="asset-status-notice" class="mb-5 p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 shadow-inner">
 
                     <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"
                         fill="none"
@@ -583,7 +594,7 @@
                      AVISO HARDWARE
                 ================================================== --}}
 
-                <div class="mb-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3 shadow-inner">
+                <div id="asset-technical-notice" class="mb-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3 shadow-inner">
 
                     <svg class="w-5 h-5 text-slate-400 shrink-0 mt-0.5"
                         fill="none"
@@ -2421,7 +2432,7 @@
      12. SOFTWARE
 ================================================== --}}
 
-<div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6 w-full block">
+<div id="asset-section-software-card" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-6 w-full block">
 
     {{-- =================================================
          ENCABEZADO
@@ -2822,12 +2833,132 @@
             
         </section>
 
+        <section id="asset-section-rustdesk-card" class="mt-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-[.16em] text-violet-700">Asistencia remota</p>
+                    <h3 class="mt-1 text-lg font-black text-slate-900">RustDesk Open Source</h3>
+                    <p class="mt-1 max-w-3xl text-sm text-slate-500">El ID se asocia a este activo de Inventario/HV. La sesión se abre en el cliente RustDesk de este equipo y requiere que el equipo remoto esté disponible y autorice la conexión.</p>
+                </div>
+                @if ($asset->rustdesk_id)
+                    <a href="rustdesk://{{ $asset->rustdesk_id }}" class="inline-flex h-10 items-center justify-center rounded-xl bg-violet-700 px-4 text-sm font-bold text-white hover:bg-violet-800">Abrir RustDesk</a>
+                @endif
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-end gap-3">
+                <label class="min-w-[260px] flex-1">
+                    <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">ID RustDesk asociado</span>
+                    <input id="asset-rustdesk-id" type="text" value="{{ $asset->rustdesk_id ?: '' }}" readonly class="w-full rounded-xl border-slate-300 bg-slate-50 font-mono text-sm text-slate-800" placeholder="Sin configurar">
+                </label>
+                @if ($asset->rustdesk_id)
+                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('asset-rustdesk-id').value)" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50">Copiar ID</button>
+                @endif
+            </div>
+
+            @if ((int) auth()->user()->role === 1)
+                <form method="POST" action="{{ route('assets.rustdesk.update', $asset) }}" class="mt-4 flex flex-wrap items-end gap-3 border-t border-slate-100 pt-4">
+                    @csrf
+                    @method('PATCH')
+                    <label class="min-w-[260px] flex-1">
+                        <span class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500">Registrar o cambiar ID</span>
+                        <input name="rustdesk_id" value="{{ old('rustdesk_id', $asset->rustdesk_id) }}" maxlength="64" pattern="[A-Za-z0-9-]+" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-violet-500 focus:ring-violet-500" placeholder="ID asignado por el cliente RustDesk">
+                        @error('rustdesk_id')<span class="mt-1 block text-xs font-semibold text-rose-600">{{ $message }}</span>@enderror
+                    </label>
+                    <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-bold text-white hover:bg-slate-700">Guardar ID</button>
+                </form>
+            @endif
+        </section>
+
     </div>
 
 
     {{-- =============================================================
          SWEETALERT
     ============================================================= --}}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navigation = document.getElementById('asset-section-navigation');
+            const buttonsRoot = document.getElementById('asset-section-buttons');
+            const currentLabel = document.getElementById('asset-section-current');
+            if (!navigation || !buttonsRoot || !currentLabel) return;
+
+            const sections = [
+                { id: 'asset-general', label: 'Información general', prefixes: ['1. Información General'] },
+                { id: 'asset-location', label: 'Ubicación y asignación', prefixes: ['2. Ubicación'] },
+                { id: 'asset-bios', label: 'Motherboard / BIOS', prefixes: ['3. Motherboard'] },
+                { id: 'asset-cpu', label: 'Procesador', prefixes: ['4. Procesadores'] },
+                { id: 'asset-ram', label: 'Memoria RAM', prefixes: ['5. Memoria RAM'] },
+                { id: 'asset-storage', label: 'Almacenamiento', prefixes: ['6. Almacenamiento'] },
+                { id: 'asset-gpu', label: 'Procesadores gráficos', prefixes: ['7. Procesadores Gráficos'] },
+                { id: 'asset-network', label: 'Conectividad y red', prefixes: ['8. Conectividad'] },
+                { id: 'asset-battery', label: 'Batería', prefixes: ['9. Batería'] },
+                { id: 'asset-monitors', label: 'Monitores', prefixes: ['10. Monitores'] },
+                { id: 'asset-os', label: 'Sistema operativo', prefixes: ['11. Sistema Operativo'] },
+                { id: 'asset-security', label: 'Seguridad', prefixes: ['Seguridad'] },
+                { id: 'asset-software', label: 'Software instalado', cardSelector: '#asset-section-software-card' },
+                { id: 'asset-rustdesk', label: 'Asistencia remota', cardSelector: '#asset-section-rustdesk-card' },
+            ];
+
+            const cardsBySection = new Map();
+            sections.forEach((section) => {
+                const cards = section.cardSelector
+                    ? [document.querySelector(section.cardSelector)].filter(Boolean)
+                    : section.prefixes.map((prefix) => {
+                        const heading = [...document.querySelectorAll('h3')]
+                            .find((candidate) => candidate.textContent.replace(/\s+/g, ' ').trim().startsWith(prefix));
+                        return heading?.closest('div.rounded-2xl.border, div.rounded-xl.border') ?? null;
+                    }).filter((card, index, all) => card && all.indexOf(card) === index);
+                cardsBySection.set(section.id, cards);
+            });
+
+            const generalCard = cardsBySection.get('asset-general')?.[0];
+            const statusNotice = document.getElementById('asset-status-notice');
+            const technicalNotice = document.getElementById('asset-technical-notice');
+            const generalCardGrid = generalCard?.querySelector('.grid');
+            if (statusNotice && generalCardGrid) generalCardGrid.before(statusNotice);
+            technicalNotice?.remove();
+
+            const availableSections = sections.filter((section) => cardsBySection.get(section.id)?.length);
+            if (!availableSections.length) return;
+
+            const allCards = [...new Set(availableSections.flatMap((section) => cardsBySection.get(section.id)))];
+            let activeSection = availableSections[0].id;
+
+            const activate = (sectionId) => {
+                activeSection = sectionId;
+                allCards.forEach((card) => {
+                    const isVisible = cardsBySection.get(sectionId).includes(card);
+                    card.hidden = !isVisible;
+                    card.style.display = isVisible ? '' : 'none';
+                });
+                availableSections.forEach((section) => {
+                    const button = buttonsRoot.querySelector(`[data-section="${section.id}"]`);
+                    const active = section.id === sectionId;
+                    button?.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    button?.classList.toggle('bg-blue-700', active);
+                    button?.classList.toggle('text-white', active);
+                    button?.classList.toggle('bg-slate-100', !active);
+                    button?.classList.toggle('text-slate-700', !active);
+                });
+                currentLabel.textContent = availableSections.find((section) => section.id === sectionId)?.label ?? '';
+            };
+
+            availableSections.forEach((section) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.section = section.id;
+                button.setAttribute('aria-pressed', 'false');
+                button.className = 'shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-blue-300';
+                button.textContent = section.label;
+                button.addEventListener('click', () => activate(section.id));
+                buttonsRoot.appendChild(button);
+            });
+
+            navigation.classList.remove('hidden');
+            activate(activeSection);
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <div

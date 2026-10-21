@@ -6,13 +6,88 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Models\Asset;
+use App\Models\SigmaAgentEnrollmentCode;
+use App\Models\User;
+use App\Services\Inventory\Processors\DeviceProcessor;
 use App\Services\Inventory\InventoryProcessor;
 use App\Services\AgentTokenAuthorizer;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class InventoryController extends Controller
 {
+    /** Exchange an administrator-issued, one-use code for an asset-scoped token. */
+    public function enroll(Request $request, DeviceProcessor $deviceProcessor)
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'size:64', 'regex:/^[a-f0-9]{64}$/'],
+            'device' => ['required', 'array'],
+            'device.serialNumber' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'device.hostname' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'device.manufacturer' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'device.model' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'device.uuid' => ['sometimes', 'nullable', 'uuid'],
+        ]);
+
+        $device = $validated['device'];
+        if (!collect(['serialNumber', 'uuid', 'hostname'])->contains(
+            fn (string $key) => filled($device[$key] ?? null)
+        )) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El equipo debe proporcionar serial, UUID de hardware o nombre de equipo.',
+            ], 422);
+        }
+
+        $codeHash = hash('sha256', $validated['code']);
+
+        return DB::transaction(function () use ($codeHash, $device, $deviceProcessor) {
+            $enrollment = SigmaAgentEnrollmentCode::query()
+                ->where('code_hash', $codeHash)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$enrollment || $enrollment->consumed_at || $enrollment->expires_at->isPast()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El código de enrolamiento no es válido, ya fue usado o venció.',
+                ], 403);
+            }
+
+            $administrator = User::query()
+                ->whereKey($enrollment->created_by_user_id)
+                ->where('role', 1)
+                ->first();
+
+            if (!$administrator) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay un administrador habilitado para emitir la credencial.',
+                ], 503);
+            }
+
+            $asset = $deviceProcessor->process($device);
+            $assetId = $asset->getKey();
+            $issued = $administrator->createToken(
+                'sigma-agent-asset-' . $assetId,
+                ['sigma-agent.asset.' . $assetId]
+            );
+
+            $enrollment->update([
+                'asset_id' => $assetId,
+                'consumed_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'token' => $issued->plainTextToken,
+                'assetId' => $assetId,
+                'agentId' => $asset->agent_uuid,
+            ]);
+        }, 3);
+    }
+
     /**
      * Recibe el inventario completo enviado por SIGMA Agent.
      */

@@ -2,9 +2,9 @@
 
 ## Diseño
 
-El módulo `Inventario de Agentes` presenta los activos cuyo `assets.is_agent_managed` está activo. La API existente de SIGMA Agent (`POST /api/v1/agent/inventory`, autenticada con Sanctum) ya registra la identidad del dispositivo y normaliza CPU, módulos RAM, BIOS, red, discos, GPU, batería, sistema operativo y seguridad en `assets` y sus relaciones. Esta implementación reutiliza esa información; no copia la telemetría a tablas paralelas.
+Los activos administrados por SIGMA Agent se consultan desde **Inventario / HV**; no hay un segundo listado de equipos. La API existente de SIGMA Agent (`POST /api/v1/agent/inventory`, autenticada con Sanctum) registra la identidad del dispositivo y normaliza CPU, módulos RAM, BIOS, red, discos, GPU, batería, sistema operativo y seguridad en `assets` y sus relaciones. La ficha reutiliza esa información; no copia la telemetría a tablas paralelas.
 
-Las rutas web requieren autenticación. La lista y el detalle quedan disponibles para roles 1 y 2; solo el rol 1 puede registrar o cambiar el ID RustDesk. La nueva columna `assets.rustdesk_id` es nullable y única. No se almacena contraseña, token RustDesk ni clave privada.
+Las rutas de Inventario / HV requieren autenticación; solo el rol 1 puede registrar o cambiar el ID RustDesk. La columna `assets.rustdesk_id` es nullable y única. No se almacena contraseña, token RustDesk ni clave privada.
 
 RustDesk Server OSS se publica bajo AGPL-3.0; revise las obligaciones de licencia antes de redistribuir versiones modificadas. SIGMA Agent puede consultar el ID con la opción oficial `rustdesk.exe --get-id` y enviarlo como `rustDeskId` en el inventario. Si RustDesk no está instalado o no puede responder, el campo se omite y la telemetría normal continúa; el valor existente en SIGMA no se borra. El backend rechaza IDs duplicados. También se puede registrar el ID manualmente desde el detalle del equipo. El enlace `rustdesk://<id>` intenta abrir el cliente local si el sistema operativo tiene registrado el protocolo. No se recolectan contraseñas ni se habilita acceso desatendido.
 
@@ -62,11 +62,27 @@ La reversión de esta migración elimina la columna, incluido cualquier ID RustD
    ```
 
 4. En el cliente RustDesk de cada equipo, abra **Configuración → Red → Servidor ID** y configure `127.0.0.1:21116` y la clave pública. Deje el relay vacío para que el cliente lo infiera, o use `127.0.0.1:21117`.
-5. Compile y despliegue la nueva versión de SIGMA Agent en cada equipo. En el siguiente inventario, el ID se asociará automáticamente al activo. Para clientes del agente aún no actualizados, abra SIGMA → **Inventario de Agentes** → equipo → **Asistencia remota** y registre el ID manualmente. **Abrir RustDesk** intenta usar el protocolo local; el técnico debe comprobar el equipo y completar la autorización requerida por el cliente.
+5. Compile y despliegue la nueva versión de SIGMA Agent en cada equipo. En el siguiente inventario, el ID se asociará automáticamente al activo. Para clientes aún no actualizados, abra SIGMA → **Inventario / HV** → ficha del equipo → **Asistencia remota** y registre el ID manualmente. **Abrir RustDesk** intenta usar el protocolo local; el técnico debe comprobar el equipo y completar la autorización requerida por el cliente.
 
 ### Actualización del agente C#
 
-En `C:\Users\Admin\source\repos\usc-api\usc-api`, compile el proyecto `usc-api.csproj` para `net10.0-windows` y distribuya el ejecutable publicado mediante el mecanismo institucional existente. No incluya ni reemplace `appsettings.json` durante la actualización: conserva el endpoint y el token local del agente. La consulta RustDesk es opcional y no requiere editar ese archivo. El cliente RustDesk debe estar instalado y configurado previamente en cada equipo.
+En `C:\Users\Admin\source\repos\usc-api\usc-api`, compile el proyecto `usc-api.csproj` para `net10.0-windows` y distribuya el ejecutable publicado mediante el mecanismo institucional existente. En instalaciones existentes se conserva la configuración y el token. Para una instalación nueva, consulte `README-RELEASE.md`: aplique la migración de códigos de enrolamiento, genere uno con `php artisan sigma:agent-enrollment-code` y escríbalo en el configurador. SIGMA emite la credencial ligada al activo y el agente la protege con DPAPI. La consulta RustDesk es opcional y el cliente debe estar instalado/configurado previamente si se usará asistencia remota.
+
+### Enrolamiento de una instalación nueva
+
+La migración `2026_10_19_120000_create_sigma_agent_enrollment_codes_table.php` agrega una tabla para códigos de un solo uso. En la instalación local existente, aplíquela de forma aislada después de respaldar PostgreSQL:
+
+```powershell
+docker compose run --rm --no-deps app php artisan migrate --path=database/migrations/2026_10_19_120000_create_sigma_agent_enrollment_codes_table.php --force
+```
+
+Después de publicar el backend, genere un código justo antes de instalar cada equipo:
+
+```powershell
+docker compose exec app php artisan sigma:agent-enrollment-code
+```
+
+El código aparece una sola vez, vence en 30 minutos y solo puede canjearse una vez. El instalador solicita ese código, no el token. SIGMA identifica o crea el activo y devuelve una credencial de alcance exclusivo para ese activo. Si se vence o se pierde la respuesta del servidor, genere otro código. No use HTTP fuera de una red confiable o VPN: tanto el código como el token se transmiten sin cifrado.
 
 Para probar con otros equipos de la LAN, cambie en el `.env` `RUSTDESK_BIND_ADDRESS=0.0.0.0` y `RUSTDESK_RELAY_HOST=<IP-o-DNS-del-host>`, reinicie solo `rustdesk-hbbs` y `rustdesk-hbbr`, configure los clientes con `<IP-o-DNS-del-host>:21116` y la clave pública, y permita los puertos de la tabla únicamente desde la red privada autorizada. `localhost`/`127.0.0.1` solo funciona para clientes en el mismo computador.
 
@@ -80,7 +96,7 @@ El volumen `rustdesk_data` conserva `id_ed25519`, `id_ed25519.pub` y los datos d
 
 ## Publicación de cambios SIGMA
 
-Después de reconstruir las imágenes `app` y `nginx`, aplique únicamente la migración nueva con el comando anterior. Revise rutas `admin/agent-inventory`, el acceso por rol 1/2, la actualización del ID por rol 1 y la respuesta HTTP del enlace del cliente. Los servicios RustDesk son opt-in y no arrancan junto al stack normal.
+Después de reconstruir las imágenes `app` y `nginx`, aplique únicamente la migración nueva con el comando anterior. El seguimiento técnico del equipo se consulta desde Inventario/HV; la API de agentes continúa recibiendo telemetría y estados. Los servicios RustDesk son opt-in y no arrancan junto al stack normal.
 
 Antes de pasar de localhost a LAN, confirme la política institucional de soporte remoto, autorización del usuario del equipo, inventario de claves, responsable de actualización de imagen y alcance del firewall. Fije la imagen `rustdesk/rustdesk-server` a una versión que la organización haya validado en vez de mantener `latest` indefinidamente.
 
