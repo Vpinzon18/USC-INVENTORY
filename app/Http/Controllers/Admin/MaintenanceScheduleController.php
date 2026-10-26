@@ -214,6 +214,7 @@ class MaintenanceScheduleController extends Controller
                     'scheduled_date' => $validated['scheduled_date'],
                     'status' => $status,
                 ]);
+                app(\App\Services\Glpi\GlpiTicketEventFactory::class)->maintenanceSchedule($createdSchedules[array_key_last($createdSchedules)]);
             }
             return $createdSchedules;
         });
@@ -376,6 +377,13 @@ class MaintenanceScheduleController extends Controller
             ->format('Letter')
             ->landscape()
             ->margins(10, 10, 10, 10)
+            ->withBrowsershot(function ($browsershot) {
+                // Chromium runs inside the SIGMA container, where its sandbox is unavailable.
+                $browsershot
+                    ->noSandbox()
+                    ->timeout(120)
+                    ->setOption('waitUntil', 'domcontentloaded');
+            })
             ->download($fileName);
     }
 }

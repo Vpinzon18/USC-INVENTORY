@@ -149,17 +149,20 @@
             <div class="relative z-10" :class="{'space-y-3': viewMode === 'list', 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4': viewMode === 'grid'}">
 
                 @forelse ($assets as $asset)
+                @php
+                    $presenceAt = $asset->agent_last_seen ?? $asset->last_seen_at;
+                @endphp
                 <div class="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-200 relative overflow-hidden flex flex-col"
                     :class="{'lg:flex-row': viewMode === 'list'}">
 
-                    <div class="absolute left-0 top-0 bottom-0 w-1 {{ $asset->last_seen_at && \Carbon\Carbon::parse($asset->last_seen_at)->gt(now()->subMinutes(10)) ? 'bg-emerald-500' : 'bg-rose-500' }}"></div>
+                    <div class="absolute left-0 top-0 bottom-0 w-1 {{ $presenceAt && \Carbon\Carbon::parse($presenceAt)->gt(now()->subMinutes(\App\Models\Asset::ONLINE_THRESHOLD_MINUTES)) ? 'bg-emerald-500' : 'bg-rose-500' }}"></div>
 
                     <div class="p-4 md:p-5 flex-1 flex items-start gap-4 min-w-[250px]">
                         <div class="shrink-0 w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center relative">
                             <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
-                            <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white {{ $asset->last_seen_at && \Carbon\Carbon::parse($asset->last_seen_at)->gt(now()->subMinutes(10)) ? 'bg-emerald-500' : 'bg-rose-500' }}" title="{{ $asset->last_seen_at ? 'Última conexión: ' . \Carbon\Carbon::parse($asset->last_seen_at)->diffForHumans() : 'Sin conexión' }}"></span>
+                            <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white {{ $presenceAt && \Carbon\Carbon::parse($presenceAt)->gt(now()->subMinutes(\App\Models\Asset::ONLINE_THRESHOLD_MINUTES)) ? 'bg-emerald-500' : 'bg-rose-500' }}" title="{{ $presenceAt ? 'Último heartbeat: ' . \Carbon\Carbon::parse($presenceAt)->diffForHumans() : 'Sin conexión' }}"></span>
                         </div>
 
                         <div>
@@ -401,5 +404,16 @@
                 }
             });
         }
+    </script>
+    <script>
+        window.setInterval(() => {
+            const activeElement = document.activeElement;
+            const editingForm = activeElement?.closest('form');
+            const modalOpen = document.querySelector('.swal2-container');
+
+            if (document.visibilityState === 'visible' && !editingForm && !modalOpen) {
+                window.location.reload();
+            }
+        }, 30000);
     </script>
 </x-app-layout>

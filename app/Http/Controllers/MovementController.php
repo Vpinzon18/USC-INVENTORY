@@ -194,6 +194,10 @@ class MovementController extends Controller
                 $asset->update(['room_id' => $salaDestino]);
                 $movedCount++;
             }
+
+            if ($movedCount > 0) {
+                app(\App\Services\Glpi\GlpiTicketEventFactory::class)->movement($actaNumber);
+            }
         });
 
         if ($movedCount === 0 && $ignoredCount === 0) {

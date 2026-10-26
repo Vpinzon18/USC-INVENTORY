@@ -175,23 +175,25 @@ public function edit(int $id)
 
     // 4. GUARDADO SEGURO
     // Usamos ?? null para evitar que el arreglo falle si el campo no fue enviado
-    $service = \App\Models\TechnicalService::create([
-        'asset_id'                => $validated['asset_id'],
-        'user_id'                 => Auth::user()->id,
-        'performed_at'            => $validated['performed_at'],
-        'type'                    => $finalType,
-        'description'             => $cleanDescription, 
-        'security_guaya'          => $cleanGuaya,
-        // CORRECCIÓN AQUÍ: Operador de fusión de null
-        'maintenance_schedule_id' => $validated['maintenance_schedule_id'] ?? null,
-    ]);
+    $service = DB::transaction(function () use ($validated, $finalType, $cleanDescription, $cleanGuaya) {
+        $service = TechnicalService::create([
+            'asset_id'                => $validated['asset_id'],
+            'user_id'                 => Auth::id(),
+            'performed_at'            => $validated['performed_at'],
+            'type'                    => $finalType,
+            'description'             => $cleanDescription,
+            'security_guaya'          => $cleanGuaya,
+            'maintenance_schedule_id' => $validated['maintenance_schedule_id'] ?? null,
+        ]);
 
-    // 5. LÓGICA DE ACTUALIZACIÓN DE CRONOGRAMA
-    // Solo actualizamos si el tipo es preventivo y el ID existe realmente
-    if (strtoupper($finalType) === 'PREVENTIVO' && !empty($validated['maintenance_schedule_id'] ?? null)) {
-        \App\Models\MaintenanceSchedule::where('id', $validated['maintenance_schedule_id'])
-            ->update(['status' => 'REALIZADO']);
-    }
+        if (strtoupper($finalType) === 'PREVENTIVO' && !empty($validated['maintenance_schedule_id'] ?? null)) {
+            MaintenanceSchedule::whereKey($validated['maintenance_schedule_id'])->update(['status' => 'REALIZADO']);
+        }
+
+        app(\App\Services\Glpi\GlpiTicketEventFactory::class)->technicalService($service);
+
+        return $service;
+    });
 
     return redirect()->route('maintenances.index')
         ->with('success', 'Registro de servicio guardado de forma segura.');

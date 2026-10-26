@@ -53,6 +53,8 @@ services:
     image: postgres:17-alpine
     container_name: sigma_postgres
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"
     environment:
       POSTGRES_DB: ${DB_DATABASE:?Set DB_DATABASE in .env}
       POSTGRES_USER: ${DB_USERNAME:?Set DB_USERNAME in .env}

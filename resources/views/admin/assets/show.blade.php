@@ -85,7 +85,7 @@
                     </div>
                     <span id="asset-section-current" class="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700"></span>
                 </div>
-                <div id="asset-section-buttons" class="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Secciones disponibles"></div>
+                <div id="asset-section-buttons" class="grid grid-cols-2 gap-2 pb-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7" role="group" aria-label="Secciones disponibles"></div>
             </nav>
 
 
@@ -164,6 +164,19 @@
             $networkAdapters->firstWhere(
             'is_primary',
             true
+            );
+
+            $primaryAdapter ??= $networkAdapters->first(
+                fn ($adapter) => $adapter->is_active
+                    && $adapter->connected
+                    && filled($adapter->ipv4)
+                    && filled($adapter->mac_address)
+            );
+
+            $primaryAdapter ??= $networkAdapters->first(
+                fn ($adapter) => $adapter->is_active
+                    && $adapter->connected
+                    && filled($adapter->mac_address)
             );
 
             @endphp
@@ -2833,6 +2846,7 @@
             
         </section>
 
+        @if (false) {{-- Asistencia remota pausada temporalmente; se conserva el bloque para reactivarlo. --}}
         <section id="asset-section-rustdesk-card" class="mt-6 rounded-2xl border border-violet-200 bg-white p-6 shadow-sm">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -2841,8 +2855,12 @@
                     <p class="mt-1 max-w-3xl text-sm text-slate-500">El ID se asocia a este activo de Inventario/HV. La sesión se abre en el cliente RustDesk de este equipo y requiere que el equipo remoto esté disponible y autorice la conexión.</p>
                 </div>
                 @if ($asset->rustdesk_id)
-                    <a href="rustdesk://{{ $asset->rustdesk_id }}" class="inline-flex h-10 items-center justify-center rounded-xl bg-violet-700 px-4 text-sm font-bold text-white hover:bg-violet-800">Abrir RustDesk</a>
+                    <form method="POST" action="{{ route('assets.remote-support.create', $asset) }}" onsubmit="return startSigmaRemoteSession(event, this)">
+                        @csrf
+                        <button type="submit" class="inline-flex h-10 items-center justify-center rounded-xl bg-violet-700 px-4 text-sm font-bold text-white hover:bg-violet-800">Solicitar asistencia</button>
+                    </form>
                 @endif
+                <a href="{{ route('admin.remote-support-sessions.index') }}" class="text-sm font-semibold text-violet-700 hover:text-violet-900">Historial de soporte</a>
             </div>
 
             <div class="mt-4 flex flex-wrap items-end gap-3">
@@ -2868,6 +2886,35 @@
                 </form>
             @endif
         </section>
+
+        <script>
+            async function startSigmaRemoteSession(event, form) {
+                event.preventDefault();
+                const button = form.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'Validando en SIGMA…';
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                        },
+                    });
+                    const result = await response.json();
+                    if (!response.ok || !result.success || !result.launchUrl) {
+                        throw new Error(result.message || 'SIGMA no autorizó la solicitud.');
+                    }
+                    window.location.href = result.launchUrl;
+                } catch (error) {
+                    window.alert(error.message || 'No fue posible iniciar la solicitud de soporte.');
+                    button.disabled = false;
+                    button.textContent = 'Solicitar asistencia';
+                }
+                return false;
+            }
+        </script>
+        @endif
 
     </div>
 
@@ -2897,7 +2944,6 @@
                 { id: 'asset-os', label: 'Sistema operativo', prefixes: ['11. Sistema Operativo'] },
                 { id: 'asset-security', label: 'Seguridad', prefixes: ['Seguridad'] },
                 { id: 'asset-software', label: 'Software instalado', cardSelector: '#asset-section-software-card' },
-                { id: 'asset-rustdesk', label: 'Asistencia remota', cardSelector: '#asset-section-rustdesk-card' },
             ];
 
             const cardsBySection = new Map();
@@ -2949,7 +2995,7 @@
                 button.type = 'button';
                 button.dataset.section = section.id;
                 button.setAttribute('aria-pressed', 'false');
-                button.className = 'shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-blue-300';
+                button.className = 'min-w-0 rounded-xl px-3 py-2.5 text-center text-xs font-bold leading-tight transition focus:outline-none focus:ring-2 focus:ring-blue-300';
                 button.textContent = section.label;
                 button.addEventListener('click', () => activate(section.id));
                 buttonsRoot.appendChild(button);

@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Asset extends Model
 {
+    public const ONLINE_THRESHOLD_MINUTES = 10;
+
     protected $table = 'assets';
 
     protected $fillable = [

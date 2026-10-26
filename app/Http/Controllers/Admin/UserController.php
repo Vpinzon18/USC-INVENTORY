@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 use App\Support\PaginationOptions;
 use Illuminate\Http\Request;
@@ -64,15 +67,23 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => 'required|integer|in:1,2,3',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        // ESCUDO ANTI-XSS: Limpiamos solo el nombre
         $validated['name'] = strip_tags($validated['name']);
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->role = $validated['role'];
 
-        $user->update($validated);
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
 
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado de forma segura');
+        $user->save();
+
+        return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente.');
     }
 
     public function store(Request $request)
@@ -95,12 +106,57 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
     } public function destroy(User $user)
 {
+    abort_unless((int) Auth::user()?->role === 1, 403);
 
     if (Auth::id() === $user->id) {
         return redirect()->back()->with('error', 'No puedes eliminar tu propia cuenta.');
     }
-    
-    $user->delete();
+
+    $references = [
+        ['table' => 'assignments', 'column' => 'user_id', 'label' => 'movimientos o asignaciones'],
+        ['table' => 'technical_services', 'column' => 'user_id', 'label' => 'servicios técnicos'],
+        ['table' => 'sigma_agent_enrollment_codes', 'column' => 'created_by_user_id', 'label' => 'códigos de enrolamiento'],
+        ['table' => 'remote_support_sessions', 'column' => 'requested_by_user_id', 'label' => 'sesiones de asistencia remota'],
+    ];
+
+    $linkedRecords = [];
+    foreach ($references as $reference) {
+        // Some optional modules may not have been migrated in every deployment.
+        if (!Schema::hasTable($reference['table']) || !Schema::hasColumn($reference['table'], $reference['column'])) {
+            continue;
+        }
+
+        $count = DB::table($reference['table'])
+            ->where($reference['column'], $user->id)
+            ->count();
+
+        if ($count > 0) {
+            $linkedRecords[] = number_format($count) . ' ' . $reference['label'];
+        }
+    }
+
+    if ($linkedRecords !== []) {
+        return redirect()->route('users.index')->with(
+            'error',
+            'No se puede eliminar este usuario porque conserva registros asociados: ' .
+            implode(', ', $linkedRecords) . '. Reasigna esos registros desde su módulo para conservar el historial.'
+        );
+    }
+
+    try {
+        $user->delete();
+    } catch (QueryException $exception) {
+        // A concurrent request may create a reference after the checks above.
+        if ($exception->getCode() === '23503') {
+            return redirect()->route('users.index')->with(
+                'error',
+                'No se puede eliminar este usuario porque otro registro del sistema todavía depende de su cuenta.'
+            );
+        }
+
+        throw $exception;
+    }
+
     return redirect()->route('users.index')->with('success', 'Usuario eliminado.');
 }
 public function resetPassword(Request $request, User $user)

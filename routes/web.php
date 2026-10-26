@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\Assets\AssetIndexController;
+use App\Http\Controllers\Admin\Assets\AssetPdfController;
+use App\Http\Controllers\Admin\Assets\AssetRemoteSupportController;
+use App\Http\Controllers\Admin\AgentEnrollmentRequestController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BuildingController;
 use App\Http\Controllers\Admin\CampusController;
@@ -17,6 +21,7 @@ use App\Http\Controllers\JobTitleController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RemoteSupportSessionController;
 use App\Http\Controllers\TechnicalServiceController;
 use App\Http\Controllers\Web\DashboardController;
 use Illuminate\Support\Facades\Auth;
@@ -51,10 +56,19 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Administrator only: users, institutional structure and catalogs
+| Solo para Administradores: modulo de administracion de infraestructura, usuarios y auditoria, con autenticación y roles de acceso.
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:1'])->group(function () {
+    Route::get('/admin/agent-enrollment-requests', [AgentEnrollmentRequestController::class, 'index'])
+        ->name('admin.agent-enrollment-requests.index');
+    Route::post('/admin/agent-enrollment-requests/{id}/approve', [AgentEnrollmentRequestController::class, 'approve'])
+        ->whereNumber('id')->middleware('throttle:30,1')->name('admin.agent-enrollment-requests.approve');
+    Route::post('/admin/agent-enrollment-requests/{id}/recover', [AgentEnrollmentRequestController::class, 'recover'])
+        ->whereNumber('id')->middleware('throttle:10,1')->name('admin.agent-enrollment-requests.recover');
+    Route::post('/admin/agent-enrollment-requests/{id}/deny', [AgentEnrollmentRequestController::class, 'deny'])
+        ->whereNumber('id')->middleware('throttle:30,1')->name('admin.agent-enrollment-requests.deny');
+
     Route::resource('users', UserController::class)->except(['show']);
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])
@@ -77,14 +91,14 @@ Route::middleware(['auth', 'role:1'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Inventory and movements
+| Rutas del modulo de INVENTARIO / HV, con autenticación y roles de acceso.
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:1,2,3'])->group(function () {
-    Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
+    Route::get('/assets', [AssetIndexController::class, 'index'])->name('assets.index');
     Route::get('/assets/{asset}', [AssetController::class, 'show'])->whereNumber('asset')->name('assets.show');
-    Route::get('/assets/{asset}/preview', [AssetController::class, 'previewPdf'])->name('assets.preview');
-    Route::get('/admin/assets/{id}/download-pdf', [AssetController::class, 'downloadPdf'])->name('assets.download.pdf');
+    Route::get('/assets/{asset}/preview', [AssetPdfController::class, 'previewPdf'])->name('assets.preview');
+    Route::get('/admin/assets/{id}/download-pdf', [AssetPdfController::class, 'downloadPdf'])->name('assets.download.pdf');
 
     Route::prefix('admin')->group(function () {
         Route::get('/movements', [MovementController::class, 'index'])->name('movements.index');
@@ -93,10 +107,15 @@ Route::middleware(['auth', 'role:1,2,3'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:1,2'])->group(function () {
+    Route::get('/admin/remote-support-sessions', [RemoteSupportSessionController::class, 'index'])
+        ->name('admin.remote-support-sessions.index');
+    Route::post('/assets/{asset}/remote-support-sessions', [RemoteSupportSessionController::class, 'create'])
+        ->middleware('throttle:10,1')
+        ->name('assets.remote-support.create');
     Route::get('/assets/create', [AssetController::class, 'create'])->name('assets.create');
     Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
     Route::get('/assets/{asset}/edit', [AssetController::class, 'edit'])->name('assets.edit');
-    Route::patch('/assets/{asset}/rustdesk', [AssetController::class, 'updateRustDeskId'])
+    Route::patch('/assets/{asset}/rustdesk', [AssetRemoteSupportController::class, 'updateRustDeskId'])
         ->middleware('role:1')
         ->name('assets.rustdesk.update');
     Route::match(['put', 'patch'], '/assets/{asset}', [AssetController::class, 'update'])->name('assets.update');
@@ -115,7 +134,7 @@ Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->middlewar
 
 /*
 |--------------------------------------------------------------------------
-| Maintenance and service reports
+| Rutas del modulo de cronogramas y mantenimientos, con autenticación y roles de acceso.
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:1,2,3'])->group(function () {
@@ -151,7 +170,7 @@ Route::delete('/maintenances/{maintenance}', [TechnicalServiceController::class,
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated filter API used by the Blade forms and AJAX components
+|Rutas de filtros para las consultas de filtros autenticados por el middleware de autenticación y roles, con limitación de solicitudes para evitar abuso.
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:1,2,3', 'throttle:120,1'])

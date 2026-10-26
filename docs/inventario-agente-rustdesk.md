@@ -64,25 +64,13 @@ La reversión de esta migración elimina la columna, incluido cualquier ID RustD
 4. En el cliente RustDesk de cada equipo, abra **Configuración → Red → Servidor ID** y configure `127.0.0.1:21116` y la clave pública. Deje el relay vacío para que el cliente lo infiera, o use `127.0.0.1:21117`.
 5. Compile y despliegue la nueva versión de SIGMA Agent en cada equipo. En el siguiente inventario, el ID se asociará automáticamente al activo. Para clientes aún no actualizados, abra SIGMA → **Inventario / HV** → ficha del equipo → **Asistencia remota** y registre el ID manualmente. **Abrir RustDesk** intenta usar el protocolo local; el técnico debe comprobar el equipo y completar la autorización requerida por el cliente.
 
-### Actualización del agente C#
+### Instalación reutilizable de SIGMA Agent
 
-En `C:\Users\Admin\source\repos\usc-api\usc-api`, compile el proyecto `usc-api.csproj` para `net10.0-windows` y distribuya el ejecutable publicado mediante el mecanismo institucional existente. En instalaciones existentes se conserva la configuración y el token. Para una instalación nueva, consulte `README-RELEASE.md`: aplique la migración de códigos de enrolamiento, genere uno con `php artisan sigma:agent-enrollment-code` y escríbalo en el configurador. SIGMA emite la credencial ligada al activo y el agente la protege con DPAPI. La consulta RustDesk es opcional y el cliente debe estar instalado/configurado previamente si se usará asistencia remota.
+El instalador 2.3.0 es común a todos los equipos: solo contiene la URL de SIGMA y no lleva un token o código compartido. Al iniciar, cada agente genera una identidad criptográfica local y presenta una solicitud pendiente. Un administrador verifica el nombre, fabricante, modelo y serial del equipo en **Administración → Solicitudes de Agentes** y aprueba o rechaza la solicitud. SIGMA crea una credencial independiente, limitada al activo, y la cifra para la clave privada de ese equipo. El agente la recibe automáticamente y la protege con DPAPI. Las actualizaciones normales del agente conservan esta identidad y credencial, por lo que no requieren un instalador personalizado para cada PC.
 
-### Enrolamiento de una instalación nueva
+La migración `2026_10_21_220000_create_sigma_agent_enrollment_requests_table.php` agrega la cola de solicitudes pendientes. Es aditiva y no modifica las tablas de inventario ni los datos existentes. Para probar la implementación, compile y publique el agente 2.3.0 y el backend; luego aplique esta migración, distribuya el mismo instalador a los equipos y apruebe sus solicitudes en SIGMA. No reutilice ni distribuya los instaladores individualizados de versiones 2.2.x.
 
-La migración `2026_10_19_120000_create_sigma_agent_enrollment_codes_table.php` agrega una tabla para códigos de un solo uso. En la instalación local existente, aplíquela de forma aislada después de respaldar PostgreSQL:
-
-```powershell
-docker compose run --rm --no-deps app php artisan migrate --path=database/migrations/2026_10_19_120000_create_sigma_agent_enrollment_codes_table.php --force
-```
-
-Después de publicar el backend, genere un código justo antes de instalar cada equipo:
-
-```powershell
-docker compose exec app php artisan sigma:agent-enrollment-code
-```
-
-El código aparece una sola vez, vence en 30 minutos y solo puede canjearse una vez. El instalador solicita ese código, no el token. SIGMA identifica o crea el activo y devuelve una credencial de alcance exclusivo para ese activo. Si se vence o se pierde la respuesta del servidor, genere otro código. No use HTTP fuera de una red confiable o VPN: tanto el código como el token se transmiten sin cifrado.
+Las solicitudes de enrolamiento y las credenciales deben transmitirse mediante HTTPS en la implementación institucional. El endpoint HTTP actual de la red de pruebas no protege la descripción del equipo ni evita que un intermediario sustituya una solicitud antes de la aprobación.
 
 Para probar con otros equipos de la LAN, cambie en el `.env` `RUSTDESK_BIND_ADDRESS=0.0.0.0` y `RUSTDESK_RELAY_HOST=<IP-o-DNS-del-host>`, reinicie solo `rustdesk-hbbs` y `rustdesk-hbbr`, configure los clientes con `<IP-o-DNS-del-host>:21116` y la clave pública, y permita los puertos de la tabla únicamente desde la red privada autorizada. `localhost`/`127.0.0.1` solo funciona para clientes en el mismo computador.
 

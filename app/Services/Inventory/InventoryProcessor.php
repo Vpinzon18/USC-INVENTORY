@@ -131,10 +131,10 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->gpuProcessor->process(
-            $asset,
-            $inventory['gpus'] ?? []
-        );
+        $gpus = $inventory['gpus'] ?? [];
+        if ($gpus !== []) {
+            $asset = $this->gpuProcessor->process($asset, $gpus);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -153,10 +153,13 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->storageProcessor->process(
-            $asset,
-            $inventory['storageDevices'] ?? []
-        );
+        $storageDevices = $inventory['storageDevices'] ?? [];
+        if ($storageDevices === [] && $this->hasLegacyStorage($inventory['storage'] ?? null)) {
+            $storageDevices = [$inventory['storage']];
+        }
+        if ($storageDevices !== []) {
+            $asset = $this->storageProcessor->process($asset, $storageDevices);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -208,10 +211,13 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->monitorProcessor->process(
-            $asset,
-            $inventory['monitors'] ?? []
-        );
+        $monitors = $inventory['monitors'] ?? [];
+        if ($monitors === [] && $this->hasLegacyMonitor($inventory['monitor'] ?? null)) {
+            $monitors = [$inventory['monitor']];
+        }
+        if ($monitors !== []) {
+            $asset = $this->monitorProcessor->process($asset, $monitors);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -327,5 +333,27 @@ class InventoryProcessor
             'asset_id' => $asset->id,
             'agent_id' => $asset->agent_uuid,
         ]);
+    }
+
+    private function hasLegacyStorage(mixed $storage): bool
+    {
+        if (!is_array($storage)) {
+            return false;
+        }
+
+        return filled($storage['model'] ?? null)
+            || filled($storage['serial'] ?? null)
+            || (int) ($storage['capacityGB'] ?? $storage['capacityGb'] ?? 0) > 0;
+    }
+
+    private function hasLegacyMonitor(mixed $monitor): bool
+    {
+        if (!is_array($monitor)) {
+            return false;
+        }
+
+        return filled($monitor['serial'] ?? null)
+            || filled($monitor['model'] ?? null)
+            || filled($monitor['brand'] ?? null);
     }
 }

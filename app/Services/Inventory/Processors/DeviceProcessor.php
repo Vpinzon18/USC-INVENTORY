@@ -8,6 +8,69 @@ use Illuminate\Validation\ValidationException;
 
 class DeviceProcessor
 {
+    /**
+     * Rebind a reinstalled agent to an existing asset after explicit admin approval.
+     * The asset must be identified by a hardware UUID or a unique serial number;
+     * hostname-only matching is deliberately not accepted for credential recovery.
+     */
+    public function processForReenrollment(array $device): Asset
+    {
+        $agentUuid = isset($device['agentId']) ? strtolower(trim((string) $device['agentId'])) : null;
+        $hardwareUuid = isset($device['uuid']) ? strtolower(trim((string) $device['uuid'])) : null;
+        $serialNumber = isset($device['serialNumber']) ? trim((string) $device['serialNumber']) : null;
+        $serialNumber = $serialNumber === '' ? null : $serialNumber;
+
+        if (!$agentUuid || !\Illuminate\Support\Str::isUuid($agentUuid)) {
+            throw ValidationException::withMessages([
+                'device.agentId' => 'La solicitud no contiene un identificador válido del agente.',
+            ]);
+        }
+
+        $byHardwareUuid = $hardwareUuid
+            ? Asset::query()->where('hardware_uuid', $hardwareUuid)->first()
+            : null;
+
+        $serialMatches = $serialNumber
+            ? Asset::query()->where('serial_number', $serialNumber)->limit(2)->get()
+            : collect();
+
+        if ($serialMatches->count() > 1) {
+            throw ValidationException::withMessages([
+                'device.serialNumber' => 'El serial coincide con varios activos; no se puede recuperar el agente automáticamente.',
+            ]);
+        }
+
+        $bySerial = $serialMatches->first();
+        if ($byHardwareUuid && $bySerial && $byHardwareUuid->isNot($bySerial)) {
+            throw ValidationException::withMessages([
+                'device' => 'El UUID de hardware y el serial identifican activos distintos. Verifique el equipo antes de continuar.',
+            ]);
+        }
+
+        $asset = $byHardwareUuid ?? $bySerial;
+        if (!$asset) {
+            throw ValidationException::withMessages([
+                'device' => 'No se encontró un activo existente por UUID de hardware o serial único. No se creará un activo nuevo durante la recuperación.',
+            ]);
+        }
+
+        $agentOwner = Asset::query()->where('agent_uuid', $agentUuid)->first();
+        if ($agentOwner && $agentOwner->isNot($asset)) {
+            throw ValidationException::withMessages([
+                'device.agentId' => 'El identificador nuevo del agente ya pertenece a otro activo.',
+            ]);
+        }
+
+        // Reuse normal inventory updates without triggering the normal immutable-ID guard.
+        $update = $device;
+        unset($update['agentId']);
+        $asset = $this->process($update + ['assetId' => $asset->getKey()]);
+        $asset->agent_uuid = $agentUuid;
+        $asset->save();
+
+        return $asset;
+    }
+
     public function process(array $device): Asset
     {
         /*

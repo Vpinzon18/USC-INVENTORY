@@ -33,7 +33,8 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Autenticación local mediante PostgreSQL.
+     * Autentica contra Active Directory y conserva un respaldo para usuarios
+     * locales existentes que aún no están registrados en el directorio.
      *
      * @throws ValidationException
      */
@@ -42,8 +43,12 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $credentials = [
-            'email' => $this->input('email'),
+            // LdapRecord busca esta clave directamente como atributo LDAP.
+            'mail' => $this->input('email'),
             'password' => $this->input('password'),
+            'fallback' => [
+                'email' => $this->input('email'),
+            ],
         ];
 
         if (Auth::attempt($credentials, $this->boolean('remember'))) {

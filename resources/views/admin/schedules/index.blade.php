@@ -41,9 +41,15 @@
                         }
                      }">
                     
-                    <div class="flex items-center gap-2 mb-4">
+                    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex items-center gap-3">
                         <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-                        <h3 class="font-bold text-slate-800">Filtros de Búsqueda Avanzada</h3>
+                            <div>
+                                <h3 class="text-sm font-extrabold text-slate-800">Filtros del cronograma</h3>
+                                <p class="mt-0.5 text-xs text-slate-500">Combina criterios para encontrar los mantenimientos que necesitas.</p>
+                            </div>
+                        </div>
+                        <span class="w-fit rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600" x-text="rules.length + (rules.length === 1 ? ' criterio' : ' criterios')"></span>
                     </div>
 
                     <form action="{{ route('schedules.index') }}" method="GET" class="space-y-4" id="filterForm">
@@ -51,16 +57,18 @@
 
                         <div class="space-y-3">
                             <template x-for="(rule, index) in rules" :key="index">
-                                <div class="flex flex-wrap items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm transition-all hover:border-blue-300">
+                                <div class="grid grid-cols-1 items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-blue-200 lg:grid-cols-[auto_1.2fr_1fr_2fr_auto]">
                                     
                                     <div class="px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[30px] text-center select-none">
                                         <template x-if="index === 0"><span>---</span></template>
                                         <template x-if="index > 0"><span class="text-blue-600 bg-blue-50 border border-blue-100 px-2 py-1 rounded">Y</span></template>
                                     </div>
 
-                                    <select :name="'rules['+index+'][field]'" x-model="rule.field" 
+                                    <div class="min-w-0">
+                                        <label :for="'schedule-rule-field-'+index" class="mb-1.5 block text-[10px] font-extrabold uppercase tracking-wide text-slate-500">Campo</label>
+                                        <select :id="'schedule-rule-field-'+index" :name="'rules['+index+'][field]'" x-model="rule.field"
                                             @change="rule.value = ''; rule.text = ''; rule.operator = 'contains'"
-                                            class="border-slate-300 rounded-lg py-2 px-3 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all cursor-pointer">
+                                            class="w-full cursor-pointer rounded-lg border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100">
                                         <option value="asset">Equipo / Placa</option>
                                         <option value="sede">Ubicación - Sede</option>
                                         <option value="building">Ubicación - Bloque / Edificio</option>
@@ -68,26 +76,29 @@
                                         <option value="dependency">Organización - Dependencia</option>
                                         <option value="technician">Técnico Asignado</option>
                                         <option value="status">Estado de Agenda</option>
-                                    </select>
+                                        </select>
+                                    </div>
 
-                                    <div class="min-w-[160px]">
-                                        <select :name="'rules['+index+'][operator]'" x-model="rule.operator"
-                                                class="w-full border-slate-300 rounded-lg py-2 px-3 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all cursor-pointer">
+                                    <div class="min-w-0">
+                                        <label :for="'schedule-rule-operator-'+index" class="mb-1.5 block text-[10px] font-extrabold uppercase tracking-wide text-slate-500">Condición</label>
+                                        <select :id="'schedule-rule-operator-'+index" :name="'rules['+index+'][operator]'" x-model="rule.operator"
+                                                class="w-full cursor-pointer rounded-lg border-slate-300 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100">
                                             <option value="contains">contiene el texto</option>
                                             <option value="equals">es exactamente</option>
                                         </select>
                                     </div>
 
-                                    <div class="flex-1 min-w-[250px]">
+                                    <div class="min-w-0">
+                                        <label class="mb-1.5 block text-[10px] font-extrabold uppercase tracking-wide text-slate-500">Valor</label>
                                         
                                         <template x-if="rule.field === 'asset'">
                                             <input type="text" :name="'rules['+index+'][value]'" x-model="rule.value" required
                                                    placeholder="Escriba el serial o placa..."
-                                                   class="w-full border-slate-300 rounded-lg py-2 px-3 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+                                                   class="w-full rounded-lg border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100">
                                         </template>
 
                                         <template x-if="rule.field === 'status'">
-                                            <select :name="'rules['+index+'][value]'" x-model="rule.value" required class="w-full border-slate-300 rounded-lg py-2 px-3 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all">
+                                            <select :name="'rules['+index+'][value]'" x-model="rule.value" required class="w-full rounded-lg border-slate-300 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100">
                                                 <option value="">[ Seleccione un Estado ]</option>
                                                 <option value="PENDIENTE">PENDIENTE</option>
                                                 <option value="REALIZADO">REALIZADO</option>
@@ -107,7 +118,7 @@
                                                            @focus="open = true; fetchData()"
                                                            :placeholder="placeholder"
                                                            autocomplete="off"
-                                                           class="w-full border-slate-300 rounded-lg py-2 pl-3 pr-10 text-sm font-medium text-slate-700 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all cursor-text">
+                                                           class="w-full rounded-lg border-slate-300 bg-slate-50 py-2 pl-3 pr-10 text-sm font-medium text-slate-700 transition-all focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 cursor-text">
                                                     
                                                     <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                                         <svg x-show="!loading" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
@@ -135,31 +146,32 @@
                                         </template>
                                     </div>
 
-                                    <button type="button" @click="removeRule(index)" class="p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-700 border border-transparent hover:border-rose-200 rounded-lg transition-all" title="Eliminar filtro">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    <button type="button" @click="removeRule(index)" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-100" title="Eliminar criterio" aria-label="Eliminar criterio">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 </div>
                             </template>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row items-center justify-between pt-2 gap-4">
-                            <button type="button" @click="addRule()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold uppercase tracking-wide transition-all border border-slate-200 w-full sm:w-auto justify-center">
-                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                + Añadir Regla
+                        <div class="flex flex-col gap-4 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                            <button type="button" @click="addRule()" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-extrabold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-100 sm:w-auto">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                Añadir criterio
                             </button>
 
-                            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                <a href="{{ route('schedules.export', request()->all()) }}" class="inline-flex items-center justify-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs uppercase tracking-wide transition-all shadow-sm">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                                <a href="{{ route('schedules.export', request()->all()) }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-extrabold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                     Exportar R-GT-051
                                 </a>
-                                
-                                <div class="flex gap-2 w-full sm:w-auto">
-                                    <a href="{{ route('schedules.index') }}" class="px-5 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-lg text-xs uppercase tracking-wide transition-all flex items-center justify-center flex-1 sm:flex-none">
-                                        Limpiar Todo
+
+                                <div class="flex flex-col gap-2 sm:flex-row">
+                                    <a href="{{ route('schedules.index') }}" class="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-100">
+                                        Limpiar filtros
                                     </a>
-                                    <button type="submit" class="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs uppercase tracking-wide transition-all shadow-sm flex-1 sm:flex-none">
-                                        Aplicar Filtros
+                                    <button type="submit" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-1">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        Aplicar filtros
                                     </button>
                                 </div>
                             </div>

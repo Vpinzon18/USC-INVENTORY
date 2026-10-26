@@ -7,16 +7,106 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Models\Asset;
 use App\Models\SigmaAgentEnrollmentCode;
+use App\Models\SigmaAgentEnrollmentRequest;
 use App\Models\User;
 use App\Services\Inventory\Processors\DeviceProcessor;
 use App\Services\Inventory\InventoryProcessor;
 use App\Services\AgentTokenAuthorizer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class InventoryController extends Controller
 {
+    /** Create or resume a device-bound enrollment request for the reusable installer. */
+    public function requestEnrollment(Request $request)
+    {
+        $validated = $request->validate([
+            'requestId' => ['required', 'uuid'],
+            'publicKey' => ['required', 'string', 'max:8192'],
+            'device' => ['required', 'array'],
+            'device.serialNumber' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'device.hostname' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'device.manufacturer' => ['sometimes', 'nullable', 'string', 'max:100'],
+            'device.model' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'device.uuid' => ['sometimes', 'nullable', 'uuid'],
+            'device.agentId' => ['required', 'uuid'],
+        ]);
+
+        $device = $validated['device'];
+        if (!collect(['serialNumber', 'uuid', 'hostname'])->contains(
+            fn (string $key) => filled($device[$key] ?? null)
+        )) {
+            return response()->json(['success' => false, 'message' => 'No se pudo identificar el equipo.'], 422);
+        }
+
+        $publicKey = openssl_pkey_get_public($validated['publicKey']);
+        $details = $publicKey ? openssl_pkey_get_details($publicKey) : false;
+        if (!$publicKey || !$details || ($details['bits'] ?? 0) < 2048 || ($details['type'] ?? null) !== OPENSSL_KEYTYPE_RSA) {
+            return response()->json(['success' => false, 'message' => 'La clave de equipo no es válida.'], 422);
+        }
+
+        $fingerprint = hash('sha256', $details['key']);
+        $enrollment = SigmaAgentEnrollmentRequest::query()->firstOrCreate(
+            ['request_id' => Str::lower($validated['requestId'])],
+            [
+                'device' => $device,
+                'public_key' => $validated['publicKey'],
+                'public_key_fingerprint' => $fingerprint,
+                'request_ip' => $request->ip(),
+                'status' => 'pending',
+                'expires_at' => now()->addDays(7),
+            ]
+        );
+
+        if (!hash_equals($enrollment->public_key_fingerprint, $fingerprint)) {
+            return response()->json(['success' => false, 'message' => 'El identificador ya está asociado a otra clave.'], 409);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => $enrollment->status,
+            'expiresAt' => $enrollment->expires_at,
+        ], 202);
+    }
+
+    /** The device signs each status request; the approval token is encrypted to its RSA key. */
+    public function enrollmentStatus(Request $request, string $requestId)
+    {
+        $validated = $request->validate([
+            'timestamp' => ['required', 'integer'],
+            'signature' => ['required', 'string', 'max:2048'],
+        ]);
+        if (!Str::isUuid($requestId) || abs(now()->timestamp - (int) $validated['timestamp']) > 180) {
+            return response()->json(['success' => false, 'message' => 'La solicitud temporal venció.'], 403);
+        }
+
+        $enrollment = SigmaAgentEnrollmentRequest::query()->where('request_id', Str::lower($requestId))->first();
+        if (!$enrollment) {
+            return response()->json(['success' => false, 'message' => 'No existe la solicitud de enrolamiento.'], 404);
+        }
+
+        $signature = base64_decode($validated['signature'], true);
+        $publicKey = openssl_pkey_get_public($enrollment->public_key);
+        $message = Str::lower($requestId) . "\n" . (string) $validated['timestamp'];
+        if ($signature === false || !$publicKey || openssl_verify($message, $signature, $publicKey, OPENSSL_ALGO_SHA256) !== 1) {
+            return response()->json(['success' => false, 'message' => 'La prueba de identidad del equipo no es válida.'], 403);
+        }
+
+        if ($enrollment->status === 'pending' && $enrollment->expires_at->isPast()) {
+            return response()->json(['success' => true, 'status' => 'expired']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => $enrollment->status,
+            'assetId' => $enrollment->asset_id,
+            'agentId' => $enrollment->device['agentId'] ?? null,
+            'encryptedToken' => $enrollment->status === 'approved' ? $enrollment->encrypted_credential : null,
+        ]);
+    }
+
     /** Exchange an administrator-issued, one-use code for an asset-scoped token. */
     public function enroll(Request $request, DeviceProcessor $deviceProcessor)
     {
@@ -71,7 +161,7 @@ class InventoryController extends Controller
             $assetId = $asset->getKey();
             $issued = $administrator->createToken(
                 'sigma-agent-asset-' . $assetId,
-                ['sigma-agent.asset.' . $assetId]
+                ['sigma-agent.asset.' . $assetId, 'sigma-agent.update']
             );
 
             $enrollment->update([
@@ -107,6 +197,7 @@ class InventoryController extends Controller
             'network' => ['sometimes', 'array'],
             'cpu' => ['sometimes', 'array'],
             'gpus' => ['sometimes', 'array', 'max:32'],
+            'storage' => ['sometimes', 'array'],
             'ram' => ['sometimes', 'array'],
             'ram.modules' => ['sometimes', 'array', 'max:64'],
             'storageDevices' => ['sometimes', 'array', 'max:128'],
@@ -115,6 +206,7 @@ class InventoryController extends Controller
             'security' => ['sometimes', 'array'],
             'user' => ['sometimes', 'array'],
             'monitors' => ['sometimes', 'array', 'max:32'],
+            'monitor' => ['sometimes', 'array'],
             'battery' => ['sometimes', 'array'],
             'motherboard' => ['sometimes', 'array'],
             'software' => ['sometimes', 'array', 'max:5000'],

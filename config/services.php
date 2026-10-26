@@ -35,4 +35,29 @@ return [
         ],
     ],
 
+    'power_bi' => [
+        'embed_url' => env('POWER_BI_EMBED_URL'),
+    ],
+
+    'glpi' => [
+        // GLPI 10 legacy REST API base, e.g. https://glpi.example.edu/apirest.php
+        'enabled' => (bool) env('GLPI_ENABLED', false),
+        'base_url' => rtrim((string) env('GLPI_BASE_URL', ''), '/'),
+        'app_token' => env('GLPI_APP_TOKEN'),
+        'user_token' => env('GLPI_USER_TOKEN'),
+        'entity_id' => (int) env('GLPI_ENTITY_ID', 0),
+        'default_group_id' => env('GLPI_DEFAULT_GROUP_ID'),
+        'ticket_type' => (int) env('GLPI_TICKET_TYPE', 2),
+        'categories' => [
+            'technical_service' => env('GLPI_CATEGORY_TECHNICAL_SERVICE'),
+            'asset_movement' => env('GLPI_CATEGORY_ASSET_MOVEMENT'),
+            'maintenance_schedule' => env('GLPI_CATEGORY_MAINTENANCE_SCHEDULE'),
+        ],
+        // JSON map from normalized SIGMA email to GLPI user ID.
+        'user_map' => json_decode((string) env('GLPI_USER_MAP', '{}'), true) ?: [],
+        'connect_timeout' => (int) env('GLPI_CONNECT_TIMEOUT', 5),
+        'timeout' => (int) env('GLPI_TIMEOUT', 20),
+        'verify_tls' => (bool) env('GLPI_VERIFY_TLS', true),
+    ],
+
 ];

@@ -37,6 +37,45 @@ class NetworkProcessor extends BaseProcessor
             $networkData
         );
 
+        // El agente obtiene el dominio desde Win32_ComputerSystem y lo incluye
+        // en `network.domain`; guardarlo en assets.domain_name mantiene el dato
+        // que consulta la ficha de vida.
+        $adapters = $network['adapters'] ?? [];
+        $primaryAdapter = collect($adapters)->first(
+            static fn (array $adapter) => (bool) ($adapter['isPrimary'] ?? $adapter['is_primary'] ?? false)
+        );
+        $primaryAdapter ??= collect($adapters)->first(
+            static fn (array $adapter) => !empty($adapter['macAddress'])
+                && !empty($adapter['iPv4'] ?? $adapter['ipv4'] ?? null)
+                && ($adapter['connected'] ?? true)
+        );
+        $primaryAdapter ??= collect($adapters)->first(
+            static fn (array $adapter) => !empty($adapter['macAddress'])
+                && ($adapter['connected'] ?? true)
+        );
+
+        $assetNetworkValues = [];
+        $domainName = trim((string) ($network['domain'] ?? ''));
+        if ($domainName !== '') {
+            $assetNetworkValues['domain_name'] = $domainName;
+        }
+
+        $primaryIp = trim((string) (
+            $primaryAdapter['iPv4']
+            ?? $primaryAdapter['ipv4']
+            ?? $network['ipv4']
+            ?? ''
+        ));
+        $primaryMac = $this->normalizeMac(
+            $primaryAdapter['macAddress']
+            ?? $network['macAddress']
+            ?? null
+        );
+
+        if ($assetNetworkValues !== []) {
+            $asset = $this->updateWithHistory($asset, $assetNetworkValues);
+        }
+
         /*
         |--------------------------------------------------------------------------
         | ADAPTADORES
@@ -50,8 +89,6 @@ class NetworkProcessor extends BaseProcessor
         |   MAC nueva     -> CREATE
         |
         */
-
-        $adapters = $network['adapters'] ?? [];
 
         /*
         |--------------------------------------------------------------------------
@@ -121,6 +158,7 @@ class NetworkProcessor extends BaseProcessor
                 'ipv4' =>
                     $adapter['iPv4']
                     ?? $adapter['ipv4']
+                    ?? ($primaryMac !== null && $mac === $primaryMac ? $primaryIp : null)
                     ?? null,
 
                 'ipv6' =>
@@ -131,10 +169,9 @@ class NetworkProcessor extends BaseProcessor
                 'connected' =>
                     $adapter['connected'] ?? false,
 
-                'is_primary' =>
-                    $adapter['isPrimary']
-                    ?? $adapter['is_primary']
-                    ?? false,
+                'is_primary' => $primaryMac !== null
+                    ? $mac === $primaryMac
+                    : (bool) ($adapter['isPrimary'] ?? $adapter['is_primary'] ?? false),
 
                 'is_active' => true,
 

@@ -2,13 +2,6 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            @if (session('success'))
-                <div class="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl shadow-sm flex items-center gap-3">
-                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <p class="text-sm font-bold text-emerald-800">{{ session('success') }}</p>
-                </div>
-            @endif
-
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 
                 <div class="p-6 md:p-8 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -66,7 +59,7 @@
                                 <th class="py-4 px-6">Usuario y Contacto</th>
                                 <th class="py-4 px-6">Rol de Acceso</th>
                                 <th class="py-4 px-6">Fecha de Registro</th>
-                                <th class="py-4 px-6 text-center w-28">Acciones</th>
+                                <th class="py-4 px-6 text-center w-44">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-sm">
@@ -115,10 +108,30 @@
                                         </div>
                                     </td>
                                     
-                                    <td class="py-4 px-6 text-center">
-                                        <a href="{{ route('users.edit', $user) }}" class="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-100 rounded-lg transition-all" title="Editar Usuario">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                        </a>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('users.edit', $user) }}" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-bold text-blue-700 transition hover:bg-blue-100" title="Editar usuario">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                Editar
+                                            </a>
+                                            @if ((int) auth()->user()->role === 1)
+                                                @if (auth()->id() !== $user->id)
+                                                    <form method="POST" action="{{ route('users.destroy', $user) }}" class="user-delete-form" data-user-name="{{ $user->name }}">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 text-xs font-bold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200" title="Eliminar usuario">
+                                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" /></svg>
+                                                            Eliminar
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <button type="button" disabled title="No puedes eliminar la cuenta que estás usando" class="inline-flex h-9 cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs font-bold text-slate-400">
+                                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" /></svg>
+                                                        Eliminar
+                                                    </button>
+                                                @endif
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -143,4 +156,43 @@
             </div>
         </div>
     </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const successMessage = @js(session('success'));
+
+        if (successMessage) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Operación completada',
+                text: successMessage,
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#2563eb',
+            });
+        }
+
+        document.querySelectorAll('.user-delete-form').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                if (form.dataset.confirmed === 'true') return;
+
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¿Eliminar usuario?',
+                    text: `Se eliminará la cuenta de ${form.dataset.userName}. Esta acción no se puede deshacer.`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#64748b',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.dataset.confirmed = 'true';
+                        form.requestSubmit();
+                    }
+                });
+            });
+        });
+    });
+</script>
 </x-app-layout>

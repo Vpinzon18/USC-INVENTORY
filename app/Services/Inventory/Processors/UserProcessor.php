@@ -8,14 +8,20 @@ class UserProcessor extends BaseProcessor
 {
     public function process(Asset $asset, array $user): Asset
     {
-        $values = [
+        $values = [];
 
-            'logged_user' => $user['username'] ?? null,
+        $username = trim((string) ($user['username'] ?? ''));
+        if ($username !== '') {
+            $values['logged_user'] = $username;
+        }
 
-            'last_login' => isset($user['lastLogin'])
-                ? date('Y-m-d H:i:s', strtotime($user['lastLogin']))
-                : null,
-        ];
+        if (!empty($user['lastLogin'])) {
+            $values['last_login'] = date('Y-m-d H:i:s', strtotime($user['lastLogin']));
+        }
+
+        if ($values === []) {
+            return $asset;
+        }
 
         $values = array_filter(
             $values,

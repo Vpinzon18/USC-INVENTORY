@@ -46,7 +46,7 @@ class CreateAgentToken extends Command
 
         $issued = $user->createToken(
             $name,
-            ['sigma-agent.asset.' . $asset->getKey()]
+            ['sigma-agent.asset.' . $asset->getKey(), 'sigma-agent.update']
         );
 
         $this->newLine();

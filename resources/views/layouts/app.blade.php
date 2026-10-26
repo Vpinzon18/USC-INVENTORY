@@ -5,6 +5,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SIGMA | USC</title>
+    <script>
+        try {
+            if (localStorage.getItem('sigma-theme') === 'dark') document.documentElement.classList.add('dark');
+        } catch (_) {}
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="icon" type="image/png" href="{{ asset('img/logoUSC.png') }}">
 
@@ -294,6 +299,13 @@
                             Tipos de Espacio
                         </a>
 
+                        <a href="{{ route('admin.agent-enrollment-requests.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('admin.agent-enrollment-requests.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
+                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('admin.agent-enrollment-requests.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Solicitudes de Agentes
+                        </a>
+
                         <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('admin.audit-logs.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
                             <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('admin.audit-logs.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -342,11 +354,70 @@
                 <div class="hidden lg:block"></div>
 
                 <div class="ml-auto flex items-center gap-3 sm:ml-0">
-                    <a href="{{ route('notifications.index') }}" aria-label="Notificaciones" title="Notificaciones" class="relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-12 0v3.2A2 2 0 015.4 16L4 17h5m6 0a3 3 0 11-6 0" /></svg>
-                        @php($unreadNotificationsCount = Auth::user()->unreadNotifications()->count())
-                        @if($unreadNotificationsCount > 0)<span class="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-red-600 px-1 text-[10px] font-extrabold leading-none text-white">{{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}</span>@endif
-                    </a>
+                    <button type="button" @click="toggleTheme()" :aria-label="darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'" :title="darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'" class="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <svg x-show="!darkMode" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36 6.36-1.42-1.42M7.05 7.05 5.64 5.64m12.72 0-1.42 1.41M7.05 16.95l-1.41 1.41M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        <svg x-cloak x-show="darkMode" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.5 15.5A8.5 8.5 0 018.5 3.5 8.5 8.5 0 1020.5 15.5z" /></svg>
+                    </button>
+                    @php
+                        $headerNotifications = Auth::user()->notifications()->latest()->limit(6)->get();
+                        $unreadNotificationsCount = Auth::user()->unreadNotifications()->count();
+                    @endphp
+                    <div class="relative" x-data="{ notificationsOpen: false }" @keydown.escape.window="notificationsOpen = false" @click.outside="notificationsOpen = false">
+                        <button type="button" @click="notificationsOpen = !notificationsOpen" :aria-expanded="notificationsOpen.toString()" aria-label="Notificaciones" title="Notificaciones" class="relative flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-12 0v3.2A2 2 0 015.4 16L4 17h5m6 0a3 3 0 11-6 0" /></svg>
+                            @if($unreadNotificationsCount > 0)<span class="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-red-600 px-1 text-[10px] font-extrabold leading-none text-white">{{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}</span>@endif
+                        </button>
+
+                        <section x-cloak x-show="notificationsOpen" x-transition.origin.top.right class="absolute right-0 z-50 mt-3 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl" aria-label="Menú de notificaciones">
+                            <header class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                                <div>
+                                    <h2 class="text-sm font-extrabold text-slate-800">Notificaciones</h2>
+                                    <p class="mt-0.5 text-xs text-slate-500">{{ $unreadNotificationsCount }} sin leer</p>
+                                </div>
+                                @if($unreadNotificationsCount > 0)
+                                    <form method="POST" action="{{ route('notifications.read-all') }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="text-xs font-bold text-blue-600 hover:text-blue-800">Marcar todas</button>
+                                    </form>
+                                @endif
+                            </header>
+
+                            <div class="max-h-[22rem] overflow-y-auto divide-y divide-slate-100">
+                                @forelse($headerNotifications as $notification)
+                                    @php($notificationData = $notification->data ?? [])
+                                    <article class="px-4 py-3 transition hover:bg-slate-50 {{ $notification->read_at ? 'bg-white' : 'bg-blue-50/50' }}">
+                                        <a href="{{ $notificationData['url'] ?? route('schedules.index') }}" class="block rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <div class="flex items-start gap-2">
+                                                <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $notification->read_at ? 'bg-slate-300' : 'bg-blue-600' }}"></span>
+                                                <span class="min-w-0 flex-1">
+                                                    <span class="block text-sm font-bold text-slate-800">{{ $notificationData['title'] ?? 'Notificación' }}</span>
+                                                    <span class="mt-0.5 block text-xs leading-5 text-slate-600">{{ $notificationData['message'] ?? 'Tienes una nueva notificación.' }}</span>
+                                                    <span class="mt-1 block text-[10px] text-slate-400">{{ $notification->created_at?->timezone(config('app.timezone'))->format('d/m/Y · g:i a') }}</span>
+                                                </span>
+                                            </div>
+                                        </a>
+                                        @unless($notification->read_at)
+                                            <form method="POST" action="{{ route('notifications.read', $notification->id) }}" class="mt-2 pl-4">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="text-[11px] font-semibold text-blue-600 hover:text-blue-800">Marcar como leída</button>
+                                            </form>
+                                        @endunless
+                                    </article>
+                                @empty
+                                    <div class="px-5 py-8 text-center">
+                                        <p class="text-sm font-semibold text-slate-700">No tienes notificaciones</p>
+                                        <p class="mt-1 text-xs text-slate-500">Aquí aparecerán los avisos asignados a tu cuenta.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            <footer class="border-t border-slate-100 bg-slate-50 px-4 py-3 text-center">
+                                <a href="{{ route('notifications.index') }}" class="text-xs font-extrabold text-blue-600 hover:text-blue-800">Ver todas las notificaciones</a>
+                            </footer>
+                        </section>
+                    </div>
                     <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-slate-50 hover:bg-blue-50 border border-slate-200 transition-all group">
                     <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-sm select-none group-hover:scale-105 transition-transform">
                         {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -384,6 +455,15 @@
             Alpine.data('appLayout', () => ({
                 sidebarOpen: window.innerWidth >= 1024,
                 isMobile: window.innerWidth < 1024,
+                darkMode: document.documentElement.classList.contains('dark'),
+
+                toggleTheme() {
+                    this.darkMode = !this.darkMode;
+                    document.documentElement.classList.toggle('dark', this.darkMode);
+                    try {
+                        localStorage.setItem('sigma-theme', this.darkMode ? 'dark' : 'light');
+                    } catch (_) {}
+                },
 
                 init() {
                     window.addEventListener('resize', () => {
