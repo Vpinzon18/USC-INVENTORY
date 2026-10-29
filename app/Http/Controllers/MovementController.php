@@ -262,6 +262,13 @@ class MovementController extends Controller
                 'actaNumber'
             ))
             ->format('letter')
+            ->withBrowsershot(function ($browsershot) {
+                // Chromium runs in the SIGMA container, which does not provide a usable sandbox.
+                $browsershot
+                    ->noSandbox()
+                    ->timeout(120)
+                    ->setOption('waitUntil', 'domcontentloaded');
+            })
             ->download("Acta_{$actaNumber}.pdf");
     }
     

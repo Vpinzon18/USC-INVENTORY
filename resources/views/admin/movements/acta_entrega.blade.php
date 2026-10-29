@@ -12,19 +12,30 @@
       box-sizing: border-box;
     }
 
-    body {
+    @page {
+      size: Letter portrait;
+      margin: 0;
+    }
+
+    html, body {
+      width: 216mm;
+      margin: 0;
+      padding: 0;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 10px;
+      font-size: 9px;
       color: #000;
       background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
 
     .page {
       width: 216mm;
       min-height: 279mm;
       margin: 0 auto;
-      padding: 8mm 8mm 8mm 8mm;
+      padding: 6mm 6mm 5mm;
       background: #fff;
+      overflow: hidden;
     }
 
     .page-break {
@@ -34,9 +45,10 @@
     /* ── HEADER ── */
     .header-table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       border: 1px solid #000;
-      margin-bottom: 0;
+      margin: 0;
     }
 
     .header-table td {
@@ -45,16 +57,16 @@
     }
 
     .header-logo {
-      width: 90px;
-      height: 90px;
+      width: 25mm;
+      height: 25mm;
       text-align: center;
-      padding: 4px;
+      padding: 2mm;
       vertical-align: middle;
     }
 
     .logo-box {
-      width: 82px;
-      height: 82px;
+      width: 21mm;
+      height: 21mm;
       border: 2px solid #000;
       display: inline-flex;
       align-items: center;
@@ -81,26 +93,26 @@
 
     .header-title {
       text-align: center;
-      padding: 6px 10px;
+      padding: 2mm 3mm;
       vertical-align: middle;
     }
 
     .header-title p {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: bold;
       text-transform: uppercase;
-      line-height: 1.6;
+      line-height: 1.45;
     }
 
     .header-right {
-      width: 150px;
+      width: 40mm;
       padding: 0;
       vertical-align: top;
     }
 
     .consecutivo-block {
       border-bottom: 1px solid #000;
-      padding: 3px 5px;
+      padding: 1.5mm 2mm 2mm;
     }
 
     .consecutivo-label {
@@ -113,18 +125,51 @@
 
     .consecutivo-box {
       width: 100%;
-      height: 30px;
+      min-height: 10mm;
       border: 1px solid #000;
-      margin-top: 3px;
-      display: block;
+      margin-top: 1mm;
+      display: table;
       text-align: center;
-      line-height: 30px;
-      font-size: 11px;
+      vertical-align: middle;
+      font-size: 9px;
       font-weight: bold;
+      overflow-wrap: anywhere;
     }
 
     .fecha-block {
-      padding: 3px 5px;
+      padding: 1.5mm 2mm 0;
+    }
+
+    .fecha-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+    }
+
+    .fecha-table td {
+      border: 1px solid #000;
+      padding: 1mm 0.5mm;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 8px;
+      line-height: 1.15;
+    }
+
+    .fecha-table .fecha-title {
+      width: 35%;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .fecha-table .fecha-part {
+      width: 21.66%;
+      font-size: 7px;
+      font-weight: bold;
+    }
+
+    .fecha-table .fecha-value {
+      font-size: 9px;
+      font-weight: bold;
     }
 
     .fecha-label {
@@ -135,10 +180,12 @@
     }
 
     .version-text {
-      font-size: 6.5px;
-      text-align: right;
-      padding: 2px 5px;
+      font-size: 6px;
+      line-height: 1.2;
+      text-align: center;
+      padding: 1mm 1mm 1.5mm;
       color: #000;
+      white-space: nowrap;
     }
 
     /* ── SECTION HEADERS (black bar) ── */
@@ -146,12 +193,13 @@
       background-color: #000;
       color: #fff;
       font-weight: bold;
-      font-size: 10px;
+      font-size: 9px;
       text-transform: uppercase;
       text-align: center;
-      padding: 4px 5px;
+      padding: 1.2mm 1mm;
       border: 1px solid #000;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.25px;
+      page-break-after: avoid;
     }
 
     /* ── TIPO DE MOVIMIENTO ── */
@@ -312,14 +360,26 @@
       text-align: center;
     }
 
+    table, tr, td, th, .section-header, .clausula-text, .obs-container, .firmas-table {
+      page-break-inside: avoid;
+    }
+
     @media print {
-      body {
-        margin: 0;
+      html, body {
+        width: 216mm;
+        margin: 0 !important;
+        padding: 0 !important;
       }
       .page {
         width: 216mm;
-        padding: 8mm;
+        min-height: 279mm;
+        padding: 6mm 6mm 5mm;
         margin: 0;
+        overflow: hidden;
+      }
+      .page-break {
+        page-break-before: always;
+        break-before: page;
       }
     }
   </style>
@@ -349,21 +409,17 @@
             <div class="consecutivo-box">{{ $actaNumber }}</div>
           </div>
           <div class="fecha-block">
-            <table style="width:100%; border-collapse:collapse;">
+            <table class="fecha-table">
               <tr>
-                <td style="border:1px solid #000; padding:2px 4px; font-size:8px; font-weight:bold; text-transform:uppercase; white-space:nowrap;">FECHA</td>
-                <td style="border:1px solid #000; padding:2px; text-align:center; width:28px;">
-                  <span style="font-size:7px; font-weight:bold; display:block;">DD</span>
-                  <div style="height:14px; line-height:14px; font-weight:bold;">{{ date('d') }}</div>
-                </td>
-                <td style="border:1px solid #000; padding:2px; text-align:center; width:28px;">
-                  <span style="font-size:7px; font-weight:bold; display:block;">MM</span>
-                  <div style="height:14px; line-height:14px; font-weight:bold;">{{ date('m') }}</div>
-                </td>
-                <td style="border:1px solid #000; padding:2px; text-align:center; width:28px;">
-                  <span style="font-size:7px; font-weight:bold; display:block;">AA</span>
-                  <div style="height:14px; line-height:14px; font-weight:bold;">{{ date('y') }}</div>
-                </td>
+                <td class="fecha-title" rowspan="2">FECHA</td>
+                <td class="fecha-part">DD</td>
+                <td class="fecha-part">MM</td>
+                <td class="fecha-part">AA</td>
+              </tr>
+              <tr>
+                <td class="fecha-value">{{ date('d') }}</td>
+                <td class="fecha-value">{{ date('m') }}</td>
+                <td class="fecha-value">{{ date('y') }}</td>
               </tr>
             </table>
           </div>

@@ -17,15 +17,27 @@
                     </div>
                 </div>
 
-                <div class="shrink-0">
-                @if(in_array((int) Auth::user()->role, [1, 2], true))
-                    <a href="{{ route('schedules.create') }}" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 w-full sm:w-auto">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                        Programar Equipo
-                    </a>
+                <div class="flex flex-wrap items-center gap-2">
+                    @if(in_array((int) Auth::user()->role, [1, 2], true))
+                        <a href="{{ route('schedules.create') }}" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 w-full sm:w-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                            Programar Equipo
+                        </a>
+                    @endif
+                    @if((int) Auth::user()->role === 1)
+                        <a href="{{ route('admin.schedules.extensions.index') }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 hover:bg-amber-100">
+                            Solicitudes de ampliación
+                            @if($pendingExtensionCount > 0)<span class="rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-black text-white">{{ $pendingExtensionCount }}</span>@endif
+                        </a>
+                    @endif
                 </div>
-                @endif
             </div>
+
+            @if(session('success') || session('error'))
+                <div class="rounded-xl border p-4 text-sm font-semibold {{ session('error') ? 'border-rose-200 bg-rose-50 text-rose-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800' }}">
+                    {{ session('error') ?? session('success') }}
+                </div>
+            @endif
 
             <div class="sigma-filter-panel overflow-hidden flex flex-col min-h-[500px]">
                 
@@ -186,7 +198,7 @@
                                 <th class="px-5 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Equipo / Serial</th>
                                 <th class="px-5 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Ubicación Asignada</th>
                                 <th class="px-5 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Técnico Asignado</th>
-                                <th class="px-5 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest text-center">Fecha Límite</th>
+                                <th class="px-5 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest text-center">Límite (24 h hábiles)</th>
                                 <th class="px-5 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest text-center">Estado Agenda</th>
                                 <th class="px-5 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest text-center">Acciones</th>
                             </tr>
@@ -210,7 +222,8 @@
                                         <div class="text-sm font-bold text-slate-700">{{ $schedule->technician->name ?? 'Sin asignar' }}</div>
                                     </td>
                                     <td class="px-5 py-3.5 text-center">
-                                        <span class="text-sm font-medium text-slate-600">{{ \Carbon\Carbon::parse($schedule->scheduled_date)->format('d/m/Y') }}</span>
+                                        <span class="block text-sm font-semibold text-slate-700">{{ $schedule->deadline_at?->format('d/m/Y H:i') ?? 'Sin fecha límite' }}</span>
+                                        <span class="mt-0.5 block text-[10px] text-slate-400">Asignado: {{ $schedule->assigned_at?->format('d/m/Y H:i') ?? '—' }}</span>
                                     </td>
                                     <td class="px-5 py-3.5 text-center">
                                         @php
@@ -227,17 +240,39 @@
                                     </td>
                                     <td class="px-5 py-3.5 text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            @if($schedule->status === 'PENDIENTE')
-                                                <a href="{{ route('schedules.edit', $schedule) }}" 
+                                            @if($schedule->status !== 'REALIZADO')
+                                                @if((int) Auth::user()->role === 1)
+                                                <a href="{{ route('schedules.edit', $schedule) }}"
                                                    class="inline-flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-1.5 px-3 rounded-lg text-xs transition-colors border border-amber-200">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                                     Corregir
                                                 </a>
-                                                <a href="{{ route('maintenances.create', ['asset_id' => $schedule->asset_id, 'schedule_id' => $schedule->id]) }}" 
+                                                @endif
+                                                @if((int) Auth::user()->role === 2 && (int) $schedule->technician_id === (int) Auth::id())
+                                                    @if($schedule->latestExtensionRequest?->status === 'PENDIENTE')
+                                                        <span class="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">Ampliación pendiente</span>
+                                                    @else
+                                                        @if($schedule->latestExtensionRequest?->status === 'RECHAZADA')
+                                                            <span class="text-[10px] font-semibold text-rose-700" title="{{ $schedule->latestExtensionRequest->decision_note }}">Solicitud rechazada</span>
+                                                        @elseif($schedule->latestExtensionRequest?->status === 'APROBADA')
+                                                            <span class="text-[10px] font-semibold text-emerald-700">Prórroga aprobada</span>
+                                                        @endif
+                                                        @if($schedule->status === 'VENCIDO')
+                                                        <a href="{{ route('schedules.extensions.create', $schedule) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-100">Solicitar ampliación</a>
+                                                        @else
+                                                            <a href="{{ route('schedules.extensions.create', $schedule) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-800">Solicitar ampliación</a>
+                                                        @endif
+                                                    @endif
+                                                @endif
+                                                @if((int) Auth::user()->role !== 2 || (int) $schedule->technician_id === (int) Auth::id())
+                                                @if((int) Auth::user()->role !== 2 || $schedule->status !== 'VENCIDO')
+                                                <a href="{{ route('maintenances.create', ['asset_id' => $schedule->asset_id, 'schedule_id' => $schedule->id]) }}"
                                                    class="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-colors border border-blue-200 hover:border-blue-600">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                                                     Ejecutar
                                                 </a>
+                                                @endif
+                                                @endif
                                             @else
                                                 <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-500 font-bold rounded-lg text-xs border border-slate-200 select-none">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>

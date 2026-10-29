@@ -44,13 +44,24 @@ class AssetApiController extends Controller
      */
     public function update()
     {
-        $appUrlParts = parse_url((string) config('app.url'));
-        if (!is_array($appUrlParts) ||
-            strtolower((string) ($appUrlParts['scheme'] ?? '')) !== 'https' ||
-            empty($appUrlParts['host'])) {
+        $updateBaseUrl = rtrim((string) config('sigma_agent_updates.base_url'), '/');
+        $appUrlParts = parse_url($updateBaseUrl);
+        if (!is_array($appUrlParts)) {
             return response()->json([
                 'available' => false,
-                'message' => 'La publicación de actualizaciones requiere APP_URL HTTPS.',
+                'message' => 'La URL del servidor de actualizaciones no es válida.',
+            ], 503);
+        }
+
+        $scheme = strtolower((string) ($appUrlParts['scheme'] ?? ''));
+        $host = strtolower((string) ($appUrlParts['host'] ?? ''));
+        $port = (int) ($appUrlParts['port'] ?? ($scheme === 'https' ? 443 : 80));
+        $https = $scheme === 'https' && $host !== '';
+        $lanHttpTest = $scheme === 'http' && $host === '172.16.136.63' && $port === 8000;
+        if (!$https && !$lanHttpTest) {
+            return response()->json([
+                'available' => false,
+                'message' => 'La publicación requiere HTTPS o el endpoint HTTP autorizado para pruebas en 172.16.136.63:8000.',
             ], 503);
         }
 
@@ -93,15 +104,15 @@ class AssetApiController extends Controller
             route('api.v1.agent.update.download', ['version' => $version]),
             PHP_URL_PATH
         );
-        $downloadHost = $appUrlParts['host'];
-        if (isset($appUrlParts['port']) && $appUrlParts['port'] !== 443) {
+        $downloadHost = $host;
+        if (($scheme === 'https' && $port !== 443) || ($scheme === 'http' && $port !== 80)) {
             $downloadHost .= ':' . $appUrlParts['port'];
         }
 
         return response()->json([
             'available' => true,
             'version' => $version,
-            'downloadUrl' => 'https://' . $downloadHost . $downloadPath,
+            'downloadUrl' => $scheme . '://' . $downloadHost . $downloadPath,
             'sha256' => $expectedHash,
             'mandatory' => $mandatory,
             'releaseNotes' => $releaseNotes,

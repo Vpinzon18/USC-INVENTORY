@@ -98,9 +98,9 @@
                         </span>
                     </a>
                 </div>
-                <div x-data="{ open: {{ request()->routeIs('schedules.*') ? 'true' : 'false' }} }">
+                <div class="sigma-nav-group">
 
-                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
+                    <button @click="toggleMenu('schedules')" :class="activeMenu === 'schedules' ? 'bg-[#2b2b40]/70 text-white' : ''"
                         class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('schedules.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}">
 
                         <div class="flex items-center">
@@ -112,12 +112,12 @@
                             </span>
                         </div>
 
-                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg x-show="sidebarOpen" :class="activeMenu === 'schedules' ? 'rotate-90 text-blue-300' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
 
-                    <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
+                    <div x-cloak x-show="activeMenu === 'schedules' && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
 
                         <a href="{{ route('schedules.index') }}"
                             class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('schedules.index') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
@@ -135,9 +135,9 @@
                         </a>
                     </div>
                 </div>
-                <div x-data="{ open: {{ request()->routeIs('movements.*') ? 'true' : 'false' }} }">
+                <div class="sigma-nav-group">
 
-                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true"
+                    <button @click="toggleMenu('movements')" :class="activeMenu === 'movements' ? 'bg-[#2b2b40]/70 text-white' : ''"
                         class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group {{ request()->routeIs('movements.*') ? 'text-blue-400 bg-[#2b2b40]/50' : '' }}">
 
                         <div class="flex items-center">
@@ -150,12 +150,12 @@
                             </span>
                         </div>
 
-                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg x-show="sidebarOpen" :class="activeMenu === 'movements' ? 'rotate-90 text-blue-300' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
 
-                    <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
+                    <div x-cloak x-show="activeMenu === 'movements' && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
 
                         <a href="{{ route('movements.mass.create') }}"
                             class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('movements.mass.create') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group"
@@ -180,8 +180,8 @@
 @if(Auth::check() && in_array((int) Auth::user()->role, [1, 2, 3], true))
                 
 
-                <div x-data="{ open: {{ request()->routeIs('maintenances.*') || request()->routeIs('schedules.*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
+                <div class="sigma-nav-group">
+                    <button @click="toggleMenu('maintenances')" :class="activeMenu === 'maintenances' ? 'bg-[#2b2b40]/70 text-white' : ''" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 shrink-0 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -189,11 +189,11 @@
                             </svg>
                             <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Reportes Técnicos</span>
                         </div>
-                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg x-show="sidebarOpen" :class="activeMenu === 'maintenances' ? 'rotate-90 text-blue-300' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
-                    <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
+                    <div x-cloak x-show="activeMenu === 'maintenances' && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
                         <a href="{{ route('maintenances.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('maintenances.index') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
                             <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('maintenances.index') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -213,19 +213,19 @@
 
 
                 @if((int) Auth::user()->role === 1)
-                                <div x-data="{ open: {{ request()->is('admin/*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
+                                <div class="sigma-nav-group">
+                    <button @click="toggleMenu('infrastructure')" :class="activeMenu === 'infrastructure' ? 'bg-[#2b2b40]/70 text-white' : ''" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 shrink-0 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                             <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Infraestructura</span>
                         </div>
-                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg x-show="sidebarOpen" :class="activeMenu === 'infrastructure' ? 'rotate-90 text-blue-300' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
-                    <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
+                    <div x-cloak x-show="activeMenu === 'infrastructure' && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
                         <a href="{{ route('campuses.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('campuses.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
                             <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('campuses.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -253,8 +253,8 @@
                 @endif
                 @endif
                 @if((int) Auth::user()->role === 1)
-                <div x-data="{ open: {{ request()->routeIs('dependencies.*') || request()->routeIs('jobtitles.*') || request()->routeIs('categories.*') || request()->routeIs('admin.room_types.*') ? 'true' : 'false' }} }">
-                    <button @click="open = !open; if(!sidebarOpen) sidebarOpen = true" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
+                <div class="sigma-nav-group">
+                    <button @click="toggleMenu('settings')" :class="activeMenu === 'settings' ? 'bg-[#2b2b40]/70 text-white' : ''" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-gray-400 hover:bg-[#2b2b40] hover:text-white transition-all duration-200 group">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 shrink-0 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -262,12 +262,12 @@
                             </svg>
                             <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Configuración de Sistema</span>
                         </div>
-                        <svg x-show="sidebarOpen" :class="open ? 'rotate-90' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg x-show="sidebarOpen" :class="activeMenu === 'settings' ? 'rotate-90 text-blue-300' : ''" class="w-4 h-4 shrink-0 transition-transform duration-200 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
 
-                    <div x-show="open && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
+                    <div x-cloak x-show="activeMenu === 'settings' && sidebarOpen" x-collapse class="pl-6 pr-2 space-y-1 mt-1">
 
                         <a href="{{ route('dependencies.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('dependencies.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
                             <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('dependencies.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,15 +306,19 @@
                             Solicitudes de Agentes
                         </a>
 
-                        <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center py-2 px-2 rounded-lg text-sm font-medium {{ request()->routeIs('admin.audit-logs.*') ? 'text-blue-400' : 'text-gray-400 hover:text-white hover:bg-[#2b2b40]' }} transition-colors group">
-                            <svg class="w-4 h-4 mr-3 shrink-0 {{ request()->routeIs('admin.audit-logs.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Registro de Auditorías
-                        </a>
+
 
                     </div>
                 </div>
+                @endif
+
+                @if(Auth::check() && (int) Auth::user()->role === 1)
+                <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center px-3 py-2.5 rounded-xl font-semibold transition-all duration-200 group {{ request()->routeIs('admin.audit-logs.*') ? 'bg-[#2b2b40] text-blue-400' : 'text-gray-400 hover:bg-[#2b2b40] hover:text-white' }}">
+                    <svg class="w-5 h-5 shrink-0 transition-colors {{ request()->routeIs('admin.audit-logs.*') ? 'text-blue-400' : 'text-gray-500 group-hover:text-blue-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="ml-3 whitespace-nowrap overflow-hidden transition-all duration-300" :class="sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'">Registro de Auditorías</span>
+                </a>
                 @endif
 
                         @if(Auth::check() && (int) Auth::user()->role === 1)
@@ -456,6 +460,23 @@
                 sidebarOpen: window.innerWidth >= 1024,
                 isMobile: window.innerWidth < 1024,
                 darkMode: document.documentElement.classList.contains('dark'),
+                activeMenu: @js(
+                    request()->routeIs('schedules.*') ? 'schedules' :
+                    (request()->routeIs('movements.*') ? 'movements' :
+                    (request()->routeIs('maintenances.*') ? 'maintenances' :
+                    ((request()->routeIs('campuses.*') || request()->routeIs('buildings.*') || request()->routeIs('rooms.*')) ? 'infrastructure' :
+                    ((request()->routeIs('dependencies.*') || request()->routeIs('jobtitles.*') || request()->routeIs('categories.*') || request()->routeIs('admin.room_types.*')) ? 'settings' : null))))
+                ),
+
+                toggleMenu(menu) {
+                    if (!this.sidebarOpen) {
+                        this.sidebarOpen = true;
+                        this.activeMenu = menu;
+                        return;
+                    }
+
+                    this.activeMenu = this.activeMenu === menu ? null : menu;
+                },
 
                 toggleTheme() {
                     this.darkMode = !this.darkMode;

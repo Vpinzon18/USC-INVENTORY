@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'base_url' => env('SIGMA_AGENT_UPDATE_BASE_URL', env('APP_URL', 'http://localhost')),
     'version' => env('SIGMA_AGENT_UPDATE_VERSION', ''),
     'package' => env('SIGMA_AGENT_UPDATE_PACKAGE', ''),
     'sha256' => strtolower((string) env('SIGMA_AGENT_UPDATE_SHA256', '')),

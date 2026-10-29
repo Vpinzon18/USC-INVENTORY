@@ -11,9 +11,19 @@ class MaintenanceSchedule extends Model
     'asset_id', 
     'technician_id', 
     'scheduled_date', 
-    'status'
+    'status',
+    'assigned_at',
+    'deadline_at',
     
 ];
+    protected function casts(): array
+    {
+        return [
+            'assigned_at' => 'datetime',
+            'deadline_at' => 'datetime',
+        ];
+    }
+
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
@@ -24,6 +34,16 @@ class MaintenanceSchedule extends Model
 }
 public function technicalService() {
     return $this->hasOne(TechnicalService::class, 'maintenance_schedule_id')->latestOfMany();
+}
+
+public function extensionRequests()
+{
+    return $this->hasMany(MaintenanceScheduleExtensionRequest::class);
+}
+
+public function latestExtensionRequest()
+{
+    return $this->hasOne(MaintenanceScheduleExtensionRequest::class)->latestOfMany();
 }
 
 }

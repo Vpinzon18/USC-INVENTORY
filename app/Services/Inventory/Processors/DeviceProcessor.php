@@ -3,11 +3,16 @@
 namespace App\Services\Inventory\Processors;
 
 use App\Models\Asset;
+use App\Services\Inventory\DeviceModelResolver;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class DeviceProcessor
 {
+    public function __construct(private readonly DeviceModelResolver $modelResolver)
+    {
+    }
+
     /**
      * Rebind a reinstalled agent to an existing asset after explicit admin approval.
      * The asset must be identified by a hardware UUID or a unique serial number;
@@ -178,7 +183,10 @@ class DeviceProcessor
 
             'hostname' => $device['hostname'] ?? null,
 
-            'model_version' => $device['model'] ?? null,
+            'model_version' => $this->modelResolver->resolve(
+                $device['manufacturer'] ?? null,
+                $device['model'] ?? null
+            ),
 
             'manufacturer' => $device['manufacturer'] ?? null,
 

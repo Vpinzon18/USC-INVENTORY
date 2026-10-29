@@ -8,6 +8,7 @@ use App\Models\MaintenanceSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Mews\Purifier\Facades\Purifier;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -119,6 +120,15 @@ if ($request->filled('date_end')) {
             $schedule = MaintenanceSchedule::with('asset.room.building')->findOrFail($request->integer('schedule_id'));
             abort_if((int) Auth::user()->role === 2 && (int) $schedule->technician_id !== (int) Auth::id(), 403);
 
+            if ((int) Auth::user()->role === 2 && ($schedule->status === 'VENCIDO' || ($schedule->deadline_at && now()->greaterThanOrEqualTo($schedule->deadline_at)))) {
+                if ($schedule->extensionRequests()->where('status', 'PENDIENTE')->exists()) {
+                    return redirect()->route('schedules.index')->with('error', 'El plazo venció y la solicitud de ampliación está pendiente de aprobación.');
+                }
+
+                return redirect()->route('schedules.extensions.create', $schedule)
+                    ->with('error', 'El plazo de 24 horas hábiles venció. Solicita una ampliación para continuar.');
+            }
+
             if ($request->filled('asset_id') && (int) $request->input('asset_id') !== (int) $schedule->asset_id) {
                 abort(404);
             }
@@ -163,12 +173,28 @@ public function edit(int $id)
         $schedule = MaintenanceSchedule::findOrFail($validated['maintenance_schedule_id']);
         abort_unless((int) $schedule->asset_id === (int) $validated['asset_id'], 422, 'El cronograma seleccionado no corresponde al activo.');
         abort_if((int) Auth::user()->role === 2 && (int) $schedule->technician_id !== (int) Auth::id(), 403);
+
+        if ((int) Auth::user()->role === 2 && ($schedule->status === 'VENCIDO' || ($schedule->deadline_at && now()->greaterThanOrEqualTo($schedule->deadline_at)))) {
+            $hasPendingRequest = $schedule->extensionRequests()->where('status', 'PENDIENTE')->exists();
+            if ($hasPendingRequest) {
+                return redirect()->route('schedules.index')->with('error', 'El plazo venció y la solicitud de ampliación está pendiente de aprobación.');
+            }
+
+            return redirect()->route('schedules.extensions.create', $schedule)
+                ->with('error', 'El plazo de 24 horas hábiles venció. Solicita una ampliación antes de registrar el cierre preventivo.');
+        }
     }
     // 2. ESCUDO LIGERO (Procesamiento de datos)
     $tipoBase = strip_tags($validated['type']);
     $tipoPersonalizado = isset($validated['custom_type']) ? strip_tags($validated['custom_type']) : null;
     $finalType = ($tipoBase === 'Otro') ? $tipoPersonalizado : $tipoBase;
     $cleanGuaya = isset($validated['security_guaya']) ? strip_tags($validated['security_guaya']) : null;
+
+    if ((int) Auth::user()->role === 2 && strtoupper((string) $finalType) === 'PREVENTIVO' && empty($validated['maintenance_schedule_id'])) {
+        throw ValidationException::withMessages([
+            'maintenance_schedule_id' => 'Para registrar un mantenimiento preventivo debes abrir la agenda asignada desde el cronograma.',
+        ]);
+    }
 
     // 3. ARTILLERÍA PESADA (Purifier)
     $cleanDescription = Purifier::clean($validated['description']);

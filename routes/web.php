@@ -156,14 +156,22 @@ Route::middleware(['auth', 'role:1,2'])->group(function () {
 
     Route::get('/admin/schedules/create', [MaintenanceScheduleController::class, 'create'])->name('schedules.create');
     Route::post('/admin/schedules', [MaintenanceScheduleController::class, 'store'])->name('schedules.store');
-    Route::get('/admin/schedules/{schedule}/edit', [MaintenanceScheduleController::class, 'edit'])->name('schedules.edit');
-    Route::put('/admin/schedules/{schedule}', [MaintenanceScheduleController::class, 'update'])->name('schedules.update');
-    Route::get('/admin/maintenance/{schedule}/edit', [MaintenanceScheduleController::class, 'edit'])->name('maintenance.edit');
+    Route::get('/admin/schedules/{schedule}/edit', [MaintenanceScheduleController::class, 'edit'])->middleware('role:1')->name('schedules.edit');
+    Route::put('/admin/schedules/{schedule}', [MaintenanceScheduleController::class, 'update'])->middleware('role:1')->name('schedules.update');
+    Route::get('/schedules/{schedule}/extension-requests/create', [\App\Http\Controllers\Admin\MaintenanceScheduleExtensionController::class, 'create'])->name('schedules.extensions.create');
+    Route::post('/schedules/{schedule}/extension-requests', [\App\Http\Controllers\Admin\MaintenanceScheduleExtensionController::class, 'store'])->name('schedules.extensions.store');
+    Route::get('/admin/maintenance/{schedule}/edit', [MaintenanceScheduleController::class, 'edit'])->middleware('role:1')->name('maintenance.edit');
 
     Route::get('/maintenances/create', [TechnicalServiceController::class, 'create'])->name('maintenances.create');
     Route::post('/maintenances', [TechnicalServiceController::class, 'store'])->name('maintenances.store');
     Route::get('/maintenances/{maintenance}/edit', [TechnicalServiceController::class, 'edit'])->name('maintenances.edit');
     Route::put('/maintenances/{maintenance}', [TechnicalServiceController::class, 'update'])->name('maintenances.update');
+});
+
+Route::middleware(['auth', 'role:1'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/schedule-extension-requests', [\App\Http\Controllers\Admin\MaintenanceScheduleExtensionController::class, 'index'])->name('schedules.extensions.index');
+    Route::post('/schedule-extension-requests/{extensionRequest}/approve', [\App\Http\Controllers\Admin\MaintenanceScheduleExtensionController::class, 'approve'])->name('schedules.extensions.approve');
+    Route::post('/schedule-extension-requests/{extensionRequest}/reject', [\App\Http\Controllers\Admin\MaintenanceScheduleExtensionController::class, 'reject'])->name('schedules.extensions.reject');
 });
 
 Route::delete('/maintenances/{maintenance}', [TechnicalServiceController::class, 'destroy'])->middleware(['auth', 'role:1'])->name('maintenances.destroy');

@@ -17,6 +17,11 @@
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
                     Ver listado
                 </a>
+                @if((int) auth()->user()->role === 1)
+                    <a href="{{ route('admin.schedules.extensions.index') }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 text-sm font-bold text-amber-800 transition hover:bg-amber-100">
+                        Ampliaciones @if($pendingExtensionCount > 0)<span class="rounded-full bg-amber-600 px-2 py-0.5 text-[10px] text-white">{{ $pendingExtensionCount }}</span>@endif
+                    </a>
+                @endif
             </section>
 
             <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -113,7 +118,9 @@
                                             <div class="mt-1 truncate text-[10px] text-slate-500"><span x-text="item.serial"></span><span class="mx-1">·</span><span x-text="item.plate"></span></div>
                                             <div class="mt-1 truncate text-[10px] text-slate-500" :title="item.location" x-text="item.location"></div>
                                             <div class="truncate text-[10px] text-slate-400">Custodiante: <span class="font-semibold text-slate-600" x-text="item.custodian"></span></div>
+                                            <div class="truncate text-[10px] text-slate-400">Límite 24 h hábiles: <span class="font-semibold text-slate-600" x-text="formatDateTime(item.deadlineAt)"></span></div>
                                             <div class="truncate text-[10px] text-slate-400">Realizó: <span class="font-semibold text-slate-600" x-text="item.performer || 'Pendiente de ejecución'"></span></div>
+                                            <a x-show="item.extensionUrl" :href="item.extensionUrl" class="w-fit text-[10px] font-bold text-amber-700 hover:text-amber-900">Solicitar ampliación</a>
                                         </div>
                                         <template x-for="day in days" :key="day.key">
                                             <div class="relative border-r border-slate-100" :class="day.isToday ? 'bg-blue-50/50' : (day.inMonth ? '' : 'bg-slate-50/60')">
@@ -263,6 +270,7 @@
             goToday() { this.monthCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1); },
             initials(name) { return (name || '?').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase(); },
             formatDate(value) { return value ? new Date(`${value}T12:00:00`).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sin fecha'; },
+            formatDateTime(value) { return value ? new Date(value).toLocaleString('es-CO', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Sin definir'; },
             statusLabel(status) { return ({ PENDIENTE: 'PENDIENTE', VENCIDO: 'VENCIDO', REALIZADO: 'REALIZADO' })[status] || status; },
             statusClass(status) { return ({ PENDIENTE: 'bg-amber-50 text-amber-700', VENCIDO: 'bg-rose-50 text-rose-700', REALIZADO: 'bg-emerald-50 text-emerald-700' })[status] || 'bg-slate-100 text-slate-600'; },
             barClass(status) { return ({ PENDIENTE: 'bg-amber-300 text-amber-950 hover:bg-amber-400', VENCIDO: 'bg-rose-500 text-white hover:bg-rose-600', REALIZADO: 'bg-emerald-500 text-white hover:bg-emerald-600' })[status] || 'bg-blue-500 text-white'; },

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 
 class AgentEnrollmentRequestController extends Controller
 {
@@ -100,7 +101,7 @@ class AgentEnrollmentRequestController extends Controller
         Log::notice('SIGMA Agent enrollment approved', [
             'request_id' => $enrollment->request_id,
             'asset_id' => $enrollment->asset_id,
-            'approved_by' => auth()->id(),
+            'approved_by' => Auth::id(),
         ]);
 
         return back()->with('success', 'Equipo aprobado. SIGMA Agent recibirá su credencial automáticamente.');
@@ -159,7 +160,7 @@ class AgentEnrollmentRequestController extends Controller
         Log::notice('SIGMA Agent credential recovered for existing asset', [
             'request_id' => $enrollment->request_id,
             'asset_id' => $enrollment->asset_id,
-            'recovered_by' => auth()->id(),
+            'recovered_by' => Auth::id(),
             'request_ip' => $enrollment->request_ip,
             'new_agent_id' => $enrollment->device['agentId'] ?? null,
         ]);
@@ -177,7 +178,7 @@ class AgentEnrollmentRequestController extends Controller
         $enrollment->update(['status' => 'denied']);
         Log::notice('SIGMA Agent enrollment denied', [
             'request_id' => $enrollment->request_id,
-            'denied_by' => auth()->id(),
+            'denied_by' => Auth::id(),
         ]);
 
         return back()->with('success', 'Solicitud rechazada.');

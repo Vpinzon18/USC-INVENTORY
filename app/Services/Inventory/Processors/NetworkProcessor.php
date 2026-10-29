@@ -8,21 +8,32 @@ class NetworkProcessor extends BaseProcessor
 {
     public function process(Asset $asset, array $network): Asset
     {
+        $hasCompletionMarker = array_key_exists('collectionSucceeded', $network);
+        $collectionSucceeded = ($network['collectionSucceeded'] ?? false) === true;
+        if ($hasCompletionMarker && !$collectionSucceeded) {
+            return $asset;
+        }
         /*
         |--------------------------------------------------------------------------
         | INFORMACIÓN GENERAL DE RED
         |--------------------------------------------------------------------------
         */
 
-        $networkData = [
-            'gateway' => $network['gateway'] ?? null,
-
-            'dns_server' => $network['dnsServer'] ?? null,
-
-            'dhcp_enabled' => $network['dhcpEnabled'] ?? false,
-
-            'connected' => $network['connected'] ?? false,
-        ];
+        $networkData = [];
+        foreach ([
+            'gateway' => 'gateway',
+            'dnsServer' => 'dns_server',
+            'dhcpEnabled' => 'dhcp_enabled',
+            'connected' => 'connected',
+        ] as $input => $column) {
+            if (array_key_exists($input, $network)
+                && $network[$input] !== null
+                && (!is_string($network[$input]) || trim($network[$input]) !== '')
+                && ($input !== 'dhcpEnabled' || $hasCompletionMarker)
+                && ($input !== 'connected' || $hasCompletionMarker || !empty($network['adapters']))) {
+                $networkData[$column] = $network[$input];
+            }
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -30,17 +41,19 @@ class NetworkProcessor extends BaseProcessor
         |--------------------------------------------------------------------------
         */
 
-        $assetNetwork = $asset->network()->updateOrCreate(
-            [
-                'asset_id' => $asset->id,
-            ],
-            $networkData
-        );
+        $adapters = isset($network['adapters']) && is_array($network['adapters'])
+            ? array_values(array_filter($network['adapters'], 'is_array'))
+            : [];
+        $hasAdapterSnapshot = $adapters !== [];
+        $hasAuthoritativeAdapterSnapshot = $hasCompletionMarker && $collectionSucceeded;
+
+        $assetNetwork = $networkData !== [] || $hasAdapterSnapshot || $hasAuthoritativeAdapterSnapshot
+            ? $asset->network()->updateOrCreate(['asset_id' => $asset->id], $networkData)
+            : $asset->network;
 
         // El agente obtiene el dominio desde Win32_ComputerSystem y lo incluye
         // en `network.domain`; guardarlo en assets.domain_name mantiene el dato
         // que consulta la ficha de vida.
-        $adapters = $network['adapters'] ?? [];
         $primaryAdapter = collect($adapters)->first(
             static fn (array $adapter) => (bool) ($adapter['isPrimary'] ?? $adapter['is_primary'] ?? false)
         );
@@ -76,12 +89,17 @@ class NetworkProcessor extends BaseProcessor
             $asset = $this->updateWithHistory($asset, $assetNetworkValues);
         }
 
+        if (!$assetNetwork || (!$hasAdapterSnapshot && !$hasAuthoritativeAdapterSnapshot)) {
+            return $asset->load(['network', 'network.adapters']);
+        }
+
         /*
         |--------------------------------------------------------------------------
         | ADAPTADORES
         |--------------------------------------------------------------------------
         |
-        | No eliminamos los adaptadores existentes.
+        | No eliminamos el historial de adaptadores. Solo marcamos inactivos
+        | los que no aparecen en una lectura no vacía.
         |
         | La MAC funciona como identificador lógico del adaptador:
         |
@@ -92,26 +110,11 @@ class NetworkProcessor extends BaseProcessor
 
         /*
         |--------------------------------------------------------------------------
-        | Marcar adaptadores anteriores como inactivos
-        |--------------------------------------------------------------------------
-        |
-        | Los adaptadores que aparezcan nuevamente serán marcados
-        | como activos más adelante.
-        |
-        */
-
-        $assetNetwork->adapters()->update([
-            'is_active' => false,
-            'connected' => false,
-            'is_primary' => false,
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
         | SINCRONIZAR ADAPTADORES
         |--------------------------------------------------------------------------
         */
 
+        $seenMacs = [];
         foreach ($adapters as $adapter) {
 
             /*
@@ -135,48 +138,58 @@ class NetworkProcessor extends BaseProcessor
                 continue;
             }
 
+            $seenMacs[] = $mac;
+
             /*
             |--------------------------------------------------------------------------
             | DATOS DEL ADAPTADOR
             |--------------------------------------------------------------------------
             */
 
+            $existingAdapter = $assetNetwork->adapters()
+                ->where('mac_address', $mac)
+                ->exists();
             $adapterData = [
-
-                'name' =>
-                    $adapter['name'] ?? null,
-
-                'description' =>
-                    $adapter['description'] ?? null,
-
-                'mac_address' =>
-                    $mac,
-
-                'type' =>
-                    $adapter['type'] ?? null,
-
-                'ipv4' =>
-                    $adapter['iPv4']
-                    ?? $adapter['ipv4']
-                    ?? ($primaryMac !== null && $mac === $primaryMac ? $primaryIp : null)
-                    ?? null,
-
-                'ipv6' =>
-                    $adapter['iPv6']
-                    ?? $adapter['ipv6']
-                    ?? null,
-
-                'connected' =>
-                    $adapter['connected'] ?? false,
-
-                'is_primary' => $primaryMac !== null
-                    ? $mac === $primaryMac
-                    : (bool) ($adapter['isPrimary'] ?? $adapter['is_primary'] ?? false),
-
+                'mac_address' => $mac,
                 'is_active' => true,
-
                 'last_seen_at' => now(),
             ];
+
+            foreach ([
+                'name' => 'name',
+                'description' => 'description',
+                'type' => 'type',
+                'connected' => 'connected',
+            ] as $input => $column) {
+                if (array_key_exists($input, $adapter)
+                    && $adapter[$input] !== null
+                    && (!is_string($adapter[$input]) || trim($adapter[$input]) !== '')) {
+                    $adapterData[$column] = $adapter[$input];
+                }
+            }
+
+            $ipv4 = $adapter['iPv4'] ?? $adapter['ipv4']
+                ?? ($primaryMac !== null && $mac === $primaryMac ? $primaryIp : null);
+            $ipv6 = $adapter['iPv6'] ?? $adapter['ipv6'] ?? null;
+            if ($ipv4 !== null) {
+                $adapterData['ipv4'] = $ipv4;
+            }
+            if ($ipv6 !== null) {
+                $adapterData['ipv6'] = $ipv6;
+            }
+
+            if ($primaryMac !== null) {
+                $adapterData['is_primary'] = $mac === $primaryMac;
+            } elseif (array_key_exists('isPrimary', $adapter) || array_key_exists('is_primary', $adapter)) {
+                $adapterData['is_primary'] = (bool) ($adapter['isPrimary'] ?? $adapter['is_primary']);
+            }
+
+            if (!$existingAdapter) {
+                $adapterData += [
+                    'connected' => (bool) ($adapter['connected'] ?? false),
+                    'is_primary' => $adapterData['is_primary'] ?? false,
+                ];
+            }
 
             /*
             |--------------------------------------------------------------------------
@@ -194,6 +207,24 @@ class NetworkProcessor extends BaseProcessor
                 ],
                 $adapterData
             );
+        }
+
+        if ($hasAuthoritativeAdapterSnapshot) {
+            $staleAdapters = $assetNetwork->adapters();
+            if ($seenMacs !== []) {
+                $staleAdapters->whereNotIn('mac_address', array_unique($seenMacs));
+            }
+            $staleAdapters->update([
+                'is_active' => false,
+                'connected' => false,
+                'is_primary' => false,
+            ]);
+        } elseif ($seenMacs !== []) {
+            // Payloads de agentes anteriores no son snapshots autoritativos:
+            // se incorporan sus adaptadores, pero no se desactivan los demás.
+            $assetNetwork->adapters()
+                ->whereIn('mac_address', array_unique($seenMacs))
+                ->update(['is_active' => true, 'last_seen_at' => now()]);
         }
 
         /*

@@ -9,6 +9,7 @@ use App\Models\Building;
 use App\Models\Room;
 use App\Models\Dependency;
 use App\Models\AuditLog;
+use Illuminate\Support\Facades\Log;
 
 class FilterApiController extends Controller
 {

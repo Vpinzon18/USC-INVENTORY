@@ -8,6 +8,10 @@ class GpuProcessor
 {
     public function process(Asset $asset, array $gpus): Asset
     {
+        if ($gpus === []) {
+            return $asset;
+        }
+
         // Eliminar las GPU anteriores del equipo
         $asset->gpus()->delete();
 

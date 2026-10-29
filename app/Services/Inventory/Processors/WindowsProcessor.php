@@ -26,7 +26,7 @@ class WindowsProcessor extends BaseProcessor
                 $windows['licenseStatus'] ?? null,
 
             'secure_boot' =>
-                $windows['secureBoot'] ?? false,
+                $windows['secureBoot'] ?? null,
 
             'bitlocker_status' =>
                 $windows['bitlockerStatus'] ?? null,

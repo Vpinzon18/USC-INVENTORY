@@ -109,10 +109,9 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->networkProcessor->process(
-            $asset,
-            $inventory['network'] ?? []
-        );
+        if (isset($inventory['network']) && is_array($inventory['network'])) {
+            $asset = $this->networkProcessor->process($asset, $inventory['network']);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -120,10 +119,12 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->cpuProcessor->process(
-            $asset,
-            $inventory['cpu'] ?? []
-        );
+        if (isset($inventory['cpu']) && is_array($inventory['cpu'])) {
+            if (!array_key_exists('collectionSucceeded', $inventory['cpu'])
+                || $inventory['cpu']['collectionSucceeded'] === true) {
+                $asset = $this->cpuProcessor->process($asset, $inventory['cpu']);
+            }
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -132,7 +133,8 @@ class InventoryProcessor
         */
 
         $gpus = $inventory['gpus'] ?? [];
-        if ($gpus !== []) {
+        $gpuCollectionIsSafe = ($inventory['gpusCollectionSucceeded'] ?? false) === true;
+        if ($gpus !== [] && $gpuCollectionIsSafe) {
             $asset = $this->gpuProcessor->process($asset, $gpus);
         }
 
@@ -142,10 +144,12 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->ramProcessor->process(
-            $asset,
-            $inventory['ram']['modules'] ?? []
-        );
+        $ramModules = $inventory['ram']['modules'] ?? null;
+        $ramCollectionIsSafe = is_array($ramModules)
+            && ($inventory['ram']['collectionSucceeded'] ?? false) === true;
+        if ($ramCollectionIsSafe) {
+            $asset = $this->ramProcessor->process($asset, $inventory['ram']['modules']);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -157,7 +161,8 @@ class InventoryProcessor
         if ($storageDevices === [] && $this->hasLegacyStorage($inventory['storage'] ?? null)) {
             $storageDevices = [$inventory['storage']];
         }
-        if ($storageDevices !== []) {
+        $storageCollectionIsSafe = ($inventory['storageCollectionSucceeded'] ?? false) === true;
+        if ($storageDevices !== [] && $storageCollectionIsSafe) {
             $asset = $this->storageProcessor->process($asset, $storageDevices);
         }
 
@@ -167,10 +172,9 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->windowsProcessor->process(
-            $asset,
-            $inventory['windows'] ?? []
-        );
+        if (isset($inventory['windows']) && is_array($inventory['windows'])) {
+            $asset = $this->windowsProcessor->process($asset, $inventory['windows']);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -189,10 +193,9 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->securityProcessor->process(
-            $asset,
-            $inventory['security'] ?? []
-        );
+        if (isset($inventory['security']) && is_array($inventory['security'])) {
+            $asset = $this->securityProcessor->process($asset, $inventory['security']);
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -225,10 +228,14 @@ class InventoryProcessor
         |--------------------------------------------------------------------------
         */
 
-        $asset = $this->softwareProcessor->process(
-            $asset,
-            $inventory
-        );
+        $softwareCollectionIsSafe = ($inventory['softwareCollectionSucceeded'] ?? false) === true;
+        if (isset($inventory['software']) && is_array($inventory['software'])) {
+            $asset = $this->softwareProcessor->process(
+                $asset,
+                $inventory,
+                $softwareCollectionIsSafe
+            );
+        }
 
         /*
         |--------------------------------------------------------------------------

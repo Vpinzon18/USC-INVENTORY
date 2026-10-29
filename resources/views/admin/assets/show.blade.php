@@ -75,19 +75,18 @@
         ========================================================== --}}
 
         <section id="asset-show"
-            class="space-y-4">
+            class="space-y-3">
 
-            <nav id="asset-section-navigation" class="hidden sticky top-3 z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur" aria-label="Secciones de la hoja de vida">
+            <nav id="asset-section-navigation" class="hidden relative z-20 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur lg:sticky lg:top-3 sm:p-4" aria-label="Secciones de la hoja de vida">
                 <div class="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
                     <div>
                         <p class="text-[10px] font-black uppercase tracking-[.16em] text-blue-700">Hoja de vida</p>
-                        <p class="text-xs text-slate-500">Selecciona una tarjeta para consultar su información por separado.</p>
+                        <p class="hidden text-xs text-slate-500 sm:block">Selecciona una sección para consultar sus campos.</p>
                     </div>
                     <span id="asset-section-current" class="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700"></span>
                 </div>
-                <div id="asset-section-buttons" class="grid grid-cols-2 gap-2 pb-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7" role="group" aria-label="Secciones disponibles"></div>
+                <div id="asset-section-buttons" class="flex min-w-0 gap-2 overflow-x-auto overscroll-x-contain pb-2" role="group" aria-label="Secciones disponibles"></div>
             </nav>
-
 
             {{-- =====================================================
                  VARIABLES
@@ -188,7 +187,7 @@
                  BLOQUE PRINCIPAL
             ====================================================== --}}
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
 
 
                 {{-- =================================================
@@ -270,7 +269,7 @@
                      1. INFORMACIÓN GENERAL
                 ================================================== --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-6">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4">
 
                     <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
 
@@ -293,7 +292,7 @@
                     </div>
 
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4">
 
 
                         {{-- SERIAL --}}
@@ -649,7 +648,7 @@
      3. MOTHERBOARD / BIOS
 ================================================= --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
 
@@ -682,7 +681,7 @@
                             Motherboard
                         </div>
 
-                        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
 
 
                             {{-- FABRICANTE --}}
@@ -784,7 +783,7 @@
                             BIOS
                         </div>
 
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
 
                             {{-- FABRICANTE BIOS --}}
@@ -865,7 +864,7 @@
                      4. CPU
                 ================================================== --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
 
@@ -900,7 +899,7 @@
 
                     @forelse($asset->processors as $processor)
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4 mb-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4 mb-3">
 
                         <div>
 
@@ -999,7 +998,7 @@
                      5. RAM
                 ================================================== --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
 
@@ -1128,7 +1127,7 @@
                      6. STORAGE
                 ================================================== --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
 
@@ -1265,7 +1264,7 @@
                      7. GPU
                 ================================================== --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
 
@@ -1402,7 +1401,7 @@
                      8. CONECTIVIDAD Y RED
                 ================================================== --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     {{-- ENCABEZADO --}}
 
@@ -1459,7 +1458,7 @@
                         </h4>
 
 
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
 
                             {{-- ESTADO --}}
@@ -1553,7 +1552,7 @@
                         </h4>
 
 
-                        <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
 
 
                             {{-- NOMBRE --}}
@@ -1832,7 +1831,7 @@
      9. BATERÍA
 ================================================== --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
 
@@ -1865,7 +1864,7 @@
 
                     @if($battery)
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4">
 
                         {{-- FABRICANTE --}}
                         <div>
@@ -2049,7 +2048,7 @@
      10. MONITORES
 ========================================================= --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     {{-- CABECERA --}}
                     <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
@@ -2266,7 +2265,7 @@
                         </p>
 
                         @if(!$agentManaged)
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 text-left">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mt-5 text-left">
                                 @foreach(['brand' => 'Marca', 'model' => 'Modelo', 'serial_number' => 'Serial', 'manufacturer_code' => 'Código fabricante', 'size' => 'Tamaño (pulgadas)', 'resolution' => 'Resolución', 'refresh_rate' => 'Hz', 'fixed_asset_code' => 'Activo fijo'] as $monitorField => $monitorLabel)
                                     <div>
                                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">{{ $monitorLabel }}</label>
@@ -2289,7 +2288,7 @@
      11. SISTEMA OPERATIVO
 ================================================= --}}
 
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
 
                     <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
 
@@ -2312,7 +2311,7 @@
                     </div>
 
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
 
                         {{-- WINDOWS --}}
@@ -2397,13 +2396,13 @@
                 {{-- =================================================
                      11. SEGURIDAD
                 ================================================== --}}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-4">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-3">
                     <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
                         <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
                             Seguridad
                         </h3>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         @foreach([
                             'license_status' => ['Estado de licencia', 'text'],
                             'bitlocker_status' => ['BitLocker', 'text'],
@@ -2919,10 +2918,6 @@
     </div>
 
 
-    {{-- =============================================================
-         SWEETALERT
-    ============================================================= --}}
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const navigation = document.getElementById('asset-section-navigation');
@@ -2958,10 +2953,13 @@
                 cardsBySection.set(section.id, cards);
             });
 
-            const generalCard = cardsBySection.get('asset-general')?.[0];
+            const generalHeading = [...document.querySelectorAll('h3')]
+                .find((heading) => heading.textContent.replace(/\s+/g, ' ').trim().startsWith('1. Información General'));
+            const generalCard = generalHeading?.closest('div.rounded-2xl.border, div.rounded-xl.border');
+            const generalCardGrid = generalCard?.querySelector('.grid');
             const statusNotice = document.getElementById('asset-status-notice');
             const technicalNotice = document.getElementById('asset-technical-notice');
-            const generalCardGrid = generalCard?.querySelector('.grid');
+
             if (statusNotice && generalCardGrid) generalCardGrid.before(statusNotice);
             technicalNotice?.remove();
 
@@ -2969,15 +2967,13 @@
             if (!availableSections.length) return;
 
             const allCards = [...new Set(availableSections.flatMap((section) => cardsBySection.get(section.id)))];
-            let activeSection = availableSections[0].id;
-
             const activate = (sectionId) => {
-                activeSection = sectionId;
                 allCards.forEach((card) => {
-                    const isVisible = cardsBySection.get(sectionId).includes(card);
-                    card.hidden = !isVisible;
-                    card.style.display = isVisible ? '' : 'none';
+                    const visible = cardsBySection.get(sectionId).includes(card);
+                    card.hidden = !visible;
+                    card.style.display = visible ? '' : 'none';
                 });
+
                 availableSections.forEach((section) => {
                     const button = buttonsRoot.querySelector(`[data-section="${section.id}"]`);
                     const active = section.id === sectionId;
@@ -2987,6 +2983,7 @@
                     button?.classList.toggle('bg-slate-100', !active);
                     button?.classList.toggle('text-slate-700', !active);
                 });
+
                 currentLabel.textContent = availableSections.find((section) => section.id === sectionId)?.label ?? '';
             };
 
@@ -2995,14 +2992,14 @@
                 button.type = 'button';
                 button.dataset.section = section.id;
                 button.setAttribute('aria-pressed', 'false');
-                button.className = 'min-w-0 rounded-xl px-3 py-2.5 text-center text-xs font-bold leading-tight transition focus:outline-none focus:ring-2 focus:ring-blue-300';
+                button.className = 'shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-center text-xs font-bold leading-tight transition focus:outline-none focus:ring-2 focus:ring-blue-300';
                 button.textContent = section.label;
                 button.addEventListener('click', () => activate(section.id));
                 buttonsRoot.appendChild(button);
             });
 
             navigation.classList.remove('hidden');
-            activate(activeSection);
+            activate(availableSections[0].id);
         });
     </script>
 

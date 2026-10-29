@@ -8,6 +8,10 @@ class StorageProcessor
 {
     public function process(Asset $asset, array $storageDevices): Asset
     {
+        if ($storageDevices === []) {
+            return $asset;
+        }
+
         // Elimina los registros anteriores
         $asset->storageDevices()->delete();
 

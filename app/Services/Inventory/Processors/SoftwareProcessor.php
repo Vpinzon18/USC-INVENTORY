@@ -7,7 +7,7 @@ use App\Models\Software;
 
 class SoftwareProcessor extends BaseProcessor
 {
-    public function process(Asset $asset, array $inventory): Asset
+    public function process(Asset $asset, array $inventory, bool $authoritativeSnapshot = true): Asset
     {
         if (
             !isset($inventory['software']) ||
@@ -23,10 +23,12 @@ class SoftwareProcessor extends BaseProcessor
         | Marcar todos como inactivos
         |--------------------------------------------------------
         */
-        Software::where('asset_id', $asset->id)
-            ->update([
-                'is_active' => false,
-            ]);
+        if ($authoritativeSnapshot) {
+            Software::where('asset_id', $asset->id)
+                ->update([
+                    'is_active' => false,
+                ]);
+        }
 
         /*
         |--------------------------------------------------------

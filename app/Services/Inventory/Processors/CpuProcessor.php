@@ -8,11 +8,7 @@ class CpuProcessor
 {
     public function process(Asset $asset, array $cpu): Asset
     {
-        // Eliminar información anterior del procesador
-        $asset->processors()->delete();
-
-        // Crear la información actual
-        $asset->processors()->create([
+        $values = array_filter([
             'brand'         => $cpu['brand'] ?? null,
             'model'         => $cpu['model'] ?? null,
             'processor_id'  => $cpu['processorId'] ?? null,
@@ -24,7 +20,26 @@ class CpuProcessor
             'architecture'  => $cpu['architecture'] ?? null,
             'family'        => $cpu['family'] ?? null,
             'generation'    => $cpu['generation'] ?? null,
-        ]);
+        ], static fn ($value, $field) => $value !== null
+            && $value !== ''
+            && (!in_array($field, ['cores', 'threads', 'speed_mhz'], true) || (int) $value > 0),
+            ARRAY_FILTER_USE_BOTH);
+
+        // Un reporte sin datos útiles suele indicar que falló la recolección.
+        // Conservamos el último procesador válido en ese caso.
+        if ($values === []) {
+            return $asset;
+        }
+
+        $processor = $asset->processors()->orderBy('id')->first();
+        if ($processor) {
+            $processor->update($values);
+
+            // Mantener una sola fila canónica, después de guardar una lectura válida.
+            $asset->processors()->where('id', '<>', $processor->getKey())->delete();
+        } else {
+            $asset->processors()->create($values);
+        }
 
         return $asset;
     }

@@ -4,60 +4,23 @@ namespace App\Http\Controllers\Admin\Assets;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
+use App\Services\Assets\AssetPdfDataBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Browsershot\Browsershot;
 
 class AssetPdfController extends Controller
 {
-    /**
-     * =========================================================
-     * PREVISUALIZACIÓN PDF
-     * =========================================================
-     */
     public function previewPdf(Asset $asset)
     {
-        $asset->load([
-            'currentCustodian.dependency',
-            'currentCustodian.jobTitle',
-            'room.building',
-            'technicalServices.user',
-            'processors',
-            'ramModules',
-            'storageDevices',
-            'gpus',
-            'network.adapters',
-            'monitors',
-            'battery',
-            'software',
-        ]);
+        $asset = $this->assetQuery()->findOrFail($asset->getKey());
 
-        return view(
-            'admin.assets.pdf_preview',
-            compact('asset')
-        );
+        return view('admin.assets.pdf_preview', $this->viewData($asset, true));
     }
-
 
     public function downloadPdf(int $id)
     {
-        $asset = Asset::with([
-            'currentCustodian.dependency',
-            'currentCustodian.jobTitle',
-            'room.building',
-            'technicalServices.user',
-            'processors',
-            'ramModules',
-            'storageDevices',
-            'gpus',
-            'network.adapters',
-            'monitors',
-            'battery',
-            'software',
-        ])->findOrFail($id);
-
-        $html = view(
-            'admin.assets.pdf_export',
-            compact('asset')
-        )->render();
+        $asset = $this->assetQuery()->findOrFail($id);
+        $html = view('admin.assets.pdf_export', $this->viewData($asset, false))->render();
 
         $pdf = Browsershot::html($html)
             ->setNodeBinary('/usr/local/bin/node')
@@ -75,16 +38,49 @@ class AssetPdfController extends Controller
             ->setMargins(0, 0, 0, 0)
             ->pdf();
 
-        $fileName = 'Hoja_Vida_USC_' .
-            ($asset->internal_code ?? $asset->serial_number ?? $asset->id) .
-            '.pdf';
+        $identifier = $asset->internal_code ?: $asset->serial_number ?: (string) $asset->id;
+        $identifier = preg_replace('/[^A-Za-z0-9_-]+/', '_', $identifier);
+        $fileName = 'Hoja_Vida_USC_'.$identifier.'.pdf';
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header(
-                'Content-Disposition',
-                'attachment; filename="' . $fileName . '"'
-            );
+            ->header('Content-Disposition', 'attachment; filename="'.$fileName.'"');
     }
 
+    /**
+     * Load each normalized collection in a bounded number of queries. Separate
+     * eager loads avoid multiplying rows across several one-to-many relations.
+     */
+    private function assetQuery(): Builder
+    {
+        return Asset::query()->with([
+            'currentCustodian.dependency',
+            'currentCustodian.jobTitle',
+            'custodian.dependency',
+            'custodian.jobTitle',
+            'room.building.campus',
+            'technicalServices' => static fn ($query) => $query
+                ->with('technician')
+                ->reorder()
+                ->orderByDesc('performed_at')
+                ->orderByDesc('id')
+                ->limit(24),
+            'processors',
+            'ramModules',
+            'storageDevices',
+            'gpus',
+            'network.adapters',
+            'monitors',
+            'software',
+        ]);
+    }
+
+    private function viewData(Asset $asset, bool $previewMode): array
+    {
+        return [
+            'asset' => $asset,
+            'sheet' => app(AssetPdfDataBuilder::class)->build($asset),
+            'previewMode' => $previewMode,
+        ];
+    }
 }

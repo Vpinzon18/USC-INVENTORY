@@ -30,6 +30,18 @@ abstract class BaseProcessor
         array $values
     ): Asset {
 
+        // Los agentes usan cadenas vacías para representar datos que WMI no
+        // pudo leer. No deben borrar un valor válido existente. false y 0 sí
+        // son datos legítimos y se conservan.
+        $values = array_filter($values, static function ($value): bool {
+            return $value !== null
+                && (!is_string($value) || trim($value) !== '');
+        });
+
+        if ($values === []) {
+            return $asset;
+        }
+
         foreach ($values as $field => $newValue) {
 
             if (in_array($field, $this->ignoreHistory, true)) {
@@ -62,11 +74,10 @@ abstract class BaseProcessor
         array $values
     ): Model {
 
-        // Elimina valores nulos
-        $values = array_filter(
-            $values,
-            static fn ($value) => $value !== null
-        );
+        $values = array_filter($values, static function ($value): bool {
+            return $value !== null
+                && (!is_string($value) || trim($value) !== '');
+        });
 
         // Si no hay datos, no hace nada
         if (empty($values)) {

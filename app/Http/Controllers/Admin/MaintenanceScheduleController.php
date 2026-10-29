@@ -16,11 +16,12 @@ class MaintenanceScheduleController extends Controller
 {
     public function index(Request $request)
     {
+        $this->markExpiredSchedules();
         $filters = $request->query();
         $perPage = \App\Support\PaginationOptions::fromRequest($request);
 
 
-        $query = MaintenanceSchedule::with(['asset.room.building.campus', 'technician']);
+        $query = MaintenanceSchedule::with(['asset.room.building.campus', 'technician', 'latestExtensionRequest']);
 
         if ($request->filled('rules') && is_array($request->rules)) {
             foreach ($request->rules as $rule) {
@@ -116,7 +117,12 @@ class MaintenanceScheduleController extends Controller
         // Aseguramos que la estructura inicial tenga la variable 'text' para el buscador AJAX
         $currentRules = $request->input('rules', [['field' => 'asset', 'operator' => 'contains', 'value' => '', 'text' => '']]);
 
-        return view('admin.schedules.index', compact('schedules', 'technicians', 'sedes', 'buildings', 'perPage', 'currentRules', 'filters'));
+        $user = $request->user();
+        $pendingExtensionCount = (int) ($user?->role) === 1
+            ? \App\Models\MaintenanceScheduleExtensionRequest::where('status', 'PENDIENTE')->count()
+            : 0;
+
+        return view('admin.schedules.index', compact('schedules', 'technicians', 'sedes', 'buildings', 'perPage', 'currentRules', 'filters', 'pendingExtensionCount'));
     }
 
     public function create()
@@ -126,8 +132,10 @@ class MaintenanceScheduleController extends Controller
         return view('admin.schedules.create', compact('technicians'));
     }
 
-    public function calendar()
+    public function calendar(Request $request)
     {
+        $this->markExpiredSchedules();
+        $user = $request->user();
         $schedules = MaintenanceSchedule::query()
             ->with([
                 'asset.room.building.campus',
@@ -135,11 +143,12 @@ class MaintenanceScheduleController extends Controller
                 'asset.custodian',
                 'technician',
                 'technicalService.technician',
+                'latestExtensionRequest',
             ])
             ->orderBy('scheduled_date')
             ->get();
 
-        $maintenanceRows = $schedules->map(function (MaintenanceSchedule $schedule): array {
+        $maintenanceRows = $schedules->map(function (MaintenanceSchedule $schedule) use ($user): array {
             $asset = $schedule->asset;
             $room = $asset?->room;
             $building = $room?->building;
@@ -149,7 +158,9 @@ class MaintenanceScheduleController extends Controller
             return [
                 'id' => $schedule->id,
                 'scheduledDate' => $schedule->scheduled_date,
+                'deadlineAt' => $schedule->deadline_at?->toIso8601String(),
                 'status' => $schedule->status,
+                'extensionStatus' => $schedule->latestExtensionRequest?->status,
                 'technicianId' => $schedule->technician_id,
                 'technician' => $schedule->technician?->name ?? 'Técnico no asignado',
                 'assetId' => $asset?->id,
@@ -177,10 +188,18 @@ class MaintenanceScheduleController extends Controller
                 'roomId' => $room?->id,
                 'custodian' => $custodian?->full_name ?? 'Sin custodiante',
                 'executionUrl' => $schedule->status === 'REALIZADO' || $service
-                    || !in_array((int) auth()->user()->role, [1, 2], true)
-                    || ((int) auth()->user()->role === 2 && (int) $schedule->technician_id !== (int) auth()->id())
+                    || ((int) ($user?->role) === 2 && ($schedule->status === 'VENCIDO' || ($schedule->deadline_at && now()->greaterThanOrEqualTo($schedule->deadline_at))))
+                    || !in_array((int) ($user?->role), [1, 2], true)
+                    || ((int) ($user?->role) === 2 && (int) $schedule->technician_id !== (int) ($user?->getAuthIdentifier()))
                     ? null
                     : route('maintenances.create', ['asset_id' => $asset?->id, 'schedule_id' => $schedule->id]),
+                'extensionUrl' => (
+                    (int) ($user?->role) === 2
+                    && (int) $schedule->technician_id === (int) ($user?->getAuthIdentifier())
+                    && $schedule->latestExtensionRequest?->status !== 'PENDIENTE'
+                )
+                    ? route('schedules.extensions.create', $schedule)
+                    : null,
             ];
         })->values();
 
@@ -190,7 +209,11 @@ class MaintenanceScheduleController extends Controller
             ?? $today;
         $calendarMonth = \Illuminate\Support\Carbon::parse($focusDate)->format('Y-m');
 
-        return view('admin.schedules.calendar', compact('maintenanceRows', 'calendarMonth'));
+        $pendingExtensionCount = (int) ($user?->role) === 1
+            ? \App\Models\MaintenanceScheduleExtensionRequest::where('status', 'PENDIENTE')->count()
+            : 0;
+
+        return view('admin.schedules.calendar', compact('maintenanceRows', 'calendarMonth', 'pendingExtensionCount'));
     }
 
     public function store(Request $request)
@@ -208,11 +231,14 @@ class MaintenanceScheduleController extends Controller
         $schedules = DB::transaction(function () use ($validated, $status): array {
             $createdSchedules = [];
             foreach ($validated['asset_ids'] as $assetId) {
+                $assignedAt = now();
                 $createdSchedules[] = MaintenanceSchedule::create([
                     'asset_id' => $assetId,
                     'technician_id' => $validated['technician_id'],
                     'scheduled_date' => $validated['scheduled_date'],
                     'status' => $status,
+                    'assigned_at' => $assignedAt,
+                    'deadline_at' => app(\App\Services\MaintenanceDeadlineCalculator::class)->addBusinessDays($assignedAt, 3),
                 ]);
                 app(\App\Services\Glpi\GlpiTicketEventFactory::class)->maintenanceSchedule($createdSchedules[array_key_last($createdSchedules)]);
             }
@@ -266,21 +292,43 @@ class MaintenanceScheduleController extends Controller
 
         $assetIds = array_values($validated['asset_ids']);
         $assignmentChanged = (int) $schedule->technician_id !== (int) $validated['technician_id'] || (int) $schedule->asset_id !== (int) $assetIds[0];
-        $additionalSchedules = DB::transaction(function () use ($schedule, $validated, $assetIds): array {
+        $decisionBy = $request->user()?->getAuthIdentifier();
+        $additionalSchedules = DB::transaction(function () use ($schedule, $validated,$decisionBy, $assetIds, $assignmentChanged): array {
+            $assignedAt = $assignmentChanged ? now() : $schedule->assigned_at;
+            $deadlineAt = $assignmentChanged
+                ? app(\App\Services\MaintenanceDeadlineCalculator::class)->addBusinessDays($assignedAt, 3)
+                : $schedule->deadline_at;
             $schedule->update([
                 'asset_id' => array_shift($assetIds),
                 'technician_id' => $validated['technician_id'],
                 'scheduled_date' => $validated['scheduled_date'],
-                'status' => $validated['status'],
+                'status' => $assignmentChanged && $schedule->status !== 'REALIZADO' ? 'PENDIENTE' : $validated['status'],
+                'assigned_at' => $assignedAt,
+                'deadline_at' => $deadlineAt,
             ]);
+
+            if ($assignmentChanged) {
+                $schedule->extensionRequests()
+                    ->where('status', 'PENDIENTE')
+                    ->update([
+                        'status' => 'RECHAZADA',
+                        'decision_by' => $decisionBy,
+                        'decision_note' => 'La asignación cambió; el técnico debe solicitar una ampliación para el nuevo responsable.',
+                        'decided_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            }
 
             $createdSchedules = [];
             foreach ($assetIds as $assetId) {
+                $newAssignedAt = now();
                 $createdSchedules[] = MaintenanceSchedule::create([
                     'asset_id' => $assetId,
                     'technician_id' => $validated['technician_id'],
                     'scheduled_date' => $validated['scheduled_date'],
                     'status' => 'PENDIENTE',
+                    'assigned_at' => $newAssignedAt,
+                    'deadline_at' => app(\App\Services\MaintenanceDeadlineCalculator::class)->addBusinessDays($newAssignedAt, 3),
                 ]);
             }
             return $createdSchedules;
@@ -297,10 +345,21 @@ class MaintenanceScheduleController extends Controller
         return redirect()->route('schedules.index')
             ->with('success', 'Agenda actualizada y nuevos equipos procesados.');
     }
+    private function markExpiredSchedules(): void
+    {
+        MaintenanceSchedule::query()
+            ->where('status', 'PENDIENTE')
+            ->whereNotNull('deadline_at')
+            ->where('deadline_at', '<=', now())
+            ->update(['status' => 'VENCIDO', 'updated_at' => now()]);
+    }
+
     public function export(Request $request)
     {
         $query = MaintenanceSchedule::with([
             'asset.room.building.campus',
+            'asset.currentCustodian.dependency',
+            'asset.custodian.dependency',
             'technician',
             'technicalService'
         ]);

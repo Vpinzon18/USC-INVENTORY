@@ -10,7 +10,7 @@ class SecurityProcessor extends BaseProcessor
     {
         $values = [
 
-            'secure_boot' => $security['secureBoot'] ?? false,
+            'secure_boot' => $security['secureBoot'] ?? null,
 
             'bitlocker_status' => $security['bitlockerStatus'] ?? null,
 
@@ -18,7 +18,7 @@ class SecurityProcessor extends BaseProcessor
 
             'antivirus' => $security['antivirus'] ?? null,
 
-            'firewall_enabled' => $security['firewallEnabled'] ?? false,
+            'firewall_enabled' => $security['firewallEnabled'] ?? null,
         ];
 
         $values = array_filter(
