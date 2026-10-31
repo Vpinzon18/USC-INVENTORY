@@ -76,6 +76,7 @@ class NetworkProcessor extends BaseProcessor
         $primaryIp = trim((string) (
             $primaryAdapter['iPv4']
             ?? $primaryAdapter['ipv4']
+            ?? $network['iPv4']
             ?? $network['ipv4']
             ?? ''
         ));

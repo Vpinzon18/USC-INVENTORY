@@ -151,17 +151,17 @@
                                     <td class="px-5 py-4">
                                         @if ($isActionable)
                                             <div class="flex flex-wrap justify-end gap-2">
-                                                <form method="POST" action="{{ route('admin.agent-enrollment-requests.approve', $enrollment) }}">
+                                                <form method="POST" action="{{ route('admin.agent-enrollment-requests.approve', $enrollment) }}" data-sigma-confirm-form data-swal-icon="question" data-swal-title="¿Autorizar este equipo?" data-swal-text="Confirma que verificaste físicamente la identidad del equipo antes de autorizarlo." data-swal-confirm-text="Sí, autorizar">
                                                     @csrf
-                                                    <button class="inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300" onclick="return confirm('¿Confirma que verificó la identidad de este equipo y desea autorizarlo?')">Aprobar</button>
+                                                    <button class="inline-flex h-9 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-extrabold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">Aprobar</button>
                                                 </form>
-                                                <form method="POST" action="{{ route('admin.agent-enrollment-requests.recover', $enrollment) }}">
+                                                <form method="POST" action="{{ route('admin.agent-enrollment-requests.recover', $enrollment) }}" data-sigma-confirm-form data-swal-icon="warning" data-swal-title="¿Recuperar el vínculo del agente?" data-swal-text="Verifica físicamente el equipo. SIGMA buscará el activo por UUID de hardware o serial único, cambiará el vínculo del agente y revocará las credenciales anteriores de ese activo." data-swal-confirm-text="Sí, recuperar activo" data-swal-cancel-text="Cancelar">
                                                     @csrf
-                                                    <button class="inline-flex h-9 items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-3 text-xs font-extrabold text-amber-900 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-200" onclick="return confirm('Esta acción requiere verificar físicamente el equipo. SIGMA buscará el activo por UUID de hardware o serial único, cambiará el vínculo del agente y revocará las credenciales anteriores de ese activo. ¿Desea continuar?')">Recuperar activo</button>
+                                                    <button class="inline-flex h-9 items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-3 text-xs font-extrabold text-amber-900 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-200">Recuperar activo</button>
                                                 </form>
-                                                <form method="POST" action="{{ route('admin.agent-enrollment-requests.deny', $enrollment) }}">
+                                                <form method="POST" action="{{ route('admin.agent-enrollment-requests.deny', $enrollment) }}" data-sigma-confirm-form data-swal-icon="warning" data-swal-title="¿Rechazar esta solicitud?" data-swal-text="El agente no quedará autorizado para enviar inventario." data-swal-confirm-text="Sí, rechazar" data-swal-cancel-text="Cancelar">
                                                     @csrf
-                                                    <button class="inline-flex h-9 items-center justify-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-extrabold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200" onclick="return confirm('¿Desea rechazar esta solicitud de agente?')">Rechazar</button>
+                                                    <button class="inline-flex h-9 items-center justify-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-extrabold text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200">Rechazar</button>
                                                 </form>
                                             </div>
                                         @else

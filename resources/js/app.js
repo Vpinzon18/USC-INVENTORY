@@ -24,6 +24,38 @@ window.SigmaFormFeedback = {
     },
 };
 
+for (const form of document.querySelectorAll('[data-sigma-confirm-form]')) {
+    form.addEventListener('submit', (event) => {
+        if (form.dataset.swalConfirmed === 'true') {
+            delete form.dataset.swalConfirmed;
+            return;
+        }
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (form.dataset.swalPending === 'true') return;
+        form.dataset.swalPending = 'true';
+
+        Swal.fire({
+            icon: form.dataset.swalIcon || 'question',
+            title: form.dataset.swalTitle || '¿Confirmas esta acción?',
+            text: form.dataset.swalText || 'Verifica la información antes de continuar.',
+            showCancelButton: true,
+            confirmButtonText: form.dataset.swalConfirmText || 'Continuar',
+            cancelButtonText: form.dataset.swalCancelText || 'Cancelar',
+            confirmButtonColor: form.dataset.swalIcon === 'warning' ? '#d97706' : '#2563eb',
+            cancelButtonColor: '#64748b',
+            reverseButtons: true,
+            focusCancel: true,
+        }).then((result) => {
+            delete form.dataset.swalPending;
+            if (!result.isConfirmed) return;
+            form.dataset.swalConfirmed = 'true';
+            form.requestSubmit(event.submitter || undefined);
+        });
+    }, true);
+}
+
 const hasRequiredData = (form) => {
     const names = (form.dataset.swalRequiredHidden || '').split(',').map((name) => name.trim()).filter(Boolean);
     for (const name of names) {
