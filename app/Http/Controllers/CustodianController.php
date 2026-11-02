@@ -67,23 +67,19 @@ class CustodianController extends Controller
      */
     public function create() 
     {
-        $rooms = Room::with('building')->orderBy('nomenclatura')->get();
-        
         // Cargamos los catálogos ordenados alfabéticamente
         $jobtitles = JobTitle::orderBy('name')->get();
         $dependencies = Dependency::orderBy('name')->get();
 
-        return view('admin.custodians.create', compact('rooms', 'jobtitles', 'dependencies'));
+        return view('admin.custodians.create', compact('jobtitles', 'dependencies'));
     }
  public function edit(Custodian $custodian)
     {
-        $rooms = Room::with('building')->orderBy('nomenclatura')->get();
-        
         // Cargamos los catálogos para el formulario de edición
         $jobtitles = JobTitle::orderBy('name')->get();
         $dependencies = Dependency::orderBy('name')->get();
 
-        return view('admin.custodians.edit', compact('custodian', 'rooms', 'jobtitles', 'dependencies'));
+        return view('admin.custodians.edit', compact('custodian', 'jobtitles', 'dependencies'));
     }
   public function store(Request $request)
 {
@@ -93,24 +89,6 @@ class CustodianController extends Controller
         'status'          => 'required|in:active,inactive',
         'email'           => 'nullable|email|max:255',
         'extension'       => 'nullable|string|max:10',
-        'rooms'           => 'nullable|array',
-        
-        'rooms.*'         => [
-            'exists:rooms,id',
-            function ($attribute, $value, $fail) {
-                if (request('status') === 'active') {
-                    $isOccupied = \App\Models\Custodian::where('status', 'active')
-                        ->whereHas('rooms', function($query) use ($value) {
-                            $query->where('rooms.id', $value);
-                        })->exists();
-
-                    if ($isOccupied) {
-                        $fail('⚠️ Una de las ubicaciones seleccionadas ya está asignada a otro responsable activo.');
-                    }
-                }
-            }
-        ],
-        
         'cost_center'     => 'required_if:status,active|nullable|string|max:50',
         
         'dependency_id'   => [
@@ -152,10 +130,6 @@ class CustodianController extends Controller
 
     $custodian = \App\Models\Custodian::create($validated);
 
-    if ($validated['status'] === 'active' && $request->has('rooms')) {
-        $custodian->rooms()->attach($request->input('rooms'));
-    }
-
     return redirect()->route('custodians.index')
         ->with('success', 'El responsable ha sido creado exitosamente.');
 }
@@ -169,25 +143,6 @@ public function update(Request $request, Custodian $custodian)
         'document_number' => 'required|string|unique:custodians,document_number,' . $custodian->id,
         'email'           => 'nullable|email|max:255',
         'extension'       => 'nullable|string|max:10',
-        'rooms'           => 'nullable|array',
-        
-        'rooms.*'         => [
-            'exists:rooms,id',
-            function ($attribute, $value, $fail) use ($custodian) {
-                if (request('status') === 'active') {
-                    $isOccupied = \App\Models\Custodian::where('status', 'active')
-                        ->where('id', '!=', $custodian->id)
-                        ->whereHas('rooms', function($query) use ($value) {
-                            $query->where('rooms.id', $value);
-                        })->exists();
-
-                    if ($isOccupied) {
-                        $fail('⚠️ Una de las ubicaciones seleccionadas ya está asignada a otro responsable activo.');
-                    }
-                }
-            }
-        ], 
-        
         'cost_center'     => 'required_if:status,active|nullable|string|max:50',
         
         'dependency_id'   => [
@@ -227,13 +182,6 @@ public function update(Request $request, Custodian $custodian)
         $validated['dependency_id'] = null;
         $validated['job_title_id']  = null;
         $validated['cost_center']   = null;
-        $custodian->rooms()->detach();
-    } else {
-        if (isset($validated['rooms'])) {
-            $custodian->rooms()->sync($validated['rooms']);
-        } else {
-            $custodian->rooms()->detach();
-        }
     }
 
     $custodian->update($validated);
@@ -255,22 +203,24 @@ public function update(Request $request, Custodian $custodian)
 public function getRoomsData(Request $request)
 {
     $custodianId = $request->query('custodian_id');
-    
-    $rooms = \App\Models\Room::with('building')->get()->map(function($room) use ($custodianId) {
-        $occupant = \App\Models\Custodian::where('status', 'active')
-            ->where('id', '!=', $custodianId ?? 0)
-            ->whereHas('rooms', function($q) use ($room) {
-                $q->where('rooms.id', $room->id);
-            })->first();
+    $custodian = $custodianId ? Custodian::find($custodianId) : null;
+    $dependencyId = $request->query('dependency_id', $custodian?->dependency_id);
 
-        return [
+    if (!$dependencyId) {
+        return response()->json([]);
+    }
+
+    $rooms = Room::with('building')
+        ->where('dependency_id', $dependencyId)
+        ->orderBy('nomenclatura')
+        ->get()
+        ->map(fn ($room) => [
             'id' => $room->id,
             'nomenclatura' => $room->nomenclatura,
             'building' => $room->building->name ?? 'Sede',
-            'is_occupied' => !!$occupant,
-            'occupant_name' => $occupant ? $occupant->full_name : null
-        ];
-    });
+            'is_occupied' => false,
+            'occupant_name' => null,
+        ]);
 
     return response()->json($rooms);
 }

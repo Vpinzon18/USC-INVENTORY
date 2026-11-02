@@ -13,8 +13,10 @@ class Room extends Model
         'name',
         'nomenclatura',
         'building_id',
+        'dependency_id',
         'room_type_id', 
         'floor',
+        'status',
     ];
     public function assets(): HasMany
     {
@@ -25,9 +27,9 @@ class Room extends Model
     {
         return $this->belongsTo(Building::class);
     }
-    public function rooms()
+    public function dependency(): BelongsTo
     {
-        return $this->belongsToMany(Room::class, 'custodian_room');
+        return $this->belongsTo(Dependency::class);
     }
       public function type()
     {

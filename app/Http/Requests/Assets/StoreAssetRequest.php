@@ -4,6 +4,7 @@ namespace App\Http\Requests\Assets;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\Custodian;
 
 class StoreAssetRequest extends FormRequest
 {
@@ -14,6 +15,10 @@ class StoreAssetRequest extends FormRequest
 
     public function rules(): array
     {
+        $custodianDependencyId = Custodian::whereKey($this->input('custodian_id'))
+            ->where('status', 'active')
+            ->value('dependency_id');
+
         return [
                 /*
                 |--------------------------------------------------------------------------
@@ -25,8 +30,13 @@ class StoreAssetRequest extends FormRequest
                     'required',
                     'integer',
                     'exists:rooms,id',
-                    Rule::exists('custodian_room', 'room_id')
-                        ->where(fn($query) => $query->where('custodian_id', $this->input('custodian_id'))),
+                    function ($attribute, $value, $fail) use ($custodianDependencyId) {
+                        $room = \App\Models\Room::find($value);
+                        if ($room && $room->dependency_id !== null
+                            && (int) $room->dependency_id !== (int) $custodianDependencyId) {
+                            $fail('La ubicación debe pertenecer a la dependencia del responsable.');
+                        }
+                    },
                 ],
 
                 'serial_number' =>

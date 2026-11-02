@@ -4,6 +4,7 @@
 
             <form action="{{ route('custodians.store') }}" method="POST" id="createCustodianForm" data-sigma-create-form>
                 @csrf
+                <input type="hidden" name="status" value="active">
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
@@ -95,34 +96,10 @@
                                     </div>
                                 </div>
 
-                                <div class="relative z-[58]">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label class="text-xs font-bold text-slate-600 uppercase tracking-wide">4. Ubicaciones a Cargo <span class="text-rose-500">*</span></label>
-                                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded shadow-sm border border-blue-100"><span id="selectedCount">0</span> Seleccionadas</span>
-                                    </div>
-                                    
-                                    <div class="relative w-full" id="multiSelectContainer">
-                                        
-                                        <div class="min-h-[42px] w-full rounded-lg border border-slate-300 shadow-sm bg-white p-1.5 flex flex-wrap gap-1.5 items-center cursor-text transition-all focus-within:border-blue-500 focus-within:ring focus-within:ring-blue-200" id="multiSelectBox">
-                                            
-                                            <div id="selectedChips" class="flex flex-wrap gap-1.5 items-center">
-                                                </div>
-                                            
-                                            <input type="text" id="roomSearch" placeholder="Buscar por nombre o bloque..." class="flex-1 min-w-[150px] border-none focus:ring-0 text-sm p-1 bg-transparent text-slate-700 placeholder-slate-400" autocomplete="off">
-                                            
-                                            <div class="px-2 text-slate-400">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                                            </div>
-                                        </div>
-
-                                        <div id="dropdownMenu" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-[60]">
-                                            <div id="roomList" class="flex flex-col">
-                                                <div class="p-4 text-center text-xs text-slate-400 font-medium">Cargando ubicaciones...</div>
-                                            </div>
-                                        </div>
-
-                                        <div id="hiddenInputsContainer"></div>
-                                    </div>
+                                <div class="rounded-xl border border-blue-100 bg-blue-50/70 p-4 md:p-5">
+                                    <h4 class="text-xs font-extrabold text-blue-900 uppercase tracking-wide">4. Espacios de la dependencia</h4>
+                                    <p class="mt-2 text-sm text-blue-800">Al seleccionar una dependencia, este responsable quedará asociado automáticamente a todas las oficinas y salones registrados para ella. Administra los espacios desde Infraestructura → Oficinas / Salones.</p>
+                                    <p class="mt-2 text-xs text-blue-700">No es necesario seleccionar los espacios uno por uno. Si cambias la dependencia del responsable, sus espacios asociados se actualizarán automáticamente.</p>
                                 </div>
 
                                 <div class="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-3">
@@ -151,7 +128,7 @@
                                 </div>
                                 <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg flex gap-3">
                                     <span class="text-slate-400 font-bold">2.</span>
-                                    <p><strong class="text-slate-700 block mb-0.5">Múltiples Ubicaciones:</strong> Utilice el buscador para seleccionar rápidamente múltiples ubicaciones. Quedarán guardadas como etiquetas azules.</p>
+                                    <p><strong class="text-slate-700 block mb-0.5">Espacios por dependencia:</strong> Las oficinas y salones se vinculan automáticamente según la dependencia seleccionada.</p>
                                 </div>
                             </div>
                         </div>
@@ -166,182 +143,26 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Variables de UI para Salones
-            const searchInput = document.getElementById('roomSearch');
-            const dropdownMenu = document.getElementById('dropdownMenu');
-            const roomListContainer = document.getElementById('roomList');
-            const multiSelectBox = document.getElementById('multiSelectBox');
-            const selectedChipsContainer = document.getElementById('selectedChips');
-            const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
-            const selectedCountDisplay = document.getElementById('selectedCount');
+        document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('createCustodianForm');
-
-            // Estado de los datos
-            let allRooms = [];
-            let selectedRooms = new Map(); // Mapa para guardar {id -> objeto_salon}
-
-            // 1. Fetch de ubicaciones
-            const response = await fetch("{{ route('api.filters.api.rooms.status') }}?custodian_id=0");
-            allRooms = await response.json();
-
-            // 2. Controladores del Menú Desplegable
-            searchInput.addEventListener('focus', () => {
-                dropdownMenu.classList.remove('hidden');
-                renderDropdown(allRooms);
-            });
-
-            // Cerrar menú al hacer clic fuera
-            document.addEventListener('click', (e) => {
-                if (!multiSelectBox.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                    dropdownMenu.classList.add('hidden');
-                }
-            });
-
-            // Enfocar buscador al hacer clic en el contenedor visual
-            multiSelectBox.addEventListener('click', () => searchInput.focus());
-
-            // 3. Renderizar la lista dentro del Dropdown
-            function renderDropdown(rooms) {
-                roomListContainer.innerHTML = '';
-                
-                if(rooms.length === 0) {
-                    roomListContainer.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">No se encontraron ubicaciones.</div>';
-                    return;
-                }
-
-                // Renderizamos máximo 100 para no saturar el DOM (El usuario debe filtrar si hay más)
-                const roomsToRender = rooms.slice(0, 100);
-
-                roomsToRender.forEach(room => {
-                    const isOccupied = room.is_occupied;
-                    const isSelected = selectedRooms.has(room.id);
-
-                    const optionHTML = `
-                        <div class="room-option flex items-center justify-between p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${isOccupied ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}" data-id="${room.id}">
-                            <div class="flex items-center gap-3">
-                                <input type="checkbox" class="h-4 w-4 text-blue-600 rounded border-slate-300 pointer-events-none" ${isSelected ? 'checked' : ''} ${isOccupied ? 'disabled' : ''}>
-                                <div>
-                                    <span class="block text-sm font-bold text-slate-700">${room.nomenclatura}</span>
-                                    <span class="block text-[10px] text-slate-400 uppercase">${room.building}</span>
-                                </div>
-                            </div>
-                            ${isOccupied ? `<span class="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100 uppercase">Ocupado: ${room.occupant_name}</span>` : ''}
-                        </div>
-                    `;
-                    roomListContainer.insertAdjacentHTML('beforeend', optionHTML);
-                });
-
-                if(rooms.length > 100) {
-                    roomListContainer.insertAdjacentHTML('beforeend', `<div class="p-2 text-center text-[10px] text-slate-400 font-bold bg-slate-50 uppercase">Mostrando 100 resultados. Use el buscador para refinar.</div>`);
-                }
-
-                // Asignar eventos de clic a cada opción (si no está ocupada)
-                document.querySelectorAll('.room-option').forEach(el => {
-                    el.addEventListener('click', function(e) {
-                        const roomId = parseInt(this.getAttribute('data-id'));
-                        const roomData = allRooms.find(r => r.id === roomId);
-                        
-                        if(roomData.is_occupied) return; // Bloquear si está ocupado
-                        
-                        if (selectedRooms.has(roomId)) {
-                            selectedRooms.delete(roomId);
-                        } else {
-                            selectedRooms.set(roomId, roomData);
-                        }
-                        
-                        updateUI();
-                        // Mantenemos el dropdown abierto para que elijan más y re-renderizamos para actualizar checkboxes
-                        renderDropdown(allRooms.filter(r => r.nomenclatura.toLowerCase().includes(searchInput.value.toLowerCase()) || r.building.toLowerCase().includes(searchInput.value.toLowerCase())));
-                        searchInput.focus();
-                    });
-                });
-            }
-
-            // 4. Filtrado en tiempo real
-            searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = allRooms.filter(r => r.nomenclatura.toLowerCase().includes(term) || r.building.toLowerCase().includes(term));
-                renderDropdown(filtered);
-            });
-
-            // 5. Actualizar la Interfaz (Etiquetas y Formularios Ocultos)
-            window.removeRoom = function(roomId) {
-                selectedRooms.delete(roomId);
-                updateUI();
-                renderDropdown(allRooms);
-            };
-
-            function updateUI() {
-                // 5.1 Actualizar contador
-                selectedCountDisplay.textContent = selectedRooms.size;
-
-                // 5.2 Limpiar contenedores
-                selectedChipsContainer.innerHTML = '';
-                hiddenInputsContainer.innerHTML = '';
-
-                // 5.3 Dibujar chips y agregar inputs hidden para Laravel
-                selectedRooms.forEach((room, id) => {
-                    // El Chip visible
-                    selectedChipsContainer.insertAdjacentHTML('beforeend', `
-                        <span class="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 px-2 py-1 rounded text-xs font-bold">
-                            ${room.nomenclatura}
-                            <button type="button" class="text-blue-400 hover:text-blue-600 focus:outline-none" onclick="removeRoom(${id})">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </span>
-                    `);
-
-                    // El input invisible que viaja al controlador
-                    hiddenInputsContainer.insertAdjacentHTML('beforeend', `
-                        <input type="hidden" name="rooms[]" value="${id}">
-                    `);
-                });
-
-                // Si hay elementos, ocultamos el placeholder
-                searchInput.placeholder = selectedRooms.size > 0 ? "Buscar más..." : "Buscar por nombre o bloque...";
-            }
-
-            // 6. Validación Final antes de enviar
-            form.addEventListener('submit', function(e) {
-                if (selectedRooms.size === 0) {
-                    e.preventDefault();
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
                     Swal.fire({
-                        title: 'Atención',
-                        text: 'Debes seleccionar al menos una ubicación disponible.',
-                        icon: 'warning',
-                        confirmButtonColor: '#3b82f6'
-                    });
-                    return;
-                }
-
-                e.preventDefault();
-                Swal.fire({
-                    title: '¿Registrar responsable?',
-                    text: 'Verifica que los datos sean correctos.',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3b82f6',
-                    cancelButtonColor: '#94a3b8',
-                    confirmButtonText: 'Sí, crear registro',
-                    cancelButtonText: 'Revisar de nuevo'
-                }).then((res) => {
-                    if (res.isConfirmed) this.submit();
+                        title: '¿Registrar responsable?',
+                        text: 'Los espacios de su dependencia quedarán asociados automáticamente.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#2563eb',
+                        confirmButtonText: 'Sí, crear registro',
+                        cancelButtonText: 'Revisar de nuevo'
+                    }).then(result => { if (result.isConfirmed) form.submit(); });
                 });
-            });
-
-            // 7. Alertas de Backend
+            }
             const errorsTag = document.getElementById('backend-errors-data');
-            if(errorsTag) {
+            if (errorsTag) {
                 const errors = JSON.parse(errorsTag.textContent);
-                if (errors.length > 0) {
-                    Swal.fire({ 
-                        icon: 'error', 
-                        title: 'Validación Rechazada', 
-                        html: errors.map(e => `<p class="text-sm text-left mb-1">⚠️ ${e}</p>`).join(''),
-                        confirmButtonColor: '#3b82f6'
-                    });
-                }
+                if (errors.length) Swal.fire({ icon: 'error', title: 'Validación rechazada', html: errors.map(error => `<p>${error}</p>`).join(''), confirmButtonColor: '#2563eb' });
             }
         });
     </script>

@@ -393,20 +393,28 @@ public function getAssets(Request $request)
         }
 
         try {
-            // 1. Cruzamos rooms con custodian_room y también con buildings
+            $custodian = \App\Models\Custodian::whereKey($responsibleId)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$custodian?->dependency_id) {
+                return response()->json([]);
+            }
+
+            // Los espacios pertenecen a la dependencia; el responsable los hereda.
             $offices = \Illuminate\Support\Facades\DB::table('rooms')
-                ->join('custodian_room', 'rooms.id', '=', 'custodian_room.room_id')
-                ->join('buildings', 'rooms.building_id', '=', 'buildings.id') // <-- NUEVO: Traemos el Edificio
-                ->where('custodian_room.custodian_id', $responsibleId)
+                ->join('buildings', 'rooms.building_id', '=', 'buildings.id')
+                ->where(function ($query) use ($custodian) {
+                    $query->where('rooms.dependency_id', $custodian->dependency_id)
+                        ->orWhereNull('rooms.dependency_id');
+                })
                 ->when($search, function($query) use ($search) {
                     $query->where(function($q) use ($search) {
-                        // 2. Ahora la búsqueda es súper inteligente (busca por nomenclatura, nombre del salón o edificio)
                         $q->where('rooms.nomenclatura', 'ilike', "%{$search}%")
                           ->orWhere('rooms.name', 'ilike', "%{$search}%")
                           ->orWhere('buildings.name', 'ilike', "%{$search}%");
                     });
                 })
-                // 3. Seleccionamos los datos de ambas tablas asegurando que no choquen los nombres
                 ->select(
                     'rooms.id', 
                     'rooms.nomenclatura', 
@@ -416,7 +424,6 @@ public function getAssets(Request $request)
                 ->limit(20)
                 ->get()
                 ->map(function($room) {
-                    // 4. Formateamos el texto para que el usuario lo vea perfectamente claro
                     $nomenclatura = $room->nomenclatura ?? 'S/N';
                     $roomName = $room->room_name ?? 'Oficina';
                     $buildingName = $room->building_name ?? 'Edificio N/A';

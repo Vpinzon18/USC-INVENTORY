@@ -25,7 +25,8 @@ class Custodian extends Model
     }
     public function rooms()
     {
-        return $this->belongsToMany(Room::class, 'custodian_room');
+        return $this->hasMany(Room::class, 'dependency_id', 'dependency_id')
+            ->whereNotNull('rooms.dependency_id');
     }
     public function dependency()
     {

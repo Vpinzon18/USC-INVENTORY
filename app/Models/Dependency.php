@@ -13,4 +13,9 @@ protected $fillable = ['name'];
     
     return $this->hasMany(Custodian::class);
 }
+
+    public function rooms()
+    {
+        return $this->hasMany(Room::class);
+    }
 }

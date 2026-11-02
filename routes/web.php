@@ -79,6 +79,7 @@ Route::middleware(['auth', 'role:1'])->group(function () {
         Route::resource('campuses', CampusController::class)->except(['show']);
         Route::resource('buildings', BuildingController::class);
         Route::resource('rooms', RoomController::class);
+        Route::post('rooms/assign-dependency', [RoomController::class, 'assignDependency'])->name('rooms.assign-dependency');
         Route::resource('custodians', CustodianController::class)->except(['show']);
         Route::resource('dependencies', DependencyController::class)->except(['show']);
         Route::resource('jobtitles', JobTitleController::class);

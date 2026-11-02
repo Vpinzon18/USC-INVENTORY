@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Building;
 use App\Models\Room;
 use App\Models\RoomType;
+use App\Models\Dependency;
 
 class RoomController extends Controller
 {
@@ -18,7 +19,7 @@ class RoomController extends Controller
         $buildingId = filter_var($filters['building_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
         $roomTypeId = filter_var($filters['room_type_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
         // 1. Traemos las relaciones necesarias (Eager Loading)
-        $query = Room::with(['building.campus', 'type']);
+        $query = Room::with(['building.campus', 'type', 'dependency']);
 
         // 2. Filtros dinámicos recibidos por AJAX
         if ($search !== '') {
@@ -46,6 +47,7 @@ class RoomController extends Controller
         // 3. Paginación
         $perPage = \App\Support\PaginationOptions::fromRequest($request);
         $rooms = $query->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
+        $dependencies = Dependency::orderBy('name')->get();
 
         // 🌟 LA MAGIA DEL AJAX: Si la petición viene de AlpineJS, devolvemos SOLO la tabla
         if ($request->ajax()) {
@@ -53,7 +55,25 @@ class RoomController extends Controller
         }
 
         // Si es una carga normal, devolvemos la vista completa
-        return view('admin.rooms.index', compact('rooms', 'filters'));
+        return view('admin.rooms.index', compact('rooms', 'filters', 'dependencies'));
+    }
+
+    public function assignDependency(Request $request)
+    {
+        $validated = $request->validate([
+            'dependency_id' => 'required|exists:dependencies,id',
+            'room_ids' => 'required|array|min:1',
+            'room_ids.*' => 'required|integer|distinct|exists:rooms,id',
+        ], [
+            'room_ids.required' => 'Selecciona al menos un espacio para asignar.',
+            'room_ids.min' => 'Selecciona al menos un espacio para asignar.',
+        ]);
+
+        Room::whereIn('id', $validated['room_ids'])
+            ->update(['dependency_id' => $validated['dependency_id']]);
+
+        return redirect()->route('rooms.index')
+            ->with('success', count($validated['room_ids']) . ' espacios asociados a la dependencia seleccionada.');
     }
 
     public function create()
@@ -61,13 +81,15 @@ class RoomController extends Controller
         $buildings = Building::with('campus')->orderBy('name')->get();
         $roomTypes = RoomType::where('is_active', true)->orderBy('name')->get();
         
-        return view('admin.rooms.create', compact('buildings', 'roomTypes'));
+        $dependencies = Dependency::orderBy('name')->get();
+        return view('admin.rooms.create', compact('buildings', 'roomTypes', 'dependencies'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
+            'dependency_id' => 'required|exists:dependencies,id',
             'nomenclatura' => 'nullable|string|unique:rooms,nomenclatura', 
             'building_id'  => 'required|exists:buildings,id',
             'floor'        => 'required|string', 
@@ -96,14 +118,16 @@ class RoomController extends Controller
     {
         $buildings = Building::with('campus')->orderBy('name')->get();
         $roomTypes = RoomType::where('is_active', true)->orderBy('name')->get();
+        $dependencies = Dependency::orderBy('name')->get();
         
-        return view('admin.rooms.edit', compact('room', 'buildings', 'roomTypes'));
+        return view('admin.rooms.edit', compact('room', 'buildings', 'roomTypes', 'dependencies'));
     }
 
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
+            'dependency_id' => 'required|exists:dependencies,id',
             'nomenclatura' => 'nullable|string|unique:rooms,nomenclatura,' . $room->id,
             'building_id'  => 'required|exists:buildings,id',
             'floor'        => 'required|string',

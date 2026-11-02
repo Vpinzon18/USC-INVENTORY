@@ -85,6 +85,18 @@
                             <!-- 🌟 SOLUCIÓN: p-5 md:p-8 y gap-5 md:gap-8 -->
                             <div class="p-5 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
                                 
+                                <div class="md:col-span-2">
+                                    <label for="dependency_id" class="flex items-center gap-2 text-[10px] md:text-[11px] font-extrabold text-slate-600 uppercase mb-2 tracking-widest">Dependencia <span class="text-rose-500">*</span></label>
+                                    <select id="dependency_id" name="dependency_id" required class="w-full bg-slate-50 border-slate-200 text-slate-800 text-xs md:text-sm font-bold rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 py-3 px-4">
+                                        <option value="">Seleccione la dependencia responsable del espacio</option>
+                                        @foreach($dependencies as $dependency)
+                                            <option value="{{ $dependency->id }}" @selected(old('dependency_id', $room->dependency_id) == $dependency->id)>{{ $dependency->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('dependency_id')<p class="text-[11px] font-bold text-rose-600 mt-1">{{ $message }}</p>@enderror
+                                    <p class="text-[11px] text-slate-500 mt-1">El espacio quedará disponible automáticamente para el responsable asignado a esta dependencia.</p>
+                                </div>
+
                                 <!-- BLOQUE / EDIFICIO (AJAX Local Alpine) -->
                                 <div class="md:col-span-2">
                                     <label class="flex items-center gap-2 text-[10px] md:text-[11px] font-extrabold text-slate-600 uppercase mb-2 md:mb-2.5 tracking-widest">

@@ -120,31 +120,10 @@
                                         </div>
                                     </div>
 
-                                    <div class="relative z-[58]">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <label class="text-xs font-bold text-slate-600 uppercase tracking-wide">4. Ubicaciones a Cargo</label>
-                                            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded shadow-sm border border-blue-100"><span id="selectedCount">0</span> Seleccionadas</span>
-                                        </div>
-                                        
-                                        <div class="relative w-full" id="multiSelectContainer">
-                                            
-                                            <div class="min-h-[42px] w-full rounded-lg border border-slate-300 shadow-sm bg-white p-1.5 flex flex-wrap gap-1.5 items-center cursor-text transition-all focus-within:border-blue-500 focus-within:ring focus-within:ring-blue-200" id="multiSelectBox">
-                                                <div id="selectedChips" class="flex flex-wrap gap-1.5 items-center">
-                                                    </div>
-                                                <input type="text" id="roomSearch" placeholder="Buscar por nombre o bloque..." class="flex-1 min-w-[150px] border-none focus:ring-0 text-sm p-1 bg-transparent text-slate-700 placeholder-slate-400" autocomplete="off">
-                                                <div class="px-2 text-slate-400">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                                                </div>
-                                            </div>
-
-                                            <div id="dropdownMenu" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-[60]">
-                                                <div id="roomList" class="flex flex-col">
-                                                    <div class="p-4 text-center text-xs text-slate-400 font-medium">Cargando ubicaciones...</div>
-                                                </div>
-                                            </div>
-
-                                            <div id="hiddenInputsContainer"></div>
-                                        </div>
+                                    <div class="rounded-xl border border-blue-100 bg-blue-50/70 p-4 md:p-5">
+                                        <h4 class="text-xs font-extrabold text-blue-900 uppercase tracking-wide">4. Espacios de la dependencia</h4>
+                                        <p class="mt-2 text-sm text-blue-800">Todos los espacios registrados para la dependencia seleccionada se asocian automáticamente a este responsable.</p>
+                                        <p class="mt-3 text-xs text-blue-700">Al guardar un cambio de dependencia, la relación de espacios se actualizará en automático. El historial de asignaciones de equipos conserva la ubicación registrada en cada movimiento.</p>
                                     </div>
                                     </div>
 
@@ -205,246 +184,55 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script id="backend-errors-data" type="application/json">{!! json_encode($errors->all()) !!}</script>
     
-    <script id="pre-selected-rooms-data" type="application/json">{!! $custodian->rooms->pluck('id')->toJson() !!}</script>
-
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            
-            // ---------------------------------------------------------
-            // 1. GESTIÓN DEL DROPDOWN DE SALONES (MULTI-SELECT)
-            // ---------------------------------------------------------
-            const searchInput = document.getElementById('roomSearch');
-            const dropdownMenu = document.getElementById('dropdownMenu');
-            const roomListContainer = document.getElementById('roomList');
-            const multiSelectBox = document.getElementById('multiSelectBox');
-            const selectedChipsContainer = document.getElementById('selectedChips');
-            const hiddenInputsContainer = document.getElementById('hiddenInputsContainer');
-            const selectedCountDisplay = document.getElementById('selectedCount');
-            
-            let allRooms = [];
-            let selectedRooms = new Map();
-
-            // Salones que el Custodio ya tiene asignados (Pre-selección)
-            const preSelectedRoomsTag = document.getElementById('pre-selected-rooms-data');
-            const preSelectedRoomIds = preSelectedRoomsTag && preSelectedRoomsTag.textContent.trim() !== '' 
-                ? JSON.parse(preSelectedRoomsTag.textContent) 
-                : [];
-
-            // Fetch de ubicaciones (Pasamos el ID actual para no bloquear los propios salones)
-            const custodianId = "{{ $custodian->id }}";
-            const response = await fetch(`{{ route('api.filters.api.rooms.status') }}?custodian_id=${custodianId}`);
-            allRooms = await response.json();
-
-            // Cargar datos pre-seleccionados al Mapa
-            preSelectedRoomIds.forEach(id => {
-                const roomData = allRooms.find(r => r.id === id);
-                if(roomData) selectedRooms.set(id, roomData);
-            });
-            updateUI(); // Dibujar chips iniciales
-
-            // Controladores del Menú Desplegable
-            searchInput.addEventListener('focus', () => {
-                dropdownMenu.classList.remove('hidden');
-                renderDropdown(allRooms);
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!multiSelectBox.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                    dropdownMenu.classList.add('hidden');
-                }
-            });
-
-            multiSelectBox.addEventListener('click', () => searchInput.focus());
-
-            // Renderizar la lista
-            function renderDropdown(rooms) {
-                roomListContainer.innerHTML = '';
-                
-                if(rooms.length === 0) {
-                    roomListContainer.innerHTML = '<div class="p-4 text-center text-xs text-slate-400">No se encontraron ubicaciones.</div>';
-                    return;
-                }
-
-                const roomsToRender = rooms.slice(0, 100);
-
-                roomsToRender.forEach(room => {
-                    const isOccupied = room.is_occupied;
-                    const isSelected = selectedRooms.has(room.id);
-
-                    const optionHTML = `
-                        <div class="room-option flex items-center justify-between p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${isOccupied ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''}" data-id="${room.id}">
-                            <div class="flex items-center gap-3">
-                                <input type="checkbox" class="h-4 w-4 text-blue-600 rounded border-slate-300 pointer-events-none" ${isSelected ? 'checked' : ''} ${isOccupied ? 'disabled' : ''}>
-                                <div>
-                                    <span class="block text-sm font-bold text-slate-700">${room.nomenclatura}</span>
-                                    <span class="block text-[10px] text-slate-400 uppercase">${room.building}</span>
-                                </div>
-                            </div>
-                            ${isOccupied ? `<span class="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100 uppercase">Ocupado: ${room.occupant_name}</span>` : ''}
-                        </div>
-                    `;
-                    roomListContainer.insertAdjacentHTML('beforeend', optionHTML);
-                });
-
-                if(rooms.length > 100) {
-                    roomListContainer.insertAdjacentHTML('beforeend', `<div class="p-2 text-center text-[10px] text-slate-400 font-bold bg-slate-50 uppercase">Mostrando 100 resultados. Use el buscador.</div>`);
-                }
-
-                document.querySelectorAll('.room-option').forEach(el => {
-                    el.addEventListener('click', function(e) {
-                        const roomId = parseInt(this.getAttribute('data-id'));
-                        const roomData = allRooms.find(r => r.id === roomId);
-                        
-                        if(roomData.is_occupied) return; 
-                        
-                        if (selectedRooms.has(roomId)) {
-                            selectedRooms.delete(roomId);
-                        } else {
-                            selectedRooms.set(roomId, roomData);
-                        }
-                        
-                        updateUI();
-                        renderDropdown(allRooms.filter(r => r.nomenclatura.toLowerCase().includes(searchInput.value.toLowerCase()) || r.building.toLowerCase().includes(searchInput.value.toLowerCase())));
-                        searchInput.focus();
-                    });
-                });
-            }
-
-            // Filtrado
-            searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = allRooms.filter(r => r.nomenclatura.toLowerCase().includes(term) || r.building.toLowerCase().includes(term));
-                renderDropdown(filtered);
-            });
-
-            // Eliminar y actualizar interfaz
-            window.removeRoom = function(roomId) {
-                selectedRooms.delete(roomId);
-                updateUI();
-                renderDropdown(allRooms);
-            };
-
-            function updateUI() {
-                selectedCountDisplay.textContent = selectedRooms.size;
-                selectedChipsContainer.innerHTML = '';
-                hiddenInputsContainer.innerHTML = '';
-
-                selectedRooms.forEach((room, id) => {
-                    selectedChipsContainer.insertAdjacentHTML('beforeend', `
-                        <span class="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-700 px-2 py-1 rounded text-xs font-bold">
-                            ${room.nomenclatura}
-                            <button type="button" class="text-blue-400 hover:text-blue-600 focus:outline-none" onclick="removeRoom(${id})">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </span>
-                    `);
-                    hiddenInputsContainer.insertAdjacentHTML('beforeend', `<input type="hidden" name="rooms[]" value="${id}">`);
-                });
-
-                searchInput.placeholder = selectedRooms.size > 0 ? "Buscar más..." : "Buscar por nombre o bloque...";
-            }
-
-
-            // ---------------------------------------------------------
-            // 2. TOGGLE DE ESTADO (ACTIVO/INACTIVO)
-            // ---------------------------------------------------------
-            const statusSelect = document.querySelector('select[name="status"]');
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('editCustodianForm');
+            const statusSelect = form?.querySelector('select[name="status"]');
             const orgSection = document.getElementById('org-section');
             const statusField = orgSection?.querySelector('.custodian-status-field');
-
-            function toggleOrgFields() {
+            const toggleOrgFields = () => {
                 if (!statusSelect || !orgSection) return;
-
                 const inactive = statusSelect.value === 'inactive';
-                orgSection.style.opacity = '1';
-                orgSection.style.pointerEvents = 'auto';
-
-                // Bloquear visualmente el resto del formulario y conservar el
-                // selector de estado accesible para poder reactivar al responsable.
-                const organizationalSection = orgSection.children[0];
-                if (organizationalSection) {
-                    const heading = organizationalSection.children[0];
-                    const fieldGrid = organizationalSection.children[1];
-                    if (heading) {
-                        heading.style.opacity = inactive ? '0.4' : '1';
-                        heading.inert = inactive;
-                    }
-                    if (fieldGrid) {
-                        Array.from(fieldGrid.children).forEach(field => {
-                            const isStatusField = field === statusField;
-                            field.style.opacity = inactive && !isStatusField ? '0.4' : '1';
-                            field.style.pointerEvents = inactive && !isStatusField ? 'none' : 'auto';
-                            field.inert = inactive && !isStatusField;
+                Array.from(orgSection.children).forEach((section, index) => {
+                    if (index === 0) {
+                        const fields = section.children[1];
+                        if (fields) Array.from(fields.children).forEach(field => {
+                            const isStatus = field === statusField;
+                            field.style.opacity = inactive && !isStatus ? '0.4' : '1';
+                            field.style.pointerEvents = inactive && !isStatus ? 'none' : 'auto';
+                            field.inert = inactive && !isStatus;
                         });
+                    } else {
+                        section.style.opacity = inactive ? '0.4' : '1';
+                        section.style.pointerEvents = inactive ? 'none' : 'auto';
+                        section.inert = inactive;
                     }
-                }
-
-                Array.from(orgSection.children).slice(1).forEach(section => {
-                    section.style.opacity = inactive ? '0.4' : '1';
-                    section.style.pointerEvents = inactive ? 'none' : 'auto';
-                    section.inert = inactive;
                 });
-            }
+            };
             if (statusSelect) {
                 toggleOrgFields();
                 statusSelect.addEventListener('change', toggleOrgFields);
             }
-
-
-            // ---------------------------------------------------------
-            // 3. CONFIRMACIÓN DE GUARDADO Y VALIDACIÓN BACKEND
-            // ---------------------------------------------------------
-            const editForm = document.getElementById('editCustodianForm');
-            if (editForm) {
-                editForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
                     Swal.fire({
                         title: '¿Confirmar actualización?',
-                        text: "Verifica que la asignación y las ubicaciones sean correctas.",
-                        icon: 'warning',
+                        text: 'Los espacios se actualizarán automáticamente según la dependencia asignada.',
+                        icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: '#3b82f6',
-                        cancelButtonColor: '#f8fafc',
+                        confirmButtonColor: '#2563eb',
                         confirmButtonText: 'Sí, guardar cambios',
-                        cancelButtonText: '<span class="text-slate-600 font-bold">Cancelar</span>',
-                        reverseButtons: true,
-                        customClass: {
-                            popup: 'rounded-2xl border border-slate-200 shadow-xl',
-                            title: 'text-xl font-black text-slate-800',
-                            cancelButton: 'border border-slate-300 shadow-sm hover:bg-slate-100'
-                        }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            editForm.submit();
-                        }
-                    });
+                        cancelButtonText: 'Cancelar'
+                    }).then(result => { if (result.isConfirmed) form.submit(); });
                 });
             }
-
-            const errorsDataTag = document.getElementById('backend-errors-data');
-            if (errorsDataTag && errorsDataTag.textContent.trim() !== '') {
+            const errorsTag = document.getElementById('backend-errors-data');
+            if (errorsTag && errorsTag.textContent.trim()) {
                 try {
-                    const backendErrors = JSON.parse(errorsDataTag.textContent);
-                    if (backendErrors.length > 0) {
-                        let errorList = '<div class="text-left text-sm text-slate-600 mt-3 space-y-2 p-3 bg-rose-50 border border-rose-100 rounded-lg">';
-                        backendErrors.forEach(error => {
-                            errorList += `<p class="flex items-start gap-2">
-                                <svg class="w-4 h-4 text-rose-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> 
-                                <span class="font-medium">${error}</span>
-                            </p>`;
-                        });
-                        errorList += '</div>';
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validación Rechazada',
-                            html: errorList,
-                            confirmButtonColor: '#3b82f6'
-                        });
-                    }
-                } catch (e) {
-                    console.error("Error parseando los errores del backend", e);
-                }
+                    const errors = JSON.parse(errorsTag.textContent);
+                    if (errors.length) Swal.fire({ icon: 'error', title: 'Validación rechazada', html: errors.map(error => `<p>${error}</p>`).join(''), confirmButtonColor: '#2563eb' });
+                } catch (error) { console.error('No se pudieron leer los errores de validación', error); }
             }
         });
     </script>

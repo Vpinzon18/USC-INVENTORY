@@ -11,6 +11,7 @@ use function Spatie\LaravelPdf\Support\pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Mews\Purifier\Facades\Purifier;
+use Illuminate\Validation\Rule;
 
 class MovementController extends Controller
 {
@@ -75,10 +76,23 @@ class MovementController extends Controller
         $baseMovement = \App\Models\Assignment::findOrFail($id);
 
         // 1. Validación estricta con nombres coherentes
+        $dependencyId = Custodian::whereKey($request->input('custodian_id'))
+            ->where('status', 'active')
+            ->value('dependency_id');
         $validated = $request->validate([
             'movement_type' => 'required|string',
-            'custodian_id'  => 'required|exists:custodians,id',
-            'room_id'       => 'required|exists:rooms,id', // ¡IMPORTANTE! Agregamos room_id aquí
+            'custodian_id'  => ['required', Rule::exists('custodians', 'id')->where('status', 'active')],
+            'room_id'       => [
+                'required',
+                'exists:rooms,id',
+                function ($attribute, $value, $fail) use ($dependencyId) {
+                    $room = Room::find($value);
+                    if ($room && $room->dependency_id !== null && $dependencyId
+                        && (int) $room->dependency_id !== (int) $dependencyId) {
+                        $fail('La ubicación debe pertenecer a la dependencia del responsable.');
+                    }
+                },
+            ],
             'observations'  => 'nullable|string',          // Asegúrate que tu textarea se llame 'observations'
             'asset_ids'     => 'required|array|min:1', 
             'asset_ids.*'   => 'exists:assets,id',
@@ -127,11 +141,24 @@ class MovementController extends Controller
    public function storeMass(Request $request)
     {
         // 3. CERRAMOS LA PUERTA OCULTA: Agregamos 'observation' a la validación
+        $dependencyId = Custodian::whereKey($request->input('custodian_id'))
+            ->where('status', 'active')
+            ->value('dependency_id');
         $validated = $request->validate([
             'selected_assets' => 'required|array|min:1',
             'selected_assets.*' => 'exists:assets,id',
-            'room_id'         => 'required|exists:rooms,id',
-            'custodian_id'    => 'required|exists:custodians,id',
+            'room_id'         => [
+                'required',
+                'exists:rooms,id',
+                function ($attribute, $value, $fail) use ($dependencyId) {
+                    $room = Room::find($value);
+                    if ($room && $room->dependency_id !== null && $dependencyId
+                        && (int) $room->dependency_id !== (int) $dependencyId) {
+                        $fail('La ubicación debe pertenecer a la dependencia del responsable.');
+                    }
+                },
+            ],
+            'custodian_id'    => ['required', Rule::exists('custodians', 'id')->where('status', 'active')],
             'movement_type'   => 'required|string',
             'headquarters'    => 'required|string',
             'observation'     => 'nullable|string', // ¡Aduana activada!

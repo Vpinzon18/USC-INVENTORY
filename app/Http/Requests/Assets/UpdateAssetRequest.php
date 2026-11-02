@@ -16,6 +16,12 @@ class UpdateAssetRequest extends FormRequest
     {
         /** @var Asset $asset */
         $asset = $this->route('asset');
+        $custodianId = $this->input('custodian_id')
+            ?: $asset?->currentAssignment?->custodian_id
+            ?: $asset?->custodian_id;
+        $dependencyId = $custodianId
+            ? \App\Models\Custodian::whereKey($custodianId)->where('status', 'active')->value('dependency_id')
+            : null;
 
         return [
 
@@ -25,8 +31,17 @@ class UpdateAssetRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'room_id' =>
-            'required|exists:rooms,id',
+            'room_id' => [
+                'required',
+                'exists:rooms,id',
+                function ($attribute, $value, $fail) use ($dependencyId) {
+                    $room = \App\Models\Room::find($value);
+                    if ($room && $room->dependency_id !== null && $dependencyId
+                        && (int) $room->dependency_id !== (int) $dependencyId) {
+                        $fail('La ubicación debe pertenecer a la dependencia del responsable.');
+                    }
+                },
+            ],
 
             'internal_code' =>
             'nullable|string|max:255|unique:assets,internal_code,' .

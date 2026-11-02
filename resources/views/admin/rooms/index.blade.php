@@ -149,15 +149,31 @@
                 </div>
             </div>
 
+            <form id="bulkRoomDependencyForm" action="{{ route('rooms.assign-dependency') }}" method="POST" class="relative z-10 bg-white rounded-xl border border-slate-200 p-4 flex flex-col md:flex-row gap-3 md:items-end">
+                @csrf
+                <div class="flex-1">
+                    <label for="bulk_dependency_id" class="block text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1">Asignar espacios seleccionados a dependencia</label>
+                    <select id="bulk_dependency_id" name="dependency_id" required class="w-full md:max-w-md rounded-lg border-slate-300 text-sm">
+                        <option value="">Selecciona una dependencia</option>
+                        @foreach($dependencies as $dependency)
+                            <option value="{{ $dependency->id }}">{{ $dependency->name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-[11px] text-slate-500 mt-1">Puedes clasificar varios espacios existentes en una sola operación. Marca los espacios en la tabla.</p>
+                </div>
+                <button type="submit" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold uppercase tracking-wide">Asignar selección</button>
+            </form>
+
             <div id="table-container" class="relative z-10 transition-opacity duration-300">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-500 font-black">
-                                    <th class="px-6 py-4 w-24">ID</th>
+                                    <th class="px-6 py-4 w-24"><input id="selectAllRooms" type="checkbox" class="rounded border-slate-300 text-blue-600" aria-label="Seleccionar los espacios de esta página"></th>
                                     <th class="px-6 py-4">Nombre / Número</th>
                                     <th class="px-6 py-4">Clasificación</th>
+                                    <th class="px-6 py-4">Dependencia</th>
                                     <th class="px-6 py-4">Ubicación Física</th>
                                     <th class="px-6 py-4 text-center">Piso</th>
                                     <th class="px-6 py-4 text-center w-32">Acciones</th>
@@ -167,6 +183,7 @@
                                 @forelse ($rooms as $room)
                                     <tr class="hover:bg-slate-50 transition-colors group">
                                         <td class="px-6 py-5">
+                                            <input type="checkbox" name="room_ids[]" value="{{ $room->id }}" form="bulkRoomDependencyForm" class="room-bulk-checkbox rounded border-slate-300 text-blue-600" aria-label="Seleccionar {{ $room->name }}">
                                             <span class="font-mono text-xs font-extrabold text-slate-400">
                                                 #{{ str_pad($room->id, 4, '0', STR_PAD_LEFT) }}
                                             </span>
@@ -193,6 +210,10 @@
                                                     {{ $room->status }}
                                                 </span>
                                             @endif
+                                        </td>
+
+                                        <td class="px-6 py-5">
+                                            <span class="text-xs font-bold text-slate-700">{{ $room->dependency->name ?? 'Sin dependencia' }}</span>
                                         </td>
 
                                         <td class="px-6 py-5">
@@ -474,6 +495,33 @@
                     if (tableContainer) tableContainer.style.opacity = '1';
                 }
             }));
+        });
+    </script>
+    <script>
+        document.addEventListener('change', function (event) {
+            if (event.target.id === 'selectAllRooms') {
+                document.querySelectorAll('.room-bulk-checkbox').forEach(box => { box.checked = event.target.checked; });
+            }
+        });
+        document.addEventListener('submit', function (event) {
+            if (event.target.id !== 'bulkRoomDependencyForm') return;
+            const form = event.target;
+            const selected = form.querySelectorAll('.room-bulk-checkbox:checked').length;
+            if (!selected) {
+                event.preventDefault();
+                Swal.fire({ icon: 'info', title: 'Selecciona espacios', text: 'Marca uno o varios espacios en la tabla para continuar.' });
+                return;
+            }
+            event.preventDefault();
+            Swal.fire({
+                icon: 'question',
+                title: '¿Asignar dependencia?',
+                text: `Se actualizarán ${selected} espacios.`,
+                showCancelButton: true,
+                confirmButtonText: 'Sí, asignar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#2563eb'
+            }).then(result => { if (result.isConfirmed) form.submit(); });
         });
     </script>
 </x-app-layout>
