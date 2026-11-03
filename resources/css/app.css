@@ -431,3 +431,13 @@ html.dark .sigma-filter-toolbar { background-color: var(--sigma-dark-surface) !i
 html.dark .swal2-popup { background-color: #111c2e !important; color: var(--sigma-dark-text) !important; }
 html.dark .swal2-title,
 html.dark .swal2-html-container { color: var(--sigma-dark-text) !important; }
+
+/* Contraste del diagrama de Gantt en modo oscuro: Tailwind genera clases
+   con opacidad que no quedan cubiertas por los selectores base anteriores. */
+html.dark .sigma-gantt .bg-slate-50\/80 { background-color: #111c2e !important; }
+html.dark .sigma-gantt .bg-slate-50\/70,
+html.dark .sigma-gantt .bg-slate-50\/60 { background-color: #172337 !important; }
+html.dark .sigma-gantt .bg-slate-100\/70 { background-color: #1e293b !important; }
+html.dark .sigma-gantt .bg-blue-50\/90 { background-color: #172337 !important; }
+html.dark .sigma-gantt .bg-blue-50\/50 { background-color: #172554 !important; }
+html.dark .sigma-gantt .hover\:bg-slate-50\/70:hover { background-color: #1b2940 !important; }

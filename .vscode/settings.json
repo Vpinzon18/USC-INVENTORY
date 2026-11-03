@@ -1,0 +1,23 @@
+{
+    "intelephense.environment.phpVersion": "8.4.0",
+    "intelephense.environment.includePaths": [
+        "vendor"
+    ],
+    "intelephense.files.exclude": [
+        "**/.git/**",
+        "**/.svn/**",
+        "**/.hg/**",
+        "**/CVS/**",
+        "**/.DS_Store/**",
+        "**/node_modules/**",
+        "**/bower_components/**",
+        "**/vendor/**/{Tests,tests}/**",
+        "**/.history/**",
+        "**/vendor/**/vendor/**"
+    ],
+    "intelephense.diagnostics.exclude": {
+        "**/vendor/**": [
+            "*"
+        ]
+    }
+}

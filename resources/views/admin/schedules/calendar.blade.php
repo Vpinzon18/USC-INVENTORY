@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="min-h-screen bg-slate-50 py-8" x-data="maintenanceGantt(@js($maintenanceRows), @js($calendarMonth), @js(url('/api/filters/api/sigma-filters')))">
+    <div class="sigma-gantt min-h-screen bg-slate-50 py-8" x-data="maintenanceGantt(@js($maintenanceRows), @js($calendarMonth), @js(url('/api/filters/api/sigma-filters')))">
         <div class="mx-auto w-[96%] max-w-[1600px] space-y-6">
             <section class="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <div class="absolute inset-y-0 left-0 w-1.5 bg-blue-600"></div>

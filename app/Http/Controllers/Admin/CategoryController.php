@@ -24,7 +24,7 @@ class CategoryController extends Controller
                 $query->where('name', 'ilike', "%{$search}%");
             })
             ->orderBy('name', 'asc')
-            ->paginate($perPage) // 🌟 REEMPLAZAMOS EL 10 POR LA VARIABLE DINÁMICA
+            ->paginate($perPage) //  REEMPLAZAMOS EL 10 POR LA VARIABLE DINÁMICA
             ->withQueryString();
 
         return view('admin.categories.index', compact('categories', 'search', 'perPage', 'filters'));

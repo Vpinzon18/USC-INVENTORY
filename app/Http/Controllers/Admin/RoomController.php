@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Building;
 use App\Models\Room;
 use App\Models\RoomType;
-use App\Models\Dependency;
 
 class RoomController extends Controller
 {
@@ -47,33 +46,13 @@ class RoomController extends Controller
         // 3. Paginación
         $perPage = \App\Support\PaginationOptions::fromRequest($request);
         $rooms = $query->orderBy('name', 'asc')->paginate($perPage)->withQueryString();
-        $dependencies = Dependency::orderBy('name')->get();
-
         // 🌟 LA MAGIA DEL AJAX: Si la petición viene de AlpineJS, devolvemos SOLO la tabla
         if ($request->ajax()) {
             return view('admin.rooms.partials.table', compact('rooms', 'filters'))->render();
         }
 
         // Si es una carga normal, devolvemos la vista completa
-        return view('admin.rooms.index', compact('rooms', 'filters', 'dependencies'));
-    }
-
-    public function assignDependency(Request $request)
-    {
-        $validated = $request->validate([
-            'dependency_id' => 'required|exists:dependencies,id',
-            'room_ids' => 'required|array|min:1',
-            'room_ids.*' => 'required|integer|distinct|exists:rooms,id',
-        ], [
-            'room_ids.required' => 'Selecciona al menos un espacio para asignar.',
-            'room_ids.min' => 'Selecciona al menos un espacio para asignar.',
-        ]);
-
-        Room::whereIn('id', $validated['room_ids'])
-            ->update(['dependency_id' => $validated['dependency_id']]);
-
-        return redirect()->route('rooms.index')
-            ->with('success', count($validated['room_ids']) . ' espacios asociados a la dependencia seleccionada.');
+        return view('admin.rooms.index', compact('rooms', 'filters'));
     }
 
     public function create()
@@ -81,8 +60,7 @@ class RoomController extends Controller
         $buildings = Building::with('campus')->orderBy('name')->get();
         $roomTypes = RoomType::where('is_active', true)->orderBy('name')->get();
         
-        $dependencies = Dependency::orderBy('name')->get();
-        return view('admin.rooms.create', compact('buildings', 'roomTypes', 'dependencies'));
+        return view('admin.rooms.create', compact('buildings', 'roomTypes'));
     }
 
     public function store(Request $request)
@@ -118,9 +96,7 @@ class RoomController extends Controller
     {
         $buildings = Building::with('campus')->orderBy('name')->get();
         $roomTypes = RoomType::where('is_active', true)->orderBy('name')->get();
-        $dependencies = Dependency::orderBy('name')->get();
-        
-        return view('admin.rooms.edit', compact('room', 'buildings', 'roomTypes', 'dependencies'));
+        return view('admin.rooms.edit', compact('room', 'buildings', 'roomTypes'));
     }
 
     public function update(Request $request, Room $room)
