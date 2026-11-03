@@ -57,11 +57,11 @@ class AssetApiController extends Controller
         $host = strtolower((string) ($appUrlParts['host'] ?? ''));
         $port = (int) ($appUrlParts['port'] ?? ($scheme === 'https' ? 443 : 80));
         $https = $scheme === 'https' && $host !== '';
-        $lanHttpTest = $scheme === 'http' && $host === '172.16.136.63' && $port === 8000;
+        $lanHttpTest = $scheme === 'http' && $host === '172.16.161.81' && $port === 8000;
         if (!$https && !$lanHttpTest) {
             return response()->json([
                 'available' => false,
-                'message' => 'La publicación requiere HTTPS o el endpoint HTTP autorizado para pruebas en 172.16.136.63:8000.',
+                'message' => 'La publicación requiere HTTPS o el endpoint HTTP autorizado para pruebas en 172.16.161.81:8000.',
             ], 503);
         }
 
